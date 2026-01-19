@@ -1,0 +1,121 @@
+---
+interface Props {
+  imageUrl: string;
+  lang: "es" | "en" | "it" | "fr" | "pt";
+}
+
+const { imageUrl, lang } = Astro.props;
+
+/* =========================
+   TEXTOS POR IDIOMA (única fuente)
+========================= */
+const TEXTS = {
+  es: {
+    title: "Free Tour por el centro histórico",
+    subtitle: "Bruselas · Guía local · Grupos reducidos",
+    duration: "⏱ 2 h 15 min",
+    languages: "🌍 Varios idiomas",
+    price: "Aportación libre",
+    description:
+      "Reserva sin pago previo. Al finalizar el tour, decides libremente cuánto aportar según tu experiencia.",
+    alt: "Free tour por el centro histórico de Bruselas con guía local",
+  },
+  en: {
+    title: "Free Walking Tour of the Historic Center",
+    subtitle: "Brussels · Local guide · Small groups",
+    duration: "⏱ 2 h 15 min",
+    languages: "🌍 Multiple languages",
+    price: "Pay what you want",
+    description:
+      "Book with no upfront payment. At the end of the tour, you decide how much to contribute based on your experience.",
+    alt: "Free walking tour of Brussels historic center with a local guide",
+  },
+  it: {
+    title: "Free Tour del centro storico",
+    subtitle: "Bruxelles · Guida locale · Piccoli gruppi",
+    duration: "⏱ 2 h 15 min",
+    languages: "🌍 Più lingue",
+    price: "Offerta libera",
+    description:
+      "Prenota senza pagamento anticipato. Alla fine del tour, decidi liberamente quanto offrire in base alla tua esperienza.",
+    alt: "Free tour del centro storico di Bruxelles con guida locale",
+  },
+  fr: {
+    title: "Free Tour du centre historique",
+    subtitle: "Bruxelles · Guide local · Petits groupes",
+    duration: "⏱ 2 h 15 min",
+    languages: "🌍 Plusieurs langues",
+    price: "Contribution libre",
+    description:
+      "Réservez sans paiement préalable. À la fin du tour, vous décidez librement du montant à offrir selon votre expérience.",
+    alt: "Free tour du centre historique de Bruxelles avec guide local",
+  },
+  pt: {
+    title: "Free Tour pelo centro histórico",
+    subtitle: "Bruxelas · Guia local · Grupos pequenos",
+    duration: "⏱ 2 h 15 min",
+    languages: "🌍 Vários idiomas",
+    price: "Contribuição livre",
+    description:
+      "Reserve sem pagamento antecipado. Ao final do tour, você decide livremente quanto contribuir de acordo com sua experiência.",
+    alt: "Free tour pelo centro histórico de Bruxelas com guia local",
+  },
+};
+
+const t = TEXTS[lang] ?? TEXTS.es;
+---
+
+<!--
+  HERO RIGHT
+  - Visual de apoyo
+  - Desktop only
+-->
+<div class="relative hidden lg:block max-w-md mx-auto">
+  <article class="bg-white rounded-3xl border border-neutral-200 shadow-soft overflow-hidden">
+
+    <!-- IMAGEN -->
+    <div class="relative h-60 overflow-hidden">
+      <img
+        src={imageUrl}
+        alt={t.alt}
+        loading="lazy"
+        decoding="async"
+        class="w-full h-full object-cover"
+      />
+      <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent"></div>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div class="p-5 space-y-4">
+
+      <!-- TÍTULO -->
+      <div>
+        <h3 class="text-base md:text-lg font-semibold text-neutral-900">
+          {t.title}
+        </h3>
+        <p class="text-sm text-neutral-500 mt-1">
+          {t.subtitle}
+        </p>
+      </div>
+
+      <!-- META INFO -->
+      <div class="flex flex-wrap gap-2 text-xs text-neutral-600">
+        <span class="px-2 py-1 rounded-full bg-neutral-100">
+          {t.duration}
+        </span>
+        <span class="px-2 py-1 rounded-full bg-neutral-100">
+          {t.languages}
+        </span>
+        <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
+          {t.price}
+        </span>
+      </div>
+
+      <!-- TEXTO -->
+      <p class="text-sm text-neutral-600">
+        {t.description}
+      </p>
+
+    </div>
+  </article>
+</div>

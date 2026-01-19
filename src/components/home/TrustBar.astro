@@ -1,0 +1,63 @@
+---
+interface Props {
+  rating?: string;
+  reviews?: string;
+  travelers?: string;
+}
+
+const {
+  rating = '4.9 / 5',
+  reviews = '2.000+ reseñas verificadas',
+  travelers = '10.000+ viajeros internacionales',
+} = Astro.props;
+---
+
+<section class="relative z-0 mt-8">
+  <div class="max-w-6xl mx-auto px-4">
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 items-center text-center text-neutral-700">
+
+      <!-- RATING -->
+      <div class="flex flex-col items-center gap-1">
+        <div class="text-sm font-semibold">
+          ⭐ {rating}
+        </div>
+        <div class="text-xs text-neutral-500">
+          Valoración media
+        </div>
+      </div>
+
+      <!-- RESEÑAS -->
+      <div class="flex flex-col items-center gap-1">
+        <div class="text-sm font-medium">
+          {reviews}
+        </div>
+        <div class="text-xs text-neutral-500">
+          Clientes reales
+        </div>
+      </div>
+
+      <!-- VIAJEROS -->
+      <div class="flex flex-col items-center gap-1">
+        <div class="text-sm font-medium">
+          {travelers}
+        </div>
+        <div class="text-xs text-neutral-500">
+          Desde 2018
+        </div>
+      </div>
+
+      <!-- GARANTÍA -->
+      <div class="flex flex-col items-center gap-1">
+        <div class="text-sm font-medium">
+          Cancelación gratuita
+        </div>
+        <div class="text-xs text-neutral-500">
+          Sin cargos ocultos
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>

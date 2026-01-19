@@ -1,0 +1,129 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import TourHeader from "@/components/TourHeader.astro";
+import Footer from "@/components/Footer.astro";
+
+const { lang } = Astro.params;
+
+const t = {
+  es: {
+    title: "Política de Cookies | BelgoTours",
+    h1: "Política de Cookies",
+    intro:
+      "Este sitio web utiliza cookies y tecnologías similares para garantizar su correcto funcionamiento, mejorar la experiencia del usuario y analizar el tráfico.",
+    what: "¿Qué son las cookies?",
+    whatText:
+      "Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando visitas un sitio web. Permiten reconocer tu navegador y recordar determinadas preferencias.",
+    types: "Tipos de cookies utilizadas",
+    list: [
+      "Cookies técnicas: necesarias para el funcionamiento del sitio.",
+      "Cookies de análisis: estadísticas de uso anónimas.",
+      "Cookies de preferencias: idioma o configuración regional.",
+    ],
+    manage: "Gestión de cookies",
+    manageText:
+      "Puedes configurar tu navegador para bloquear o eliminar cookies. Ten en cuenta que desactivar cookies puede afectar al funcionamiento del sitio.",
+    updates: "Actualizaciones",
+    updatesText:
+      "Esta política puede actualizarse para reflejar cambios legales o técnicos.",
+  },
+
+  en: {
+    title: "Cookies Policy | BelgoTours",
+    h1: "Cookies Policy",
+    intro:
+      "This website uses cookies and similar technologies to ensure proper functioning, improve user experience, and analyze traffic.",
+    what: "What are cookies?",
+    whatText:
+      "Cookies are small text files stored on your device when you visit a website. They help recognize your browser and remember certain preferences.",
+    types: "Types of cookies used",
+    list: [
+      "Technical cookies: necessary for site operation.",
+      "Analytics cookies: anonymous usage statistics.",
+      "Preference cookies: language or region settings.",
+    ],
+    manage: "Managing cookies",
+    manageText:
+      "You can configure your browser to block or delete cookies. Please note that disabling cookies may affect site functionality.",
+    updates: "Updates",
+    updatesText:
+      "This policy may be updated to reflect legal or technical changes.",
+  },
+
+  it: {
+    title: "Politica sui Cookie | BelgoTours",
+    h1: "Politica sui Cookie",
+    intro:
+      "Questo sito utilizza cookie e tecnologie simili per garantirne il corretto funzionamento, migliorare l’esperienza dell’utente e analizzare il traffico.",
+    what: "Cosa sono i cookie?",
+    whatText:
+      "I cookie sono piccoli file di testo che vengono memorizzati sul tuo dispositivo quando visiti un sito web. Aiutano a riconoscere il browser e a ricordare alcune preferenze.",
+    types: "Tipologie di cookie utilizzate",
+    list: [
+      "Cookie tecnici: necessari per il funzionamento del sito.",
+      "Cookie analitici: statistiche di utilizzo anonime.",
+      "Cookie di preferenza: lingua o impostazioni regionali.",
+    ],
+    manage: "Gestione dei cookie",
+    manageText:
+      "Puoi configurare il tuo browser per bloccare o eliminare i cookie. La disattivazione dei cookie potrebbe influire sul funzionamento del sito.",
+    updates: "Aggiornamenti",
+    updatesText:
+      "Questa informativa può essere aggiornata per riflettere modifiche legali o tecniche.",
+  },
+
+  fr: {
+    title: "Politique des Cookies | BelgoTours",
+    h1: "Politique des Cookies",
+    intro:
+      "Ce site utilise des cookies et des technologies similaires pour assurer son bon fonctionnement, améliorer l’expérience utilisateur et analyser le trafic.",
+    what: "Qu’est-ce qu’un cookie ?",
+    whatText:
+      "Les cookies sont de petits fichiers texte stockés sur votre appareil lorsque vous visitez un site web. Ils permettent de reconnaître votre navigateur et de mémoriser certaines préférences.",
+    types: "Types de cookies utilisés",
+    list: [
+      "Cookies techniques : nécessaires au fonctionnement du site.",
+      "Cookies analytiques : statistiques d’utilisation anonymes.",
+      "Cookies de préférence : langue ou paramètres régionaux.",
+    ],
+    manage: "Gestion des cookies",
+    manageText:
+      "Vous pouvez configurer votre navigateur pour bloquer ou supprimer les cookies. La désactivation des cookies peut affecter le fonctionnement du site.",
+    updates: "Mises à jour",
+    updatesText:
+      "Cette politique peut être mise à jour pour refléter des changements légaux ou techniques.",
+  },
+};
+
+const copy = t[lang] || t.en;
+---
+
+<Layout title={copy.title}>
+  <TourHeader simple />
+
+  <main class="bg-white">
+    <section class="max-w-3xl mx-auto px-6 py-16 prose prose-gray">
+      <h1>{copy.h1}</h1>
+
+      <p>{copy.intro}</p>
+
+      <h2>{copy.what}</h2>
+      <p>{copy.whatText}</p>
+
+      <h2>{copy.types}</h2>
+      <ul>
+        {copy.list.map(item => (
+          <li>{item}</li>
+        ))}
+      </ul>
+
+      <h2>{copy.manage}</h2>
+      <p>{copy.manageText}</p>
+
+      <h2>{copy.updates}</h2>
+      <p>{copy.updatesText}</p>
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</Layout>

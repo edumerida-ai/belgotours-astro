@@ -1,0 +1,88 @@
+---
+// src/components/global/LanguageSelector.astro
+interface Props {
+  currentLang: string;
+}
+
+const { currentLang = 'es' } = Astro.props;
+
+// Configuración de idiomas disponibles
+const languages = [
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' }
+];
+
+// Función para construir URLs multi-idioma
+const getLanguageUrl = (targetLang: string) => {
+  const currentPath = Astro.url.pathname;
+  
+  // Si estamos en la página principal
+  if (currentPath === `/es/` || currentPath === `/en/` || 
+      currentPath === `/it/` || currentPath === `/fr/` || currentPath === `/pt/`) {
+    return `/${targetLang}/`;
+  }
+  
+  // Para otras páginas, reemplazar el idioma en la URL
+  const pathWithoutLang = currentPath.replace(/^\/(es|en|it|fr|pt)\//, '/');
+  return `/${targetLang}${pathWithoutLang}`;
+};
+---
+
+<div class="language-selector relative">
+  <details class="dropdown dropdown-end">
+    <summary class="btn btn-ghost gap-2 text-white hover:bg-white/20">
+      <span class="text-lg">
+        {languages.find(lang => lang.code === currentLang)?.flag}
+      </span>
+      <span class="hidden sm:inline font-medium">
+        {languages.find(lang => lang.code === currentLang)?.name}
+      </span>
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </summary>
+    
+    <ul class="dropdown-content menu bg-base-100 rounded-box z-50 w-48 p-2 shadow-xl mt-2">
+      {languages.map((language) => (
+        <li key={language.code}>
+          <a 
+            href={getLanguageUrl(language.code)}
+            class={`flex items-center gap-3 py-2 px-3 hover:bg-base-200 rounded-lg transition-colors ${
+              currentLang === language.code ? 'bg-blue-50 text-blue-600' : ''
+            }`}
+            aria-label={`Cambiar a ${language.name}`}
+            hreflang={language.code}
+          >
+            <span class="text-lg">{language.flag}</span>
+            <span class="font-medium flex-1">{language.name}</span>
+            {currentLang === language.code && (
+              <span class="text-blue-600">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+              </span>
+            )}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </details>
+</div>
+
+<style>
+  .language-selector details[open] summary {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .dropdown-content {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>

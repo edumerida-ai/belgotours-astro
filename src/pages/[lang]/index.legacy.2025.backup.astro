@@ -1,0 +1,841 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ToursDestacados from '../../components/ToursDestacados.astro';
+import ReviewsSection from '../../components/ReviewsSection.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import { getHomePage } from '@/lib/strapiClient';
+
+// ✅ FUNCIÓN getStaticPaths() PARA GENERAR PÁGINAS ESTÁTICAS
+export async function getStaticPaths() {
+  const languages = [
+    { code: 'es', name: 'Español' },
+    { code: 'en', name: 'English' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'fr', name: 'Français' },
+    { code: 'pt', name: 'Português' }
+  ];
+
+  const paths = await Promise.all(
+    languages.map(async (language) => {
+      let home: any = null;
+
+      try {
+        home = await getHomePage(language.code);
+      } catch (error) {
+        console.error(`❌ Error obteniendo home-page para ${language.code}`, error);
+      }
+
+      return {
+        params: { lang: language.code },
+        props: {
+          languageInfo: language,
+          homeData: home || null,
+        }
+      };
+    })
+  );
+
+  return paths;
+}
+
+// ✅ DATOS DE TOURS POR IDIOMA - ESTRUCTURA INTELIGENTE
+const toursByLanguage = {
+  'es': [
+    { 
+      name: '🚶‍♂️ Free Tour Bruselas Español', 
+      slug: 'free-tour-bruselas', 
+      duration: '2.5 horas', 
+      price: 'Gratis',
+      type: 'free-tour',
+      badge: 'MÁS POPULAR',
+      idiomas: ['🇪🇸 Español']
+    },
+    { 
+      name: '🚶‍♂️ Free Tour Brujas Español', 
+      slug: 'free-tour-brujas', 
+      duration: '3 horas', 
+      price: 'Gratis',
+      type: 'free-tour',
+      badge: 'RECOMENDADO',
+      idiomas: ['🇪🇸 Español']
+    },
+    { 
+      name: '🍫 Tour del Chocolate Español', 
+      slug: 'tour-chocolate-waffles', 
+      duration: '2.5 horas', 
+      price: '45€',
+      type: 'special',
+      badge: 'GASTRONOMÍA',
+      idiomas: ['🇪🇸 Español']
+    },
+    { 
+      name: '👑 Tour Privado Bruselas', 
+      slug: 'tour-privado-bruselas', 
+      duration: '4 horas', 
+      price: '120€',
+      type: 'private',
+      badge: 'EXCLUSIVO',
+      idiomas: ['🇪🇸 Español']
+    },
+    { 
+      name: '👑 Tour Privado Brujas', 
+      slug: 'tour-privado-brujas', 
+      duration: '3.5 horas', 
+      price: '140€',
+      type: 'private',
+      badge: 'PRIVADO',
+      idiomas: ['🇪🇸 Español']
+    }
+  ],
+  'en': [
+    { 
+      name: '🚶‍♂️ Free Tour Brussels English', 
+      slug: 'free-tour-bruselas', 
+      duration: '2.5 hours', 
+      price: 'Free',
+      type: 'free-tour',
+      badge: 'MOST POPULAR',
+      idiomas: ['🇬🇧 English']
+    },
+    { 
+      name: '👑 Private Tour Brussels', 
+      slug: 'tour-privado-bruselas', 
+      duration: '4 hours', 
+      price: '120€',
+      type: 'private',
+      badge: 'EXCLUSIVE',
+      idiomas: ['🇬🇧 English']
+    }
+  ],
+  'it': [
+    { 
+      name: '🚶‍♂️ Free Tour Bruxelles Italiano', 
+      slug: 'free-tour-bruselas', 
+      duration: '2.5 ore', 
+      price: 'Gratis',
+      type: 'free-tour',
+      badge: 'POPOLARE',
+      idiomas: ['🇮🇹 Italiano']
+    },
+    { 
+      name: '👑 Tour Privato Bruxelles', 
+      slug: 'tour-privado-bruselas', 
+      duration: '4 ore', 
+      price: '120€',
+      type: 'private',
+      badge: 'ESCLUSIVO',
+      idiomas: ['🇮🇹 Italiano']
+    }
+  ],
+  'fr': [
+    { 
+      name: '👑 Tour Privé Bruxelles', 
+      slug: 'tour-privado-bruselas', 
+      duration: '4 heures', 
+      price: '120€',
+      type: 'private',
+      badge: 'EXCLUSIF',
+      idiomas: ['🇫🇷 Français']
+    }
+  ],
+  'pt': [
+    { 
+      name: '🚶‍♂️ Free Tour Bruxelas Inglês', 
+      slug: 'free-tour-bruselas', 
+      duration: '2.5 horas', 
+      price: 'Grátis',
+      type: 'free-tour',
+      badge: 'POPULAR',
+      idiomas: ['🇬🇧 English']
+    },
+    { 
+      name: '🚶‍♂️ Free Tour Bruxelas Espanhol', 
+      slug: 'free-tour-bruselas', 
+      duration: '2.5 horas', 
+      price: 'Grátis',
+      type: 'free-tour',
+      badge: 'POPULAR',
+      idiomas: ['🇪🇸 Español']
+    },
+    { 
+      name: '🍫 Tour do Chocolate Espanhol', 
+      slug: 'tour-chocolate-waffles', 
+      duration: '2.5 horas', 
+      price: '45€',
+      type: 'special',
+      badge: 'GASTRONOMÍA',
+      idiomas: ['🇪🇸 Español']
+    },
+    { 
+      name: '👑 Tour Privado Bruxelas Inglês', 
+      slug: 'tour-privado-bruselas', 
+      duration: '4 horas', 
+      price: '120€',
+      type: 'private',
+      badge: 'EXCLUSIVO',
+      idiomas: ['🇬🇧 English']
+    },
+    { 
+      name: '👑 Tour Privado Bruxelas Espanhol', 
+      slug: 'tour-privado-bruselas', 
+      duration: '4 horas', 
+      price: '120€',
+      type: 'private',
+      badge: 'EXCLUSIVO',
+      idiomas: ['🇪🇸 Español']
+    },
+    { 
+      name: '👑 Tour Privado Bruges Espanhol', 
+      slug: 'tour-privado-brujas', 
+      duration: '3.5 horas', 
+      price: '140€',
+      type: 'private',
+      badge: 'PRIVADO',
+      idiomas: ['🇪🇸 Español']
+    }
+  ]
+};
+
+// Configuración multi-idioma ACTUALIZADA
+const languages = {
+  'es': {
+    title: 'Belgotours - Free Tours y Tours Privados en Bruselas | Guías Locales Expertos',
+    description: 'Reserva free tours y tours privados en Bruselas con guías locales expertos. Español, English, Français, Italiano. Mejor precio garantizado. ⭐4.9/5',
+    hero: {
+      title: 'Descubre Bruselas',
+      subtitle: 'Con Guías Locales Expertos',
+      description: 'Free tours y experiencias únicas en',
+      highlighted: 'español, inglés, francés e italiano'
+    },
+    search: {
+      title: 'Encuentra tu experiencia perfecta',
+      subtitle: 'Reserva en 2 minutos • Cancelación gratuita',
+      languageLabel: '🌍 ¿En qué idioma buscas tu tour?',
+      tourLabel: '🎯 Elige tu tour ideal',
+      selectTour: 'Selecciona un tour...',
+      button: '🔍 Ver Tour Seleccionado',
+      stats: ['Tours Únicos', 'Rating 4.9/5', '5 Idiomas']
+    },
+    trust: {
+      rating: '4.9/5',
+      reviews: '(2,000+ reseñas)',
+      travelers: '10K+',
+      travelersText: 'viajeros satisfechos',
+      guides: 'Guías',
+      certified: 'certificados'
+    },
+    scroll: 'Descubre nuestros tours más populares',
+    toursLanguageInfo: ''
+  },
+  'en': {
+    title: 'Belgotours - Free Tours & Private Tours in Brussels | Expert Local Guides',
+    description: 'Book free tours and private tours in Brussels with expert local guides. Spanish, English, French, Italian. Best price guaranteed. ⭐4.9/5',
+    hero: {
+      title: 'Discover Brussels',
+      subtitle: 'With Expert Local Guides', 
+      description: 'Free tours and unique experiences in',
+      highlighted: 'Spanish, English, French and Italian'
+    },
+    search: {
+      title: 'Find Your Perfect Experience',
+      subtitle: 'Book in 2 minutes • Free cancellation',
+      languageLabel: '🌍 In which language are you looking for your tour?',
+      tourLabel: '🎯 Choose your ideal tour',
+      selectTour: 'Select a tour...',
+      button: '🔍 View Selected Tour',
+      stats: ['Unique Tours', 'Rating 4.9/5', '5 Languages']
+    },
+    trust: {
+      rating: '4.9/5',
+      reviews: '(2,000+ reviews)',
+      travelers: '10K+',
+      travelersText: 'satisfied travelers',
+      guides: 'Guides',
+      certified: 'certified'
+    },
+    scroll: 'Discover our most popular tours',
+    toursLanguageInfo: ''
+  },
+  'it': {
+    title: 'Belgotours - Free Tours e Tour Privati a Bruxelles | Guide Locali Esperte',
+    description: 'Prenota free tours e tour privati a Bruxelles con guide locali esperte. Spagnolo, Inglese, Francese, Italiano. Miglior prezzo garantito. ⭐4.9/5',
+    hero: {
+      title: 'Scopri Bruxelles',
+      subtitle: 'Con Guide Locali Esperte',
+      description: 'Free tours ed esperienze uniche in',
+      highlighted: 'spagnolo, inglese, francese e italiano'
+    },
+    search: {
+      title: 'Trova la Tua Esperienza Perfetta',
+      subtitle: 'Prenota in 2 minuti • Cancellazione gratuita',
+      languageLabel: '🌍 In quale lingua cerchi il tuo tour?',
+      tourLabel: '🎯 Scegli il tour ideale',
+      selectTour: 'Seleziona un tour...',
+      button: '🔍 Vedi Tour Selezionato',
+      stats: ['Tour Unici', 'Voto 4.9/5', '5 Lingue']
+    },
+    trust: {
+      rating: '4.9/5',
+      reviews: '(2,000+ recensioni)',
+      travelers: '10K+',
+      travelersText: 'viaggiatori soddisfatti',
+      guides: 'Guide',
+      certified: 'certificate'
+    },
+    scroll: 'Scopri i nostri tour più popolari',
+    toursLanguageInfo: ''
+  },
+  'fr': {
+    title: 'Belgotours - Visites Gratuites et Tours Privés à Bruxelles | Guides Locaux Experts',
+    description: 'Réservez des visites gratuites et des tours privés à Bruxelles avec des guides locaux experts. Espagnol, Anglais, Français, Italien. Meilleur prix garanti. ⭐4.9/5',
+    hero: {
+      title: 'Découvrez Bruxelles',
+      subtitle: 'Avec des Guides Locaux Experts',
+      description: 'Visites gratuites et expériences uniques en',
+      highlighted: 'espagnol, anglais, français et italien'
+    },
+    search: {
+      title: 'Trouvez Votre Expérience Parfaite',
+      subtitle: 'Réservation en 2 minutes • Annulation gratuite',
+      languageLabel: '🌍 Dans quelle langue cherchez-vous votre tour?',
+      tourLabel: '🎯 Choisissez votre tour idéal',
+      selectTour: 'Sélectionnez un tour...',
+      button: '🔍 Voir le Tour Sélectionné',
+      stats: ['Tours Uniques', 'Note 4.9/5', '5 Langues']
+    },
+    trust: {
+      rating: '4.9/5',
+      reviews: '(2,000+ avis)',
+      travelers: '10K+',
+      travelersText: 'voyageurs satisfaits',
+      guides: 'Guides',
+      certified: 'certifiés'
+    },
+    scroll: 'Découvrez nos tours les plus populaires',
+    toursLanguageInfo: ''
+  },
+ 'pt': {
+   title: 'Belgotours - Tours Gratuitos e Tours Privados em Bruxelas | Guias Locais Especialistas',
+   description: 'Reserve tours gratuitos e tours privados em Bruxelas com guias locais especialistas. Espanhol, Inglês, Francês, Italiano. Melhor preço garantido. ⭐4.9/5',
+   hero: {
+     title: 'Descubra Bruxelas',
+     subtitle: 'Com Guias Locais Especialistas',
+     description: 'Tours gratuitos e experiências únicas em',
+     highlighted: 'espanhol, inglês, francês e italiano'
+   },
+   search: {
+     title: 'Encontre Sua Experiência Perfeita',
+     subtitle: 'Reserva em 2 minutos • Cancelamento gratuito',
+     languageLabel: '🌍 Em qual idioma você busca seu tour?',
+     tourLabel: '🎯 Escolha seu tour ideal',
+     selectTour: 'Selecione um tour...',
+     button: '🔍 Ver Tour Selecionado',
+     stats: ['Tours Únicos', 'Classificação 4.9/5', '5 Idiomas']
+   },
+   trust: {
+     rating: '4.9/5',
+     reviews: '(2,000+ avaliações)',
+     travelers: '10K+',
+     travelersText: 'viajantes satisfeitos',
+     guides: 'Guias',
+     certified: 'certificados'
+   },
+   scroll: 'Descubra nossos tours mais populares',
+   toursLanguageInfo: '🔄 Tours disponíveis em Inglês e Espanhol'
+ }
+};
+
+const { lang } = Astro.params;
+const { homeData } = Astro.props;
+
+const currentLang = languages[lang] || languages['es'];
+const currentTours = toursByLanguage[lang] || toursByLanguage['es'];
+
+// ✅ SEO: prioridad a lo que venga de Strapi, fallback a textos actuales
+const seoTitle = homeData?.seo_title || currentLang.title;
+const seoDescription = homeData?.seo_description || currentLang.description;
+
+// ✅ Hero: prioridad a Strapi si está configurado
+const heroTitle = homeData?.hero_title || currentLang.hero.title;
+const heroSubtitle = homeData?.hero_subtitle || currentLang.hero.subtitle;
+const heroDescription = homeData?.hero_description || currentLang.hero.description;
+const heroBadge = homeData?.hero_badge || null;
+---
+
+<Layout 
+  title={seoTitle}
+  description={seoDescription}
+  canonical={`https://belgotours.com/${lang}/`}
+>
+
+<Header lang={lang} />
+
+<!-- 🎯 HERO SECTION REVOLUCIONARIO 2026 (ahora leyendo de Strapi cuando exista) -->
+<section class="relative bg-gradient-to-br from-blue-600 via-purple-700 to-blue-800 text-white min-h-screen flex items-center">
+  <div class="absolute inset-0 bg-black/20"></div>
+  <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-10"></div>
+  
+  <div class="container relative z-10 mx-auto px-4 py-20">
+    <div class="max-w-4xl mx-auto">
+      
+      <!-- 1. HEADLINE + TRUST BADGES INTEGRADOS -->
+      <div class="text-center mb-8">
+        {heroBadge && (
+          <div class="inline-flex items-center px-4 py-1 mb-4 rounded-full bg-white/10 border border-white/20 text-sm uppercase tracking-wide">
+            <span class="mr-2">🔥</span> {heroBadge}
+          </div>
+        )}
+
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight">
+          {heroTitle}
+        </h1>
+        <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-yellow-300 mb-6">
+          {heroSubtitle}
+        </h2>
+        <p class="text-xl md:text-2xl opacity-90 leading-relaxed mb-8">
+          {heroDescription} 
+          <span class="font-semibold text-yellow-300"> {currentLang.hero.highlighted}</span>
+        </p>
+        
+        <!-- Trust Badges Integrados -->
+        <div class="flex flex-wrap justify-center items-center gap-6 md:gap-8">
+          <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm px-5 py-3 rounded-full">
+            <span class="text-yellow-400 text-xl">⭐</span>
+            <div class="text-left">
+              <div class="font-semibold text-lg">{currentLang.trust.rating}</div>
+              <div class="text-sm opacity-80">{currentLang.trust.reviews}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm px-5 py-3 rounded-full">
+            <span class="text-green-400 text-xl">👥</span>
+            <div class="text-left">
+              <div class="font-semibold text-lg">{currentLang.trust.travelers}</div>
+              <div class="text-sm opacity-80">{currentLang.trust.travelersText}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-white/10 backdrop-blur-sm px-5 py-3 rounded-full">
+            <span class="text-blue-400 text-xl">🎓</span>
+            <div class="text-left">
+              <div class="font-semibold text-lg">{currentLang.trust.guides}</div>
+              <div class="text-sm opacity-80">{currentLang.trust.certified}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ NUEVO: Info sobre idiomas de tours (solo para portugués) -->
+      {lang === 'pt' && currentLang.toursLanguageInfo && (
+        <div class="bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-4 mb-8 text-center">
+          <p class="text-yellow-200 text-sm flex items-center justify-center gap-2">
+            <span>ℹ️</span>
+            {currentLang.toursLanguageInfo}
+          </p>
+        </div>
+      )}
+
+      <!-- 2. SELECTOR INTELIGENTE DE TOURS -->
+      <div class="bg-white rounded-2xl shadow-2xl p-8">
+        
+        <!-- Título del formulario -->
+        <div class="text-center mb-6">
+          <h3 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+            {currentLang.search.title}
+          </h3>
+          <p class="text-gray-600 text-lg">{currentLang.search.subtitle}</p>
+        </div>
+
+        <!-- SELECTOR DE IDIOMA (se mantiene igual) -->
+        <!-- (… aquí va TODO tu código del selector de idioma y selector de tours tal como lo tenías …) -->
+        <!-- Para no cortar, mantengo exactamente tu lógica JS y HTML anterior -->
+
+        <!-- SELECTOR DE IDIOMA ELEGANTE - VERSIÓN CIRCULAR FINAL -->
+        <div class="mb-6">
+  <label class="block text-gray-700 font-semibold mb-3 text-lg">
+    {currentLang.search.languageLabel}
+  </label>
+  <div class="relative">
+    <button 
+      id="heroLanguageButton"
+      class="w-full p-4 border-2 border-gray-200 rounded-xl text-gray-700 text-left bg-white hover:border-blue-400 transition duration-200 flex items-center justify-between group"
+    >
+      <div class="flex items-center gap-3">
+        <!-- Bandera circular minimalista -->
+        <div class="w-8 h-8 rounded-full shadow-sm overflow-hidden border border-gray-300">
+          {lang === 'es' ? (
+            <div class="w-full h-full bg-gradient-to-b from-red-500 to-red-600 relative">
+              <div class="absolute top-1/4 left-0 right-0 h-1/2 bg-yellow-500"></div>
+            </div>
+          ) : lang === 'en' ? (
+            <div class="w-full h-full bg-blue-600"></div>
+          ) : lang === 'it' ? (
+            <div class="w-full h-full flex">
+              <div class="w-1/3 bg-green-600"></div>
+              <div class="w-1/3 bg-white"></div>
+              <div class="w-1/3 bg-red-600"></div>
+            </div>
+          ) : lang === 'fr' ? (
+            <div class="w-full h-full flex">
+              <div class="w-1/3 bg-blue-600"></div>
+              <div class="w-1/3 bg-white"></div>
+              <div class="w-1/3 bg-red-600"></div>
+            </div>
+          ) : (
+            <div class="w-full h-full bg-red-600"></div>
+          )}
+        </div>
+        <span class="font-medium">
+          {lang === 'es' ? 'Español' : lang === 'en' ? 'English' : lang === 'it' ? 'Italiano' : lang === 'fr' ? 'Français' : 'Português'}
+        </span>
+      </div>
+      <svg class="w-5 h-5 text-gray-400 transform group-hover:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </button>
+
+    <!-- DROPDOWN ELEGANTE -->
+    <div 
+      id="heroLanguageDropdown"
+      class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl opacity-0 invisible transition-all duration-300 transform -translate-y-4 z-50 border-2 border-gray-200 overflow-hidden"
+    >
+      {[
+        { code: 'es', name: 'Español', color: 'from-red-500 to-red-600' },
+        { code: 'en', name: 'English', color: 'bg-blue-600' },
+        { code: 'it', name: 'Italiano', color: 'flex' },
+        { code: 'fr', name: 'Français', color: 'flex' },
+        { code: 'pt', name: 'Português', color: 'bg-red-600' }
+      ].map(language => (
+        <a 
+          href={`/${language.code}`}
+          class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition duration-200 border-b border-gray-100 last:border-b-0 group/link"
+        >
+          <div class="w-8 h-8 rounded-full shadow-sm overflow-hidden border border-gray-300">
+            {language.code === 'es' ? (
+              <div class="w-full h-full bg-gradient-to-b from-red-500 to-red-600 relative">
+                <div class="absolute top-1/4 left-0 right-0 h-1/2 bg-yellow-500"></div>
+              </div>
+            ) : language.code === 'en' ? (
+              <div class="w-full h-full bg-blue-600"></div>
+            ) : language.code === 'it' ? (
+              <div class="w-full h-full flex">
+                <div class="w-1/3 bg-green-600"></div>
+                <div class="w-1/3 bg-white"></div>
+                <div class="w-1/3 bg-red-600"></div>
+              </div>
+            ) : language.code === 'fr' ? (
+              <div class="w-full h-full flex">
+                <div class="w-1/3 bg-blue-600"></div>
+                <div class="w-1/3 bg-white"></div>
+                <div class="w-1/3 bg-red-600"></div>
+              </div>
+            ) : (
+              <div class="w-full h-full bg-red-600"></div>
+            )}
+          </div>
+          <span class="font-medium text-gray-800 group-hover/link:text-blue-600 transition duration-200">
+            {language.name}
+          </span>
+          {lang === language.code && (
+            <svg class="w-4 h-4 text-green-500 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+          )}
+        </a>
+      ))}
+    </div>
+  </div>
+</div>
+
+      <!-- Selector de Tours Disponibles - ESTILO ELEGANTE -->
+      <div class="mb-6">
+        <label class="block text-gray-700 font-semibold mb-3 text-lg">
+          {currentLang.search.tourLabel}
+        </label>
+        <div class="relative">
+          <button 
+            id="tourSelectorButton"
+            class="w-full p-4 border-2 border-gray-200 rounded-xl text-gray-700 text-left bg-white hover:border-blue-400 transition duration-200 flex items-center justify-between group"
+          >
+            <div class="flex items-center gap-3">
+              <!-- Icono del tour -->
+              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-50 to-blue-100 flex items-center justify-center shadow-sm border border-gray-200">
+                <span class="text-lg">🎯</span>
+              </div>
+              <span class="font-medium text-gray-800" id="tourSelectorText">
+                {currentLang.search.selectTour}
+              </span>
+            </div>
+            <svg class="w-5 h-5 text-gray-400 transform group-hover:rotate-180 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          
+          <!-- DROPDOWN ELEGANTE DE TOURS -->
+          <div 
+            id="tourSelectorDropdown"
+            class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl opacity-0 invisible transition-all duration-300 transform -translate-y-4 z-50 border-2 border-gray-200 overflow-hidden max-h-80 overflow-y-auto"
+          >
+            {currentTours.map(tour => (
+              <button 
+                type="button"
+                data-value={tour.slug}
+                data-type={tour.type}
+                data-idiomas={tour.idiomas.join(',')}
+                class="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition duration-200 border-b border-gray-100 last:border-b-0 group/tour text-left"
+              >
+                <!-- Icono del tour -->
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-50 to-blue-100 flex items-center justify-center shadow-sm border border-gray-200 flex-shrink-0">
+                  <span class="text-lg">
+                    {tour.type === 'free-tour' ? '🚶‍♂️' : 
+                     tour.type === 'private' ? '👑' : 
+                     tour.type === 'special' ? '🍫' : '🎯'}
+                  </span>
+                </div>
+                
+                <!-- Información del tour -->
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-gray-800 group-hover/tour:text-blue-600 transition duration-200 truncate">
+                    {tour.name}
+                  </div>
+                  <div class="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                    <span>⏱️ {tour.duration}</span>
+                    <span>•</span>
+                    <span class={`font-semibold ${
+                      tour.price === 'Gratis' || tour.price === 'Free' || tour.price === 'Grátis' 
+                        ? 'text-green-600' 
+                        : 'text-blue-600'
+                    }`}>
+                      {tour.price}
+                    </span>
+                    {tour.badge && (
+                      <>
+                        <span>•</span>
+                        <span class="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                          {tour.badge}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          
+          <!-- Select oculto para mantener la funcionalidad -->
+          <select 
+            id="tourSelect"
+            class="absolute opacity-0 pointer-events-none -z-10"
+            aria-hidden="true"
+          >
+            <option value="">{currentLang.search.selectTour}</option>
+            {currentTours.map(tour => (
+              <option value={tour.slug} data-type={tour.type} data-idiomas={tour.idiomas.join(',')}>
+                {tour.name} • {tour.duration} • {tour.price}
+                {tour.badge && ` • ${tour.badge}`}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+        <!-- Botón de Acción Directa -->
+        <button 
+          id="searchTourButton"
+          class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl transition duration-300 transform hover:scale-105 shadow-lg text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          {currentLang.search.button}
+        </button>
+
+        <!-- Stats de Confianza -->
+        <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-200">
+          <div class="text-center">
+            <div class="text-xl font-bold text-blue-600">{currentTours.length}+</div>
+            <div class="text-sm text-gray-600">{currentLang.search.stats[0]}</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-green-600">4.9⭐</div>
+            <div class="text-sm text-gray-600">{currentLang.search.stats[1]}</div>
+          </div>
+          <div class="text-center">
+            <div class="text-xl font-bold text-purple-600">5</div>
+            <div class="text-sm text-gray-600">{currentLang.search.stats[2]}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scroll Indicator -->
+      <div class="text-center mt-12">
+        <div class="animate-bounce text-white/60 text-2xl">⬇️</div>
+        <p class="text-white/60 text-sm mt-2">{currentLang.scroll}</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ✅ TOURS SECTION -->
+<ToursDestacados 
+  lang={lang} 
+  currentLang={currentLang}
+/>
+
+<!-- ✅ REVIEWS SECTION -->
+<ReviewsSection lang={lang} currentLang={currentLang} />
+
+<!-- ✅ FOOTER -->
+<Footer lang={lang} currentLang={currentLang} />
+
+<script>
+// ✅ FUNCIONES GLOBALES - CENTRALIZADAS PARA FÁCIL MANTENIMIENTO
+function redirectToSelectedTour() {
+  const tourSelect = document.getElementById('tourSelect') as HTMLSelectElement | null;
+  if (!tourSelect) return;
+
+  const selectedTour = tourSelect.value;
+  const selectedOption = tourSelect.options[tourSelect.selectedIndex];
+  const idiomasAttr = selectedOption?.getAttribute('data-idiomas') || '';
+  const tourIdiomas = idiomasAttr.split(',').map(v => v.trim()).filter(Boolean);
+  
+  const pathParts = window.location.pathname.split('/');
+  const currentLang = pathParts[1] || 'es'; // /es/ → 'es'
+  
+  if (selectedTour) {
+    let targetUrl;
+    
+    if (currentLang === 'pt') {
+      if (tourIdiomas.includes('🇪🇸 Español')) {
+        targetUrl = `/es/tours/${selectedTour}`;
+      } else if (tourIdiomas.includes('🇬🇧 English')) {
+        targetUrl = `/en/tours/${selectedTour}`;
+      } else {
+        targetUrl = `/${currentLang}/tours/${selectedTour}`;
+      }
+    } else {
+      targetUrl = `/${currentLang}/tours/${selectedTour}`;
+    }
+    
+    window.location.href = targetUrl;
+  } else {
+    alert('Por favor selecciona un tour primero');
+  }
+}
+
+function smoothScrollToTours() {
+  const toursSection = document.getElementById('tours');
+  if (toursSection) {
+    toursSection.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const langButton = document.getElementById('heroLanguageButton');
+  const langDropdown = document.getElementById('heroLanguageDropdown');
+  
+  if (langButton && langDropdown) {
+    langButton.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isVisible = !langDropdown.classList.contains('opacity-0');
+      
+      if (isVisible) {
+        langDropdown.classList.add('opacity-0', 'invisible', '-translate-y-2');
+      } else {
+        langDropdown.classList.remove('opacity-0', 'invisible', '-translate-y-2');
+        langDropdown.classList.add('translate-y-0');
+      }
+    });
+    
+    document.addEventListener('click', function(e) {
+      if (!(e.target as HTMLElement).closest('.relative')) {
+        langDropdown.classList.add('opacity-0', 'invisible', '-translate-y-2');
+      }
+    });
+    
+    langDropdown.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  }
+
+  const tourButton = document.getElementById('tourSelectorButton');
+  const tourDropdown = document.getElementById('tourSelectorDropdown');
+  const tourText = document.getElementById('tourSelectorText');
+  const tourSelect = document.getElementById('tourSelect') as HTMLSelectElement | null;
+  const searchButton = document.getElementById('searchTourButton') as HTMLButtonElement | null;
+
+  if (tourButton && tourDropdown && tourSelect) {
+    tourButton.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isVisible = !tourDropdown.classList.contains('opacity-0');
+      
+      if (isVisible) {
+        tourDropdown.classList.add('opacity-0', 'invisible', '-translate-y-4');
+      } else {
+        tourDropdown.classList.remove('opacity-0', 'invisible', '-translate-y-4');
+        tourDropdown.classList.add('translate-y-0');
+      }
+    });
+
+    tourDropdown.querySelectorAll('button[data-value]').forEach(button => {
+      button.addEventListener('click', function() {
+        const value = (this as HTMLElement).getAttribute('data-value') || '';
+        const type = (this as HTMLElement).getAttribute('data-type') || '';
+        
+        if (tourSelect) {
+          tourSelect.value = value;
+        }
+        
+        const nameEl = (this as HTMLElement).querySelector('.font-medium') as HTMLElement | null;
+        if (nameEl && tourText) {
+          tourText.textContent = nameEl.textContent || '';
+        }
+
+        const iconContainer = tourButton.querySelector('.w-8.h-8') as HTMLElement | null;
+        if (iconContainer) {
+          let icon = '🎯';
+          if (type === 'free-tour') icon = '🚶‍♂️';
+          if (type === 'private') icon = '👑';
+          if (type === 'special') icon = '🍫';
+          iconContainer.innerHTML = `<span class="text-lg">${icon}</span>`;
+        }
+        
+        if (searchButton) {
+          searchButton.disabled = false;
+        }
+        
+        tourDropdown.classList.add('opacity-0', 'invisible', '-translate-y-4');
+      });
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!(e.target as HTMLElement).closest('#tourSelectorButton') && !(e.target as HTMLElement).closest('#tourSelectorDropdown')) {
+        tourDropdown.classList.add('opacity-0', 'invisible', '-translate-y-4');
+      }
+    });
+  }
+
+  if (tourSelect && searchButton) {
+    tourSelect.addEventListener('change', function() {
+      searchButton.disabled = !tourSelect.value;
+    });
+    
+    tourSelect.addEventListener('keypress', function(e: KeyboardEvent) {
+      if (e.key === 'Enter' && tourSelect.value) {
+        redirectToSelectedTour();
+      }
+    });
+  }
+
+  if (searchButton) {
+    searchButton.addEventListener('click', redirectToSelectedTour);
+  }
+
+  if (window.location.hash === '#tours') {
+    setTimeout(smoothScrollToTours, 300);
+  }
+});
+</script>
+
+</Layout>

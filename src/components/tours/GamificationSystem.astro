@@ -1,0 +1,287 @@
+---
+// Sistema de Gamificación - Versión Corregida
+export interface Props {
+  tourId: string;
+  tourName: string;
+}
+
+const { tourId, tourName } = Astro.props;
+---
+
+<div id="gamification" class="fixed top-20 right-4 z-30">
+  <!-- Botón colapsable -->
+  <button 
+    id="gamificationToggle"
+    class="bg-white rounded-full shadow-lg border border-gray-200 w-12 h-12 flex items-center justify-center hover:shadow-xl transition-all duration-300 mb-2"
+  >
+    <span class="text-xl">🎮</span>
+  </button>
+
+  <!-- Panel de Gamificación (colapsado por defecto) -->
+  <div id="gamificationPanel" class="hidden bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 w-64">
+    <div class="text-center mb-3">
+      <h3 class="font-bold text-gray-800 text-sm mb-1">Tour Gamificado</h3>
+      <p class="text-xs text-gray-600">Gana puntos durante el tour</p>
+    </div>
+
+    <!-- Puntos Actuales -->
+    <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-3 mb-3 text-center">
+      <div class="text-xl font-bold text-gray-800" id="currentPoints">0</div>
+      <div class="text-xs text-gray-600">puntos acumulados</div>
+    </div>
+
+    <!-- Logros Disponibles -->
+    <div class="space-y-2 mb-3">
+      <div class="achievement" data-points="50" data-achievement="selfie">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">📸</span>
+          <div class="flex-1">
+            <div class="text-xs font-medium text-gray-800">Selfie icónico</div>
+            <div class="text-xs text-gray-600">+50 puntos</div>
+          </div>
+          <div class="achievement-check text-sm">○</div>
+        </div>
+      </div>
+
+      <div class="achievement" data-points="100" data-achievement="trivia">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🧩</span>
+          <div class="flex-1">
+            <div class="text-xs font-medium text-gray-800">Responde trivia</div>
+            <div class="text-xs text-gray-600">+100 puntos</div>
+          </div>
+          <div class="achievement-check text-sm">○</div>
+        </div>
+      </div>
+
+      <div class="achievement" data-points="200" data-achievement="secret">
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🎯</span>
+          <div class="flex-1">
+            <div class="text-xs font-medium text-gray-800">Spot secreto</div>
+            <div class="text-xs text-gray-600">+200 puntos</div>
+          </div>
+          <div class="achievement-check text-sm">○</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Premios -->
+    <div class="pt-3 border-t border-gray-200">
+      <h4 class="text-xs font-semibold text-gray-800 mb-2">Tus premios:</h4>
+      <div class="space-y-1 text-xs">
+        <div class="flex justify-between items-center">
+          <span>🔹 100 pts</span>
+          <span class="text-green-600 font-medium">Sticker</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span>🔹 300 pts</span>
+          <span class="text-blue-600 font-medium">Chocolate</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span>🔹 500 pts</span>
+          <span class="text-purple-600 font-medium">15% descuento</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+// Sistema de Gamificación Corregido
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎮 Inicializando Sistema de Gamificación...');
+  
+  const gamificationToggle = document.getElementById('gamificationToggle');
+  const gamificationPanel = document.getElementById('gamificationPanel');
+  const achievements = document.querySelectorAll('.achievement');
+  const currentPointsElement = document.getElementById('currentPoints');
+  
+  let currentTourId = '${tourId}' || 'free-tour-brujas-magica';
+  let points = 0;
+  let completedAchievements = new Set();
+  let isPanelOpen = false;
+
+  // Cargar progreso guardado
+  function loadProgress() {
+    const savedPoints = localStorage.getItem(`belgotours_points_${currentTourId}`);
+    const savedAchievements = localStorage.getItem(`belgotours_achievements_${currentTourId}`);
+    
+    if (savedPoints) {
+      points = parseInt(savedPoints);
+      updatePointsDisplay();
+    }
+    
+    if (savedAchievements) {
+      completedAchievements = new Set(JSON.parse(savedAchievements));
+      updateAchievementsDisplay();
+    }
+  }
+
+  // Guardar progreso
+  function saveProgress() {
+    localStorage.setItem(`belgotours_points_${currentTourId}`, points.toString());
+    localStorage.setItem(`belgotours_achievements_${currentTourId}`, JSON.stringify([...completedAchievements]));
+  }
+
+  // Toggle panel
+  function togglePanel() {
+    isPanelOpen = !isPanelOpen;
+    if (isPanelOpen) {
+      gamificationPanel.classList.remove('hidden');
+    } else {
+      gamificationPanel.classList.add('hidden');
+    }
+  }
+
+  // Completar logro
+  function completeAchievement(achievementType, pointsToAdd) {
+    if (completedAchievements.has(achievementType)) {
+      console.log('✅ Logro ya completado:', achievementType);
+      return;
+    }
+
+    completedAchievements.add(achievementType);
+    points += pointsToAdd;
+
+    // Animación de puntos
+    animatePoints(pointsToAdd);
+    
+    // Actualizar UI
+    updateAchievementsDisplay();
+    saveProgress();
+    
+    // Mostrar notificación
+    showAchievementNotification(pointsToAdd, achievementType);
+    
+    console.log(`🎉 Logro completado: ${achievementType} +${pointsToAdd}pts`);
+  }
+
+  // Animación de puntos
+  function animatePoints(pointsToAdd) {
+    const startPoints = points - pointsToAdd;
+    let current = startPoints;
+    const increment = pointsToAdd / 20;
+    const duration = 500;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= points) {
+        current = points;
+        clearInterval(timer);
+      }
+      currentPointsElement.textContent = Math.floor(current);
+    }, duration / 20);
+  }
+
+  // Actualizar display de puntos
+  function updatePointsDisplay() {
+    currentPointsElement.textContent = points;
+  }
+
+  // Actualizar display de logros
+  function updateAchievementsDisplay() {
+    achievements.forEach(achievement => {
+      const achievementType = achievement.dataset.achievement;
+      const checkElement = achievement.querySelector('.achievement-check');
+      
+      if (completedAchievements.has(achievementType)) {
+        checkElement.textContent = '✅';
+        achievement.style.opacity = '0.7';
+        achievement.style.cursor = 'default';
+      } else {
+        checkElement.textContent = '○';
+        achievement.style.opacity = '1';
+        achievement.style.cursor = 'pointer';
+      }
+    });
+  }
+
+  // Mostrar notificación
+  function showAchievementNotification(pointsEarned, achievementType) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-24 right-24 bg-green-500 text-white px-4 py-2 rounded-lg shadow-2xl z-50 animate-bounce';
+    notification.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="text-lg">🎉</span>
+        <div class="text-sm">
+          <div class="font-semibold">+${pointsEarned} puntos!</div>
+          <div>Logro desbloqueado</div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Remover después de 3 segundos
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
+  }
+
+  // Event Listeners
+  if (gamificationToggle) {
+    gamificationToggle.addEventListener('click', togglePanel);
+    console.log('✅ Botón gamificación configurado');
+  }
+
+  // Logros click
+  achievements.forEach(achievement => {
+    achievement.addEventListener('click', function() {
+      const achievementType = this.dataset.achievement;
+      const pointsToAdd = parseInt(this.dataset.points);
+      
+      if (!completedAchievements.has(achievementType)) {
+        completeAchievement(achievementType, pointsToAdd);
+      }
+    });
+  });
+
+  // Cerrar panel al hacer click fuera
+  document.addEventListener('click', function(event) {
+    const gamification = document.getElementById('gamification');
+    if (!gamification.contains(event.target) && isPanelOpen) {
+      togglePanel();
+    }
+  });
+
+  // Inicializar
+  loadProgress();
+  console.log('✅ Sistema de Gamificación inicializado correctamente');
+  console.log('Puntos actuales:', points);
+  console.log('Logros completados:', [...completedAchievements]);
+});
+</script>
+
+<style>
+.achievement {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.achievement:hover {
+  background-color: #f8fafc;
+  transform: translateX(2px);
+}
+
+.achievement-check {
+  transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #gamification {
+    top: 16px !important;
+    right: 16px !important;
+  }
+  
+  #gamificationPanel {
+    width: 280px !important;
+    right: 0 !important;
+  }
+}
+</style>

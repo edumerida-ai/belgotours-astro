@@ -1,0 +1,36 @@
+---
+export const prerender = false;
+
+import Layout from "../../../layouts/Layout.astro";
+
+const token = Astro.params.token;
+const lang = Astro.params.lang;
+
+if (!token) {
+  throw new Error("Missing token");
+}
+
+const API = import.meta.env.PUBLIC_STRAPI_URL;
+if (!API) {
+  throw new Error("❌ PUBLIC_STRAPI_URL no está definido en .env");
+}
+
+// Validar token en Strapi
+const res = await fetch(`${API}/review-tokens/validate?token=${token}`);
+
+let data;
+try {
+  data = await res.json();
+} catch (e) {
+  data = { valid: false };
+}
+
+if (!data?.valid) {
+  return Astro.redirect(`/${lang}/resenas/error?reason=invalid`);
+}
+
+// Token válido → enviar al formulario correcto según idioma
+return Astro.redirect(`/${lang}/resenas/formulario?token=${token}`);
+---
+
+<!-- No HTML -->

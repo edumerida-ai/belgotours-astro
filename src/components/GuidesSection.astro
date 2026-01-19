@@ -1,0 +1,117 @@
+---
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+
+// Strapi
+const STRAPI_API = import.meta.env.PUBLIC_STRAPI_URL;
+
+// Textos por idioma
+const texts = {
+  es: {
+    title: "Nuestros guías locales",
+    subtitle: "Personas reales, guías certificados y apasionados por Bruselas.",
+    role: "Guía local de BelgoTours",
+  },
+  en: {
+    title: "Our local guides",
+    subtitle: "Real people, certified guides passionate about Brussels.",
+    role: "Local guide at BelgoTours",
+  },
+  it: {
+    title: "Le nostre guide locali",
+    subtitle: "Persone vere, guide certificate appassionate di Bruxelles.",
+    role: "Guida locale di BelgoTours",
+  },
+  fr: {
+    title: "Nos guides locaux",
+    subtitle: "De vraies personnes, guides certifiés passionnés par Bruxelles.",
+    role: "Guide local BelgoTours",
+  },
+  pt: {
+    title: "Nossos guias locais",
+    subtitle: "Pessoas reais, guias certificados apaixonados por Bruxelas.",
+    role: "Guia local da BelgoTours",
+  }
+};
+
+const t = texts[lang] || texts.es;
+
+// Fetch guías activas
+let guias = [];
+
+try {
+  const res = await fetch(
+    `${STRAPI_API}/guias?filters[activo][$eq]=true&populate=foto`
+  );
+
+  if (res.ok) {
+    const json = await res.json();
+    guias = json?.data ?? [];
+  }
+} catch (e) {
+  console.error("Error loading guides", e);
+}
+---
+
+<section id="guides" class="bg-black py-20">
+  <div class="max-w-7xl mx-auto px-4">
+
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <h2 class="text-3xl md:text-4xl font-semibold text-white mb-4">
+        {t.title}
+      </h2>
+      <p class="text-[#6B7280] text-lg">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- Grid guías -->
+    {guias.length > 0 ? (
+      <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        {guias.map((g) => {
+          const a = g.attributes || {};
+          const foto = a.foto?.data?.attributes?.url;
+
+          return (
+            <article class="flex flex-col items-center text-center">
+              {foto && (
+                <img
+                  src={foto}
+                  alt={a.nombre}
+                  class="w-32 h-32 rounded-full object-cover mb-4 border-2 border-[#FACC15]"
+                />
+              )}
+
+              <h3 class="text-white font-semibold text-lg">
+                {a.nombre}
+              </h3>
+
+              <p class="text-sm text-[#FACC15] mt-1">
+                {t.role}
+              </p>
+
+              {Array.isArray(a.idiomas) && (
+                <div class="flex flex-wrap justify-center gap-2 mt-3 text-xs text-[#6B7280]">
+                  {a.idiomas.map((i) => (
+                    <span class="border border-[#1F2937] px-2 py-1 rounded">
+                      {i.toUpperCase()}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    ) : (
+      <p class="text-center text-[#6B7280]">
+        No hay guías disponibles en este momento.
+      </p>
+    )}
+
+  </div>
+</section>

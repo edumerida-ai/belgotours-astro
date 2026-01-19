@@ -1,0 +1,205 @@
+---
+interface Props {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroDescription: string;
+  heroBadge?: string | null;
+  heroImageUrl: string;
+  featuredTour?: any;
+  featuredTourUrl: string;
+  currentLang: any;
+  lang: string;
+}
+
+const {
+  heroTitle,
+  heroSubtitle,
+  heroDescription,
+  heroBadge,
+  heroImageUrl,
+  featuredTour,
+  featuredTourUrl,
+  currentLang,
+  lang
+} = Astro.props;
+---
+
+<section class="relative overflow-hidden bg-gradient-to-b from-brand-black via-slate-950 to-slate-900 text-white pt-20 pb-16">
+  <!-- Fondos decorativos suaves -->
+  <div class="pointer-events-none absolute inset-0 opacity-40">
+    <div class="absolute -top-32 -left-32 w-80 h-80 bg-gradient-to-br from-yellow-400/30 via-red-500/20 to-transparent rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-red-500/25 via-yellow-400/10 to-transparent rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="container relative mx-auto px-4">
+    <div class="grid lg:grid-cols-12 gap-10 items-center">
+      
+      <!-- LADO IZQUIERDO: Texto principal -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- Badge superior -->
+        <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm text-xs uppercase tracking-widest">
+          <span>⭐ 4.9/5</span>
+          <span class="w-1 h-1 rounded-full bg-white/50"></span>
+          <span>10K+ viajeros</span>
+          <span class="w-1 h-1 rounded-full bg-white/50"></span>
+          <span>Free Tours & Privados</span>
+        </div>
+
+        <!-- Titulares -->
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-3">
+          {heroTitle}
+        </h1>
+
+        <h2 class="text-2xl md:text-3xl font-semibold text-yellow-300 mb-4">
+          {heroSubtitle}
+        </h2>
+
+        <p class="text-lg md:text-xl text-white/80 max-w-2xl">
+          {heroDescription}
+          <span class="font-semibold text-yellow-300"> {currentLang.hero.highlighted}</span>
+        </p>
+
+        <!-- Trust bar tipo Google Travel -->
+        <div class="flex flex-wrap gap-4 md:gap-6">
+          <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-sm">
+            <span class="text-yellow-300 text-2xl">⭐</span>
+            <div>
+              <div class="font-semibold text-base md:text-lg">{currentLang.trust.rating}</div>
+              <div class="text-xs md:text-sm text-white/70">{currentLang.trust.reviews}</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-sm">
+            <span class="text-emerald-300 text-2xl">👥</span>
+            <div>
+              <div class="font-semibold text-base md:text-lg">{currentLang.trust.travelers}</div>
+              <div class="text-xs md:text-sm text-white/70">{currentLang.trust.travelersText}</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 backdrop-blur-sm">
+            <span class="text-red-300 text-2xl">🎓</span>
+            <div>
+              <div class="font-semibold text-base md:text-lg">{currentLang.trust.guides}</div>
+              <div class="text-xs md:text-sm text-white/70">{currentLang.trust.certified}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PT Aviso de idiomas -->
+        {lang === 'pt' && currentLang.toursLanguageInfo && (
+          <div class="bg-yellow-500/15 border border-yellow-400/40 rounded-xl px-4 py-3 text-sm text-yellow-100 max-w-xl">
+            <p class="flex items-center gap-2">
+              <span>ℹ️</span>
+              {currentLang.toursLanguageInfo}
+            </p>
+          </div>
+        )}
+
+        <!-- CTA principal -->
+        <div class="flex flex-wrap items-center gap-4 pt-2">
+          <a
+            href={featuredTourUrl}
+            class="inline-flex items-center justify-center px-8 py-3 rounded-full bg-yellow-400 text-brand-black font-semibold text-base md:text-lg shadow-soft hover:bg-yellow-300 transition transform hover:-translate-y-0.5"
+          >
+            {featuredTour ? featuredTour.name : 'Ver tours disponibles'}
+          </a>
+
+          <button
+            type="button"
+            onclick="document.getElementById('tours')?.scrollIntoView({ behavior:'smooth' })"
+            class="inline-flex items-center gap-2 text-sm md:text-base text-white/80 hover:text-white transition"
+          >
+            <span>⬇️ {currentLang.scroll}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LADO DERECHO: Card visual -->
+      <div class="lg:col-span-5">
+        <div class="relative max-w-md mx-auto">
+
+          <div class="bg-white text-slate-900 rounded-3xl shadow-soft overflow-hidden border border-slate-200">
+            
+            <!-- Imagen -->
+            <div class="relative h-60 md:h-72 overflow-hidden">
+              <img 
+                src={heroImageUrl}
+                alt={featuredTour ? featuredTour.name : 'Bruselas, Grand Place al atardecer'}
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+
+              <!-- Badges superiores -->
+              <div class="absolute top-4 left-4 flex flex-col gap-2">
+                {heroBadge && (
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500 text-white text-xs font-semibold shadow">
+                    🔥 {heroBadge}
+                  </span>
+                )}
+
+                {featuredTour && (
+                  <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/90 text-slate-900 text-xs font-semibold">
+                    🚶‍♂️ {featuredTour.type === 'free-tour' ? 'Free Tour' : 'Tour destacado'}
+                  </span>
+                )}
+              </div>
+
+              <!-- Rating -->
+              <div class="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 text-xs text-white">
+                <span>⭐ {currentLang.trust.rating}</span>
+                <span class="w-1 h-1 rounded-full bg-white/60"></span>
+                <span>{currentLang.trust.reviews}</span>
+              </div>
+            </div>
+
+            <!-- Contenido de Card -->
+            <div class="p-5 space-y-3">
+              <h3 class="text-base md:text-lg font-semibold line-clamp-2">
+                {featuredTour ? featuredTour.name : 'Free Tour Bruselas • Centro histórico'}
+              </h3>
+
+              <p class="text-xs md:text-sm text-slate-500 mt-1">
+                Grand Place • Manneken Pis • Sablon • Mont des Arts
+              </p>
+
+              <div class="flex flex-wrap items-center gap-3 text-xs md:text-sm text-slate-600">
+                {featuredTour && (
+                  <>
+                    <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100">
+                      <span>⏱️</span>
+                      <span>{featuredTour.duration}</span>
+                    </div>
+
+                    <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100">
+                      <span>🌍</span>
+                      <span>{featuredTour.idiomas[0]}</span>
+                    </div>
+                  </>
+                )}
+
+                <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-900">
+                  <span>🆓</span>
+                  <span>Cancelación gratuita</span>
+                </div>
+              </div>
+
+              <button
+                onclick={`window.location.href='${featuredTourUrl}'`}
+                class="mt-2 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-brand-black text-white text-sm md:text-base font-semibold hover:bg-slate-900 transition"
+              >
+                Ver detalles y horarios
+                <span>↗</span>
+              </button>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+

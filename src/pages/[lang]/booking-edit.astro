@@ -1,0 +1,844 @@
+---
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+
+const { lang } = Astro.params;
+const uiLang = ["es", "en", "it", "fr"].includes(lang) ? lang : "es";
+
+// ID de reserva desde ?id=XYZ
+const reservaId = Astro.url.searchParams.get("id");
+
+const STRAPI_URL =
+  import.meta.env.PUBLIC_STRAPI_URL || "http://localhost:1337/api";
+
+let reserva: any = null;
+let error: string | null = null;
+
+if (!reservaId) {
+  error =
+    uiLang === "es"
+      ? "No se encontró el identificador de la reserva."
+      : uiLang === "en"
+      ? "Reservation ID not found."
+      : uiLang === "it"
+      ? "ID della prenotazione non trovato."
+      : "Identifiant de réservation introuvable.";
+} else {
+  try {
+    const res = await fetch(
+      `${STRAPI_URL}/reservas/public/${encodeURIComponent(
+        reservaId
+      )}?populate[tour]=*`
+    );
+
+    if (!res.ok) {
+      error =
+        uiLang === "es"
+          ? "No se pudo cargar tu reserva."
+          : uiLang === "en"
+          ? "We could not load your booking."
+          : uiLang === "it"
+          ? "Non è stato possibile caricare la tua prenotazione."
+          : "Impossible de charger votre réservation.";
+    } else {
+      const json = await res.json();
+      reserva = json?.data || null;
+    }
+  } catch (e) {
+    console.error("Error loading reservation:", e);
+    error =
+      uiLang === "es"
+        ? "Ocurrió un error al cargar tu reserva."
+        : uiLang === "en"
+        ? "An error occurred while loading your booking."
+        : uiLang === "it"
+        ? "Si è verificato un errore durante il caricamento della prenotazione."
+        : "Une erreur s'est produite lors du chargement de votre réservation.";
+  }
+}
+
+// Valores por defecto seguros
+const adultos = reserva?.adultos ?? 1;
+const ninos = reserva?.ninos ?? 0;
+const nombre = reserva?.nombre ?? "";
+const apellidos = reserva?.apellidos ?? "";
+const email = reserva?.email ?? "";
+const telefono = reserva?.telefono ?? "";
+const ciudad = reserva?.ciudad ?? "";
+const pais = reserva?.pais ?? "";
+const comentarios = reserva?.comentarios_cliente ?? "";
+const estado = reserva?.estado ?? "confirmada";
+
+// Parse fecha/hora para mostrar readonly
+let dateLabel = "--/--/----";
+let timeLabel = "--:--";
+
+if (reserva?.fecha_hora_tour) {
+  const d = new Date(reserva.fecha_hora_tour);
+  const localeMap: Record<string, string> = {
+    es: "es-ES",
+    en: "en-GB",
+    it: "it-IT",
+    fr: "fr-FR",
+  };
+  const locale = localeMap[uiLang] || "es-ES";
+
+  dateLabel = d.toLocaleDateString(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  timeLabel = d.toLocaleTimeString(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Traducciones
+const tTitle: Record<string, string> = {
+  es: "Editar tu reserva",
+  en: "Edit your booking",
+  it: "Modifica la tua prenotazione",
+  fr: "Modifier votre réservation",
+};
+
+const tSubtitle: Record<string, string> = {
+  es: "Actualiza tus datos. Si necesitas cambiar fecha u horario, cancela y crea una nueva reserva.",
+  en: "Update your details. If you need to change date or time, cancel and create a new booking.",
+  it: "Aggiorna i tuoi dati. Se devi cambiare data o orario, annulla e crea una nuova prenotazione.",
+  fr: "Mettez à jour vos informations. Si vous devez changer la date ou l'horaire, annulez et créez une nouvelle réservation.",
+};
+
+const tSectionBooking: Record<string, string> = {
+  es: "Resumen del tour",
+  en: "Tour summary",
+  it: "Riepilogo del tour",
+  fr: "Résumé de la visite",
+};
+
+const tSectionEdit: Record<string, string> = {
+  es: "Datos que puedes modificar",
+  en: "Details you can edit",
+  it: "Dati che puoi modificare",
+  fr: "Données que vous pouvez modifier",
+};
+
+const tWarningDate: Record<string, string> = {
+  es: "Para cambiar fecha u horario, cancela esta reserva y realiza una nueva. Así evitamos errores de capacidad y asignación de guía.",
+  en: "To change date or time, please cancel this booking and create a new one. This avoids capacity and guide assignment issues.",
+  it: "Per cambiare data o orario, annulla questa prenotazione e creane una nuova. Così evitiamo problemi di capacità e assegnazione della guida.",
+  fr: "Pour changer la date ou l'horaire, annulez cette réservation et créez-en une nouvelle. Cela évite les problèmes de capacité et d'affectation du guide.",
+};
+
+const tLabels = {
+  name: { es: "Nombre", en: "First name", it: "Nome", fr: "Prénom" },
+  lastName: {
+    es: "Apellidos",
+    en: "Last name",
+    it: "Cognome",
+    fr: "Nom de famille",
+  },
+  email: {
+    es: "Correo electrónico",
+    en: "Email address",
+    it: "Indirizzo email",
+    fr: "Adresse email",
+  },
+  phone: {
+    es: "Teléfono (WhatsApp recomendado)",
+    en: "Phone (WhatsApp recommended)",
+    it: "Telefono (WhatsApp consigliato)",
+    fr: "Téléphone (WhatsApp recommandé)",
+  },
+  city: {
+    es: "Ciudad de residencia",
+    en: "City of residence",
+    it: "Città di residenza",
+    fr: "Ville de résidence",
+  },
+  country: {
+    es: "País",
+    en: "Country",
+    it: "Paese",
+    fr: "Pays",
+  },
+  adults: {
+    es: "Adultos",
+    en: "Adults",
+    it: "Adulti",
+    fr: "Adultes",
+  },
+  children: {
+    es: "Niños",
+    en: "Children",
+    it: "Bambini",
+    fr: "Enfants",
+  },
+  comments: {
+    es: "Comentarios para el guía (opcional)",
+    en: "Comments for the guide (optional)",
+    it: "Commenti per la guida (opzionale)",
+    fr: "Commentaires pour le guide (optionnel)",
+  },
+};
+
+const tButtons = {
+  save: {
+    es: "💾 Guardar cambios",
+    en: "💾 Save changes",
+    it: "💾 Salva modifiche",
+    fr: "💾 Enregistrer les changements",
+  },
+  cancel: {
+    es: "Cancelar reserva",
+    en: "Cancel booking",
+    it: "Annulla prenotazione",
+    fr: "Annuler la réservation",
+  },
+  back: {
+    es: "← Volver al resumen",
+    en: "← Back to summary",
+    it: "← Torna al riepilogo",
+    fr: "← Retour au récapitulatif",
+  },
+};
+
+const tTips = {
+  saveOk: {
+    es: "✅ Cambios guardados correctamente.",
+    en: "✅ Changes saved successfully.",
+    it: "✅ Modifiche salvate correttamente.",
+    fr: "✅ Modifications enregistrées avec succès.",
+  },
+  saveError: {
+    es: "❌ No se pudieron guardar tus cambios. Intenta de nuevo.",
+    en: "❌ Your changes could not be saved. Please try again.",
+    it: "❌ Impossibile salvare le modifiche. Riprova.",
+    fr: "❌ Impossible d'enregistrer vos modifications. Veuillez réessayer.",
+  },
+  cancelConfirm: {
+    es: "¿Seguro que quieres cancelar esta reserva? Esta acción no se puede deshacer.",
+    en: "Are you sure you want to cancel this booking? This action cannot be undone.",
+    it: "Sei sicuro di voler annullare questa prenotazione? Questa azione non può essere annullata.",
+    fr: "Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.",
+  },
+  cancelDone: {
+    es: "✅ Reserva cancelada correctamente.",
+    en: "✅ Booking cancelled successfully.",
+    it: "✅ Prenotazione annullata correttamente.",
+    fr: "✅ Réservation annulée avec succès.",
+  },
+  cancelError: {
+    es: "❌ No se pudo cancelar la reserva. Intenta de nuevo.",
+    en: "❌ The booking could not be cancelled. Please try again.",
+    it: "❌ Impossibile annullare la prenotazione. Riprova.",
+    fr: "❌ Impossible d'annuler la réservation. Veuillez réessayer.",
+  },
+};
+---
+
+<Layout lang={uiLang}>
+  <main class="min-h-screen bg-gray-50/80 py-10 px-4">
+    <div
+      id="bookingEditRoot"
+      class="max-w-5xl mx-auto"
+      data-lang={uiLang}
+      data-reserva-id={reservaId || ""}
+      data-api-base={STRAPI_URL}
+    >
+      {error ? (
+        <div class="bg-white rounded-3xl shadow-2xl p-8 border border-red-100 text-center">
+          <h1 class="text-2xl md:text-3xl font-bold text-red-600 mb-3">
+            {error}
+          </h1>
+          <a
+            href={`/${uiLang}/`}
+            class="inline-flex items-center justify-center mt-4 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+          >
+            {tButtons.back[uiLang]}
+          </a>
+        </div>
+      ) : (
+        <>
+          {/* CABECERA */}
+          <header class="mb-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100 mb-3">
+              <span>🔐</span>
+              <span>
+                {uiLang === "es" &&
+                  "Solo tú puedes ver y modificar estos datos"}
+                {uiLang === "en" && "Only you can view and edit these details"}
+                {uiLang === "it" &&
+                  "Solo tu puoi visualizzare e modificare questi dati"}
+                {uiLang === "fr" &&
+                  "Vous seul(e) pouvez voir et modifier ces données"}
+              </span>
+            </div>
+
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              {tTitle[uiLang]}
+            </h1>
+            <p class="text-sm md:text-base text-gray-600 max-w-2xl">
+              {tSubtitle[uiLang]}
+            </p>
+          </header>
+
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+            {/* Columna izquierda: resumen readonly + mapa */}
+            <aside class="lg:col-span-2 space-y-4">
+              <section class="bg-white rounded-2xl shadow-xl border border-gray-100 p-5">
+                <h2 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span class="inline-flex w-8 h-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 text-lg">
+                    📌
+                  </span>
+                  <span>{tSectionBooking[uiLang]}</span>
+                </h2>
+
+                <div class="space-y-2 text-sm text-gray-700">
+                  <div class="flex justify-between gap-4">
+                    <span class="font-medium">
+                      {uiLang === "es" && "Tour"}
+                      {uiLang === "en" && "Tour"}
+                      {uiLang === "it" && "Tour"}
+                      {uiLang === "fr" && "Visite"}
+                    </span>
+                    <span class="text-right font-semibold max-w-[60%]">
+                      {reserva?.tour?.titulo ||
+                        reserva?.tour?.nombre ||
+                        "Free Tour Bruselas"}
+                    </span>
+                  </div>
+                  <div class="flex justify-between gap-4">
+                    <span class="font-medium">
+                      {uiLang === "es" && "Fecha"}
+                      {uiLang === "en" && "Date"}
+                      {uiLang === "it" && "Data"}
+                      {uiLang === "fr" && "Date"}
+                    </span>
+                    <span>{dateLabel}</span>
+                  </div>
+                  <div class="flex justify-between gap-4">
+                    <span class="font-medium">
+                      {uiLang === "es" && "Horario"}
+                      {uiLang === "en" && "Time"}
+                      {uiLang === "it" && "Orario"}
+                      {uiLang === "fr" && "Horaire"}
+                    </span>
+                    <span>{timeLabel}</span>
+                  </div>
+                  <div class="flex justify-between gap-4">
+                    <span class="font-medium">
+                      {uiLang === "es" && "Idioma"}
+                      {uiLang === "en" && "Language"}
+                      {uiLang === "it" && "Lingua"}
+                      {uiLang === "fr" && "Langue"}
+                    </span>
+                    <span>
+                      {(reserva?.idioma_tour || uiLang).toUpperCase()}
+                    </span>
+                  </div>
+                  <div class="flex justify-between gap-4">
+                    <span class="font-medium">
+                      {uiLang === "es" && "Estado"}
+                      {uiLang === "en" && "Status"}
+                      {uiLang === "it" && "Stato"}
+                      {uiLang === "fr" && "Statut"}
+                    </span>
+                    <span class="capitalize">
+                      {estado === "cancelada"
+                        ? uiLang === "es"
+                          ? "Cancelada"
+                          : uiLang === "en"
+                          ? "Cancelled"
+                          : uiLang === "it"
+                          ? "Annullata"
+                          : "Annulée"
+                        : uiLang === "es"
+                        ? "Confirmada"
+                        : uiLang === "en"
+                        ? "Confirmed"
+                        : uiLang === "it"
+                        ? "Confermata"
+                        : "Confirmée"}
+                    </span>
+                  </div>
+                </div>
+
+                <p class="mt-4 text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 flex gap-2">
+                  <span>⚠️</span>
+                  <span>{tWarningDate[uiLang]}</span>
+                </p>
+              </section>
+
+              {/* Mapa estilo Google Reserve */}
+              <section class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="p-4 pb-0 flex items-center justify-between">
+                  <div>
+                    <p class="text-xs uppercase tracking-wide text-gray-400">
+                      {uiLang === "es" && "Punto de encuentro"}
+                      {uiLang === "en" && "Meeting point"}
+                      {uiLang === "it" && "Punto d'incontro"}
+                      {uiLang === "fr" && "Point de rendez-vous"}
+                    </p>
+                    <p class="text-sm font-semibold text-gray-900">
+                      Grand Place 8, 1000 Bruxelles
+                    </p>
+                  </div>
+                  <a
+                    href={
+                      process.env.MAPA_PUNTO_ENCUENTRO_URL ||
+                      "https://www.google.com/maps/search/?api=1&query=Grand+Place+8+1000+Bruxelles"
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    <span>Ver en Maps</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+                <div class="mt-3">
+                  <iframe
+                    src={
+                      process.env.MAPA_EMBEBIDO_URL ||
+                      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2519.060253832005!2d4.3504613!3d50.8467334!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c3c3800f970fd5%3A0x9d0f9e3d3f8e9b1b!2sGrand%20Place%208%2C%201000%20Bruxelles!5e0!3m2!1ses!2sbe!4v1700000000000"
+                    }
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    class="w-full h-56 border-t border-gray-100"
+                  ></iframe>
+                </div>
+              </section>
+            </aside>
+
+            {/* Columna derecha: formulario de edición */}
+            <section class="lg:col-span-3">
+              <div class="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 md:p-8 relative overflow-hidden">
+                <div class="absolute inset-0 pointer-events-none opacity-5 bg-[radial-gradient(circle_at_top,_#2563eb,_transparent_60%),_radial-gradient(circle_at_bottom,_#22c55e,_transparent_55%)]"></div>
+
+                <div class="relative z-10">
+                  <h2 class="text-sm font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                    <span class="inline-flex w-8 h-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 text-lg">
+                      ✏️
+                    </span>
+                    <span>{tSectionEdit[uiLang]}</span>
+                  </h2>
+                  <p class="text-xs text-gray-600 mb-5">
+                    {uiLang === "es" &&
+                      "Estos cambios actualizan tu reserva en tiempo real en BelgoTours (como en Airbnb / Google Reserve)."}
+                    {uiLang === "en" &&
+                      "These changes update your booking in real time in BelgoTours (like Airbnb / Google Reserve)."}
+                    {uiLang === "it" &&
+                      "Queste modifiche aggiornano la tua prenotazione in tempo reale su BelgoTours (come Airbnb / Google Reserve)."}
+                    {uiLang === "fr" &&
+                      "Ces modifications mettent à jour votre réservation en temps réel sur BelgoTours (comme Airbnb / Google Reserve)."}
+                  </p>
+
+                  <form id="editForm" class="space-y-5">
+                    {/* Datos personales */}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          for="nombre"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.name[uiLang]} *
+                        </label>
+                        <input
+                          id="nombre"
+                          name="nombre"
+                          type="text"
+                          value={nombre}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="apellidos"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.lastName[uiLang]} *
+                        </label>
+                        <input
+                          id="apellidos"
+                          name="apellidos"
+                          type="text"
+                          value={apellidos}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="email"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.email[uiLang]} *
+                        </label>
+                        <input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={email}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="telefono"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.phone[uiLang]} *
+                        </label>
+                        <input
+                          id="telefono"
+                          name="telefono"
+                          type="tel"
+                          value={telefono}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                          required
+                        />
+                        <p class="mt-1 text-[11px] text-gray-500">
+                          {uiLang === "es" &&
+                            "Si cambias de número, asegúrate de que sea un móvil con WhatsApp para avisos importantes."}
+                          {uiLang === "en" &&
+                            "If you change your number, make sure it's a mobile with WhatsApp for important updates."}
+                          {uiLang === "it" &&
+                            "Se cambi numero, assicurati che sia un cellulare con WhatsApp per gli avvisi importanti."}
+                          {uiLang === "fr" &&
+                            "Si vous changez de numéro, assurez-vous qu'il s'agit d'un mobile avec WhatsApp pour les informations importantes."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Ubicación */}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          for="ciudad"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.city[uiLang]} *
+                        </label>
+                        <input
+                          id="ciudad"
+                          name="ciudad"
+                          type="text"
+                          value={ciudad}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="pais"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.country[uiLang]} *
+                        </label>
+                        <input
+                          id="pais"
+                          name="pais"
+                          type="text"
+                          value={pais}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Participantes */}
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label
+                          for="adultos"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.adults[uiLang]} *
+                        </label>
+                        <input
+                          id="adultos"
+                          name="adultos"
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={adultos}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label
+                          for="ninos"
+                          class="block text-xs font-semibold text-gray-700 mb-1"
+                        >
+                          {tLabels.children[uiLang]}
+                        </label>
+                        <input
+                          id="ninos"
+                          name="ninos"
+                          type="number"
+                          min="0"
+                          max="20"
+                          value={ninos}
+                          class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Comentarios */}
+                    <div>
+                      <label
+                        for="comentarios"
+                        class="block text-xs font-semibold text-gray-700 mb-1"
+                      >
+                        {tLabels.comments[uiLang]}
+                      </label>
+                      <textarea
+                        id="comentarios"
+                        name="comentarios"
+                        rows={3}
+                        class="w-full rounded-xl border border-gray-200 bg-white/80 px-3 py-2.5 text-sm shadow-sm focus:border-gray-900 focus:ring-2 focus:ring-amber-200 outline-none"
+                      >
+                        {comentarios}
+                      </textarea>
+                    </div>
+
+                    {/* Mensaje de estado */}
+                    <div
+                      id="editStatus"
+                      class="text-xs text-gray-600 min-h-[1.25rem]"
+                    ></div>
+
+                    {/* Botones */}
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-3 border-t border-gray-100">
+                      <div class="flex flex-col sm:flex-row gap-3">
+                        <button
+                          id="saveChangesBtn"
+                          type="submit"
+                          class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-md shadow-emerald-500/30 transition transform hover:translate-y-[1px] disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {tButtons.save[uiLang]}
+                        </button>
+                        <button
+                          id="cancelBookingBtn"
+                          type="button"
+                          class="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold shadow-sm transition"
+                        >
+                          {tButtons.cancel[uiLang]}
+                        </button>
+                      </div>
+
+                      <a
+                        href={`/${uiLang}/booking-success?id=${reservaId}`}
+                        class="inline-flex items-center justify-center text-xs font-medium text-gray-500 hover:text-gray-700"
+                      >
+                        {tButtons.back[uiLang]}
+                      </a>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </section>
+          </div>
+        </>
+      )}
+    </div>
+  </main>
+</Layout>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const root = document.getElementById("bookingEditRoot");
+    if (!root) return;
+
+    const lang = root.dataset.lang || "es";
+    const reservaId = root.dataset.reservaId;
+    const apiBase =
+      root.dataset.apiBase || "http://localhost:1337/api";
+
+    const form = document.getElementById("editForm");
+    const statusEl = document.getElementById("editStatus");
+    const saveBtn = document.getElementById("saveChangesBtn");
+    const cancelBtn = document.getElementById("cancelBookingBtn");
+
+    if (!reservaId || !form) return;
+
+    const t = {
+      saveOk: {
+        es: "✅ Cambios guardados correctamente.",
+        en: "✅ Changes saved successfully.",
+        it: "✅ Modifiche salvate correttamente.",
+        fr: "✅ Modifications enregistrées avec succès.",
+      },
+      saveError: {
+        es: "❌ No se pudieron guardar tus cambios. Intenta de nuevo.",
+        en: "❌ Your changes could not be saved. Please try again.",
+        it: "❌ Impossibile salvare le modifiche. Riprova.",
+        fr: "❌ Impossible d'enregistrer vos modifications. Veuillez réessayer.",
+      },
+      cancelConfirm: {
+        es: "¿Seguro que quieres cancelar esta reserva? Esta acción no se puede deshacer.",
+        en: "Are you sure you want to cancel this booking? This action cannot be undone.",
+        it: "Sei sicuro di voler annullare questa prenotazione? Questa azione non può essere annullata.",
+        fr: "Êtes-vous sûr de vouloir annuler cette réservation ? Cette action est irréversible.",
+      },
+      cancelDone: {
+        es: "✅ Reserva cancelada correctamente.",
+        en: "✅ Booking cancelled successfully.",
+        it: "✅ Prenotazione annullata correttamente.",
+        fr: "✅ Réservation annulée avec succès.",
+      },
+      cancelError: {
+        es: "❌ No se pudo cancelar la reserva. Intenta de nuevo.",
+        en: "❌ The booking could not be cancelled. Please try again.",
+        it: "❌ Impossibile annullare la prenotazione. Riprova.",
+        fr: "❌ Impossible d'annuler la réservation. Veuillez réessayer.",
+      },
+    };
+
+    function msg(key) {
+      const dict = t[key] || {};
+      return dict[lang] || dict["es"] || "";
+    }
+
+    async function handleSave(e) {
+      e.preventDefault();
+      if (!reservaId) return;
+
+      const formData = new FormData(form);
+
+      const payload = {
+        nombre: formData.get("nombre")?.toString().trim(),
+        apellidos: formData.get("apellidos")?.toString().trim(),
+        email: formData.get("email")?.toString().trim(),
+        telefono: formData.get("telefono")?.toString().trim(),
+        ciudad: formData.get("ciudad")?.toString().trim(),
+        pais: formData.get("pais")?.toString().trim(),
+        adultos: Number(formData.get("adultos") || 1),
+        ninos: Number(formData.get("ninos") || 0),
+        comentarios_cliente:
+          formData.get("comentarios")?.toString().trim() || "",
+      };
+
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = "…";
+      }
+      if (statusEl) {
+        statusEl.textContent = "";
+      }
+
+      try {
+        const res = await fetch(
+          `${apiBase.replace(/\/$/, "")}/reservas/public/${encodeURIComponent(
+            reservaId
+          )}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Bad status " + res.status);
+        }
+
+        if (statusEl) {
+          statusEl.className =
+            "text-xs text-emerald-700 mt-1";
+          statusEl.textContent = msg("saveOk");
+        }
+
+        // Opcional: redirigir de nuevo a booking-success
+        setTimeout(() => {
+          window.location.href = `/${lang}/booking-success?id=${encodeURIComponent(
+            reservaId
+          )}`;
+        }, 800);
+      } catch (err) {
+        console.error(err);
+        if (statusEl) {
+          statusEl.className =
+            "text-xs text-red-600 mt-1";
+          statusEl.textContent = msg("saveError");
+        }
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          // Restaurar texto según idioma
+          if (lang === "es")
+            saveBtn.textContent = "💾 Guardar cambios";
+          else if (lang === "en")
+            saveBtn.textContent = "💾 Save changes";
+          else if (lang === "it")
+            saveBtn.textContent = "💾 Salva modifiche";
+          else
+            saveBtn.textContent = "💾 Enregistrer les changements";
+        }
+      }
+    }
+
+    async function handleCancel() {
+      if (!reservaId) return;
+      const confirmMsg = msg("cancelConfirm");
+      if (!window.confirm(confirmMsg)) return;
+
+      if (cancelBtn) {
+        cancelBtn.disabled = true;
+      }
+      if (statusEl) {
+        statusEl.textContent = "";
+      }
+
+      try {
+        const res = await fetch(
+          `${apiBase.replace(
+            /\/$/,
+            ""
+          )}/reservas/public/${encodeURIComponent(
+            reservaId
+          )}/cancel`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Bad status " + res.status);
+        }
+
+        if (statusEl) {
+          statusEl.className =
+            "text-xs text-emerald-700 mt-1";
+          statusEl.textContent = msg("cancelDone");
+        }
+
+        // Después de cancelar, enviamos al usuario al home de su idioma
+        setTimeout(() => {
+          window.location.href = `/${lang}/`;
+        }, 900);
+      } catch (err) {
+        console.error(err);
+        if (statusEl) {
+          statusEl.className =
+            "text-xs text-red-600 mt-1";
+          statusEl.textContent = msg("cancelError");
+        }
+      } finally {
+        if (cancelBtn) {
+          cancelBtn.disabled = false;
+        }
+      }
+    }
+
+    form.addEventListener("submit", handleSave);
+    cancelBtn?.addEventListener("click", handleCancel);
+  });
+</script>

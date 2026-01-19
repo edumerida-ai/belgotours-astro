@@ -1,0 +1,650 @@
+---
+// Props para multi-idioma
+interface Props {
+  lang: 'es' | 'en' | 'it' | 'fr' | 'pt';
+}
+
+const { lang } = Astro.props;
+
+// Tours reales de Belgotours - SOLO TOURS QUE EXISTEN
+const toursData = {
+  'es': [
+    // FREETOURS
+    {
+      id: 1,
+      titulo: "Free Tour Bruselas en Español",
+      descripcion: "Descubre los secretos de Bruselas con guías locales expertos. Grand Place, Manneken Pis y mucho más.",
+      precio: 0,
+      moneda: "€",
+      tipoPrecio: "Precio libre",
+      duracion: " 2 h 15 min",
+      idiomas: ["🇪🇸 Español"],
+      rating: 4.9,
+      reviews: 1247,
+      imagen: "/images/ToursDestacados/free-tour-espanol-bruselas-belgotours.webp",
+      badge: "MÁS POPULAR",
+      categoria: "free-tour",
+      slug: "free-tour-bruselas"
+    },
+    {
+      id: 2,
+      titulo: "Free Tour Brujas en Español", 
+      descripcion: "Explora la Venecia del Norte con sus canales medievales y arquitectura impresionante.",
+      precio: 0,
+      moneda: "€",
+      tipoPrecio: "Precio libre",
+      duracion: " 2 h 15 min",
+      idiomas: ["🇪🇸 Español"],
+      rating: 4.8,
+      reviews: 892,
+      imagen: "/images/ToursDestacados/free-tour-brujas-en-espanol-belgotours.webp",
+      badge: "RECOMENDADO",
+      categoria: "free-tour",
+      slug: "free-tour-brujas"
+    },
+    // TOUR DEL CHOCOLATE
+    {
+      id: 3,
+      titulo: "Tour del Chocolate y cerveza en Español",
+      descripcion: "Ruta gastronómica por las mejores chocolaterías de Bruselas. Degustaciones incluidas.",
+      precio: 45,
+      moneda: "€",
+      tipoPrecio: "por persona",
+      duracion: "2 h 30 min",
+      idiomas: ["🇪🇸 Español"],
+      rating: 4.7,
+      reviews: 543,
+      imagen: "/images/ToursDestacados/tour-chocolate-y-cerveza-en-espanol-bruselas.webp",
+      badge: "GASTRONOMÍA",
+      categoria: "tour-especial",
+      slug: "tour-chocolate-cerveza-bruselas"
+    },
+    // TOURS PRIVADOS
+    {
+      id: 4,
+      titulo: "Tour Privado Bruselas en Español",
+      descripcion: "Experiencia personalizada con guía privado. Itinerario flexible según tus intereses.",
+      precio: 120,
+      moneda: "€",
+      tipoPrecio: "por grupo",
+      duracion: "2 h 15 min",
+      idiomas: ["🇪🇸 Español"],
+      rating: 5.0,
+      reviews: 356,
+      imagen: "/images/ToursDestacados/tour-privado-bruselas-espanol-belgotours.webp",
+      badge: "EXCLUSIVO",
+      categoria: "tour-privado",
+      slug: "tour-privado-bruselas"
+    },
+    {
+      id: 5,
+      titulo: "Tour Privado Brujas en Español",
+      descripcion: "Descubre Brujas de forma exclusiva con un guía privado especializado.",
+      precio: 140,
+      moneda: "€", 
+      tipoPrecio: "por grupo",
+      duracion: "2 h 15 min",
+      idiomas: ["🇪🇸 Español"],
+      rating: 4.9,
+      reviews: 278,
+      imagen: "/images/ToursDestacados/tour-privado-brujas-espanol-belgotours.webp",
+      badge: "PRIVADO",
+      categoria: "tour-privado",
+      slug: "tour-privado-brujas"
+    }    
+  ],
+  'en': [
+    // FREETOURS
+    {
+      id: 1,
+      titulo: "Free Tour Brussels in English",
+      descripcion: "Discover Brussels secrets with expert local guides. Grand Place, Manneken Pis and much more.",
+      precio: 0,
+      moneda: "€",
+      tipoPrecio: "Pay what you want",
+      duracion: "2 h 15 min",
+      idiomas: ["🇬🇧 English"],
+      rating: 4.9,
+      reviews: 987,
+      imagen: "/images/ToursDestacados/free-tour-english-brussels-belgotours.webp",
+      badge: "MOST POPULAR",
+      categoria: "free-tour",
+      slug: "free-tour-brussels"
+    },
+    // TOURS PRIVADOS
+    {
+      id: 2,
+      titulo: "Private Tour Brussels in English",
+      descripcion: "Personalized experience with private guide. Flexible itinerary according to your interests.",
+      precio: 120,
+      moneda: "€",
+      tipoPrecio: "per group", 
+      duracion: "2 h 15 min",
+      idiomas: ["🇬🇧 English"],
+      rating: 5.0,
+      reviews: 289,
+      imagen: "/images/ToursDestacados/private-tour-brussels-english-belgotours.webp",
+      badge: "EXCLUSIVE",
+      categoria: "tour-privado",
+      slug: "private-tour-brussels"
+    }
+  ],
+  'it': [
+    // FREETOURS
+    {
+      id: 1,
+      titulo: "Free Tour Bruxelles in Italiano",
+      descripcion: "Scopri i segreti di Bruxelles con guide locali esperte. Grand Place, Manneken Pis e molto altro.",
+      precio: 0,
+      moneda: "€",
+      tipoPrecio: "Prezzo libero",
+      duracion: "2 h 15 min",
+      idiomas: ["🇮🇹 Italiano"],
+      rating: 4.8,
+      reviews: 432,
+      imagen: "/images/ToursDestacados/free-tour-italiano-bruxelles-belgotours.webp",
+      badge: "POPOLARE",
+      categoria: "free-tour",
+      slug: "free-tour-bruxelles"
+    },
+    // TOURS PRIVADOS
+    {
+      id: 2,
+      titulo: "Tour Privato Bruxelles in Italiano",
+      descripcion: "Esperienza personalizzata con guida privata. Itinerario flessibile secondo i tuoi interessi.",
+      precio: 120,
+      moneda: "€",
+      tipoPrecio: "per gruppo",
+      duracion: "2 h 15 min",
+      idiomas: ["🇮🇹 Italiano"],
+      rating: 5.0,
+      reviews: 187,
+      imagen: "/images/ToursDestacados/tour-privato-bruxelles-italiano-belgotours.webp",
+      badge: "ESCLUSIVO",
+      categoria: "tour-privado",
+      slug: "tour-privato-bruxelles"
+    }
+  ],
+  'fr': [
+    // TOURS DISPONIBLES para francés - SOLO LOS QUE EXISTEN
+    {
+      id: 1,
+      titulo: "Tour Privé Bruxelles Personnalisé",
+      descripcion: "Expérience exclusive avec guide privé francophone. Itinéraire flexible selon vos intérêts. Découvrez Bruxelles à votre rythme.",
+      precio: 120,
+      moneda: "€",
+      tipoPrecio: "par groupe",
+      duracion: "2 h 15 min", 
+      idiomas: ["🇫🇷 Français"],
+      rating: 5.0,
+      reviews: 234,
+      imagen: "/images/ToursDestacados/tour-prive-bruxelles-francais-belgotours.webp",
+      badge: "EXCLUSIF",
+      categoria: "tour-privado",
+      slug: "tour-prive-bruxelles"
+    }
+  ],
+ 'pt': [
+   // FREE TOUR BRUSELAS EN INGLÉS
+   {
+     id: 1,
+     titulo: "Free Tour Essencial de Bruxelas",
+     descripcion: "Descubra os segredos de Bruxelas com guias locais especialistas. Grand Place, Manneken Pis e muito mais.",
+     precio: 0,
+     moneda: "€",
+     tipoPrecio: "Pague quanto quiser",
+     duracion: "2 h 15 min",
+     idiomas: ["🇬🇧 English"],
+     rating: 4.9,
+     reviews: 987,
+     imagen: "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=400&h=300&fit=crop",
+     badge: "POPULAR",
+     categoria: "free-tour",
+     slug: "free-tour-brussels"
+   },
+   // FREE TOUR BRUSELAS EN ESPAÑOL
+   {
+     id: 2,
+     titulo: "Free Tour Bruselas em Espanhol",
+     descripcion: "Descubra os segredos de Bruxelas com guias locais especialistas. Grand Place, Manneken Pis e muito mais.",
+     precio: 0,
+     moneda: "€",
+     tipoPrecio: "Preço livre",
+     duracion: "2 h 15 min",
+     idiomas: ["🇪🇸 Español"],
+     rating: 4.9,
+     reviews: 1247,
+     imagen: "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=400&h=300&fit=crop",
+     badge: "POPULAR",
+     categoria: "free-tour",
+     slug: "free-tour-bruselas"
+   },
+   // TOUR CHOCOLATE EN ESPAÑOL
+   {
+     id: 3,
+     titulo: "Tour do Chocolate em Espanhol",
+     descripcion: "Rota gastronómica pelas melhores chocolatarias de Bruxelas. Degustações incluídas.",
+     precio: 45,
+     moneda: "€",
+     tipoPrecio: "por pessoa",
+     duracion: "2 h 30 min",
+     idiomas: ["🇪🇸 Español"],
+     rating: 4.7,
+     reviews: 543,
+     imagen: "https://images.unsplash.com/photo-1565806269258-2d4c202834b8?w=400&h=300&fit=crop",
+     badge: "GASTRONOMÍA",
+     categoria: "tour-especial",
+     slug: "tour-chocolate-cerveza-bruselas"
+   },
+   // FREE TOUR BRUJAS EN ESPAÑOL
+   {
+     id: 4,
+     titulo: "Free Tour Mágico de Bruges",
+     descripcion: "Explore a Veneza do Norte com seus canais medievais e arquitetura impressionante.",
+     precio: 0,
+     moneda: "€",
+     tipoPrecio: "Preço livre",
+     duracion: "2 h 15 min",
+     idiomas: ["🇪🇸 Español"],
+     rating: 4.8,
+     reviews: 892,
+     imagen: "https://images.unsplash.com/photo-1599661044176-35d063b4d8bf?w=400&h=300&fit=crop",
+     badge: "RECOMENDADO",
+     categoria: "free-tour",
+     slug: "free-tour-brujas"
+   },
+   // TOUR PRIVADO BRUSELAS EN INGLÉS
+   {
+     id: 5,
+     titulo: "Tour Privado de Bruxelas em Inglês",
+     descripcion: "Experiência personalizada com guia privado. Itinerário flexível de acordo com seus interesses.",
+     precio: 120,
+     moneda: "€",
+     tipoPrecio: "por grupo",
+     duracion: "2 h 15 min",
+     idiomas: ["🇬🇧 English"],
+     rating: 5.0,
+     reviews: 289,
+     imagen: "https://images.unsplash.com/photo-1628746220626-43ff86c7b23d?w=400&h=300&fit=crop",
+     badge: "EXCLUSIVO",
+     categoria: "tour-privado",
+     slug: "private-tour-brussels"
+   },
+   // TOUR PRIVADO BRUSELAS EN ESPAÑOL
+   {
+     id: 6,
+     titulo: "Tour Privado de Bruxelas em Espanhol",
+     descripcion: "Experiência personalizada com guia privado. Itinerário flexível de acordo com seus interesses.",
+     precio: 120,
+     moneda: "€",
+     tipoPrecio: "por grupo",
+     duracion: " 2 h 15 min",
+     idiomas: ["🇪🇸 Español"],
+     rating: 5.0,
+     reviews: 356,
+     imagen: "https://images.unsplash.com/photo-1628746220626-43ff86c7b23d?w=400&h=300&fit=crop",
+     badge: "EXCLUSIVO",
+     categoria: "tour-privado",
+     slug: "tour-privado-bruselas"
+   },
+   // TOUR PRIVADO BRUJAS EN ESPAÑOL
+   {
+     id: 7,
+     titulo: "Tour Privado de Bruges em Espanhol",
+     descripcion: "Descubra Bruges de forma exclusiva com um guia privado especializado.",
+     precio: 140,
+     moneda: "€",
+     tipoPrecio: "por grupo",
+     duracion: "2 h 10 min",
+     idiomas: ["🇪🇸 Español"],
+     rating: 4.9,
+     reviews: 278,
+     imagen: "https://images.unsplash.com/photo-1583324113626-70df0d74f833?w=400&h=300&fit=crop",
+     badge: "PRIVADO",
+     categoria: "tour-privado",
+     slug: "tour-privado-brujas"
+   }
+ ]
+};
+
+// Textos multi-idioma para la sección
+const sectionTexts = {
+  es: {
+    title: "Nuestros <span class='text-blue-600'>Tours Más Populares</span>",
+    subtitle:
+      "Descubre las experiencias mejor valoradas por miles de viajeros. <span class='font-semibold text-blue-600'>Reserva ahora, paga después.</span>",
+    filters: {
+      all: "Todos los Tours",
+      free: "💛 Pago libre",
+      private: "👑 Tours Privados",
+      special: "🍫 Tours Especiales",
+    },
+    tourDetails: {
+      reviews: "reseñas",
+      free: "Pago libre",
+      book: "Reservar",
+      perGroup: "por grupo",
+      perPerson: "por persona",
+    },
+    cta: {
+      button: "Ver Todos los Tours Disponibles",
+      features:
+        "⚡ Confirmación instantánea • Cancelación gratuita • 👥 Grupos reducidos",
+    },
+  },
+
+  en: {
+    title: "Our <span class='text-blue-600'>Most Popular Tours</span>",
+    subtitle:
+      "Discover the best-rated experiences by thousands of travelers. <span class='font-semibold text-blue-600'>Book now, pay later.</span>",
+    filters: {
+      all: "All Tours",
+      free: "💛 Tip-based",
+      private: "👑 Private Tours",
+      special: "🍫 Special Tours",
+    },
+    tourDetails: {
+      reviews: "reviews",
+      free: "Tip-based",
+      book: "Book Now",
+      perGroup: "per group",
+      perPerson: "per person",
+    },
+    cta: {
+      button: "View All Available Tours",
+      features:
+        "⚡ Instant confirmation • Free cancellation • 👥 Small groups",
+    },
+  },
+
+  it: {
+    title: "I Nostri <span class='text-blue-600'>Tour Più Popolari</span>",
+    subtitle:
+      "Scopri le esperienze meglio valutate da migliaia di viaggiatori. <span class='font-semibold text-blue-600'>Prenota ora, paga dopo.</span>",
+    filters: {
+      all: "Tutti i Tour",
+      free: "💛 Offerta libera",
+      private: "👑 Tour Privati",
+      special: "🍫 Tour Speciali",
+    },
+    tourDetails: {
+      reviews: "recensioni",
+      free: "Offerta libera",
+      book: "Prenota",
+      perGroup: "per gruppo",
+      perPerson: "a persona",
+    },
+    cta: {
+      button: "Vedi Tutti i Tour Disponibili",
+      features:
+        "⚡ Conferma immediata • Cancellazione gratuita • 👥 Gruppi piccoli",
+    },
+  },
+
+  fr: {
+    title: "Nos <span class='text-blue-600'>Tours Les Plus Populaires</span>",
+    subtitle:
+      "Découvrez les expériences les mieux notées par des milliers de voyageurs. <span class='font-semibold text-blue-600'>Réservez maintenant, payez plus tard.</span>",
+    filters: {
+      all: "Tous les Tours",
+      free: "💛 Participation libre",
+      private: "👑 Tours Privés",
+      special: "🍫 Tours Spéciaux",
+    },
+    tourDetails: {
+      reviews: "avis",
+      free: "Participation libre",
+      book: "Réserver",
+      perGroup: "par groupe",
+      perPerson: "par personne",
+    },
+    cta: {
+      button: "Voir Tous les Tours Disponibles",
+      features:
+        "⚡ Confirmation instantanée • Annulation gratuite • 👥 Petits groupes",
+    },
+  },
+
+  pt: {
+    title: "Nossos <span class='text-blue-600'>Tours Mais Populares</span>",
+    subtitle:
+      "Descubra as experiências mais bem avaliadas por milhares de viajantes. <span class='font-semibold text-blue-600'>Reserve agora, pague depois.</span>",
+    filters: {
+      all: "Todos os Tours",
+      free: "💛 Contribuição livre",
+      private: "👑 Tours Privados",
+      special: "🍫 Tours Especiais",
+    },
+    tourDetails: {
+      reviews: "avaliações",
+      free: "Contribuição livre",
+      book: "Reservar",
+      perGroup: "por grupo",
+      perPerson: "por pessoa",
+    },
+    cta: {
+      button: "Ver Todos os Tours Disponíveis",
+      features:
+        "⚡ Confirmação instantânea • Cancelamento gratuito • 👥 Grupos pequenos",
+    },
+  },
+};
+
+const safeLang: 'es' | 'en' | 'it' | 'fr' | 'pt' =
+  ['es', 'en', 'it', 'fr', 'pt'].includes(lang) ? lang : 'es';
+
+const toursDestacados = toursData[safeLang];
+const texts = sectionTexts[safeLang];
+
+// Función para determinar el texto del precio
+const getPriceType = (tour: any) => {
+  if (tour.precio === 0) return texts.tourDetails.free;
+  if (tour.tipoPrecio.includes("grupo") || tour.tipoPrecio.includes("group")) {
+    return texts.tourDetails.perGroup;
+  }
+  return texts.tourDetails.perPerson;
+};
+// ✅ FUNCIÓN MEJORADA - Para portugués, usa el idioma del tour
+const getTourUrl = (tourSlug: string, lang: string, tourIdiomas: string[]) => {
+  // Si es portugués y el tour tiene idioma específico, usar ese idioma
+   if (lang === "pt") {
+    // Determinar el idioma del tour basado en los idiomas disponibles
+     if (tourIdiomas.includes("🇪🇸 Español")) return `/es/tours/${tourSlug}`;
+    if (tourIdiomas.includes("🇬🇧 English")) return `/en/tours/${tourSlug}`;
+  }
+  // Para otros idiomas, usar el idioma actual
+  return `/${lang}/tours/${tourSlug}`;
+};
+---
+
+<!-- SECCIÓN TOURS DESTACADOS -->
+<section id="tours" class="py-20 bg-neutral-50">
+  <div class="container mx-auto px-4 max-w-7xl">    
+    <!-- Header de la sección -->
+    <header class="text-center mb-14">
+      <h2
+  class="text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900 mb-4"
+  set:html={texts.title.replace("text-blue-600", "text-yellow-400")}
+></h2>
+      <p
+  class="text-neutral-600 max-w-2xl mx-auto text-lg"
+  set:html={texts.subtitle.replace("text-blue-600", "text-yellow-400")}
+></p>
+
+    </header>
+    <!-- Filtros de categorías -->
+   <div class="flex flex-wrap justify-center gap-3 mb-12" data-filters>
+   <button data-filter="all"
+    class="filter-btn px-5 py-2.5 rounded-full bg-neutral-900 text-white text-sm font-semibold">
+    {texts.filters.all}
+   </button>
+
+   <button data-filter="free-tour"
+    class="filter-btn px-5 py-2.5 rounded-full bg-white border border-neutral-300 text-neutral-700 text-sm">
+    {texts.filters.free}
+   </button>
+
+   <button data-filter="tour-privado"
+    class="filter-btn px-5 py-2.5 rounded-full bg-white border border-neutral-300 text-neutral-700 text-sm">
+    {texts.filters.private}
+   </button>
+
+   <button data-filter="tour-especial"
+    class="filter-btn px-5 py-2.5 rounded-full bg-white border border-neutral-300 text-neutral-700 text-sm">
+    {texts.filters.special}
+   </button>
+  </div>
+
+              <!-- Grid de Tours -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+  {toursDestacados.map((tour) => (
+ <article
+  data-category={tour.categoria}
+  class="relative bg-white rounded-3xl border border-neutral-200 shadow-sm hover:shadow-xl transition-all duration-300 group tour-card flex flex-col overflow-hidden"
+>
+
+
+      <!-- Badge -->
+      {tour.badge && (
+        <div class="absolute top-4 left-4 z-10">
+          <span class="px-3 py-1 text-xs font-bold rounded-full bg-yellow-400 text-black">
+            {tour.badge}
+          </span>
+        </div>
+      )}
+
+      <!-- Imagen -->
+      <div class="relative h-52 overflow-hidden">
+        <img
+          src={tour.imagen}
+          alt={tour.titulo}
+          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <div class="absolute inset-0 bg-black/10"></div>
+      </div>
+
+      <!-- Contenido -->
+      <div class="p-6 flex flex-col flex-1">
+
+
+
+        <!-- Rating (comentado correctamente) -->
+        {/*
+        <div class="flex items-center gap-2 mb-3 text-sm">
+          <span class="text-yellow-400">★</span>
+          <span class="font-semibold text-neutral-800">{tour.rating}</span>
+          <span class="text-neutral-500">
+            ({tour.reviews} {texts.tourDetails.reviews})
+          </span>
+        </div>
+        */}
+
+        <!-- Título y Descripción -->
+        <h3 class="text-xl font-bold text-neutral-900 mb-2 line-clamp-2">
+          {tour.titulo}
+        </h3>
+        <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+          {tour.descripcion}
+        </p>
+
+        <!-- Detalles -->
+        <div class="flex flex-wrap gap-4 mb-4 text-sm text-gray-500">
+          <div class="flex items-center gap-1">
+            <span>⏱️</span>
+            <span>{tour.duracion}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span>🌍</span>
+            <span>{tour.idiomas[0]}</span>
+            {tour.idiomas.length > 1 && (
+              <span class="text-xs text-gray-400">
+                +{tour.idiomas.length - 1}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <!-- Precio y CTA -->
+<div class="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+
+  <!-- CTA (acción principal a la izquierda) -->
+  <a
+    href={getTourUrl(tour.slug, lang, tour.idiomas)}
+    class="bg-neutral-900 hover:bg-black text-white font-semibold py-3 px-6 rounded-xl transition duration-300 transform hover:scale-105"
+  >
+    {texts.tourDetails.book}
+  </a>
+
+  <!-- Precio / tipo (información secundaria a la derecha) -->
+  <div class="flex flex-col text-right">
+    <span class="text-2xl font-bold text-gray-800">
+      {tour.precio === 0
+        ? texts.tourDetails.free
+        : `${tour.precio}${tour.moneda}`}
+    </span>
+    <span class="text-xs text-gray-500">
+      {getPriceType(tour)}
+    </span>
+  </div>
+
+</div>
+
+
+      </div>
+    </article>
+  ))}
+</div>
+
+    <!-- CTA Final -->
+    <div class="text-center mt-12">
+      <a 
+        href={`/${lang}#tours`}
+        class="bg-neutral-900 hover:bg-black text-white font-bold py-4 px-8 rounded-xl transition duration-300 transform hover:scale-105 shadow-lg inline-block"
+      >
+        {texts.cta.button}
+      </a>
+      <p class="text-gray-500 text-sm mt-4">
+        {texts.cta.features}
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
+
+<script>
+  const filterButtons = document.querySelectorAll(".filter-btn");
+  const tourCards = document.querySelectorAll(".tour-card");
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const filter = btn.dataset.filter;
+
+      // Estado activo
+      filterButtons.forEach(b => {
+        b.classList.remove("bg-neutral-900", "text-white");
+        b.classList.add("bg-white", "border", "border-neutral-300", "text-neutral-700");
+      });
+
+      btn.classList.add("bg-neutral-900", "text-white");
+      btn.classList.remove("bg-white", "border-neutral-300", "text-neutral-700");
+
+      // Filtrado
+      tourCards.forEach(card => {
+        if (filter === "all" || card.dataset.category === filter) {
+          card.classList.remove("hidden");
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+    });
+  });
+</script>

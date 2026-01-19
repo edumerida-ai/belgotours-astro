@@ -1,0 +1,148 @@
+---
+// src/components/booking/ParticipantCounter.astro
+interface Props {
+  lang?: string;
+}
+
+const { lang = 'es' } = Astro.props;
+---
+
+<div class="participant-counter space-y-6">
+  <!-- Adultos -->
+  <div>
+    <label class="block text-gray-800 font-semibold mb-2">
+      {lang === 'es' ? '👤 Adultos' :
+       lang === 'en' ? '👤 Adults' :
+       lang === 'it' ? '👤 Adulti' :
+       lang === 'fr' ? '👤 Adultes' :
+       '👤 Adultos'}
+    </label>
+
+    <div class="flex items-center gap-4">
+      <button
+        type="button"
+        id="decreaseAdults"
+        class="w-10 h-10 rounded-full flex items-center justify-center
+               bg-gray-200 text-gray-700
+               hover:bg-gray-300 transition
+               disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled
+      >
+        −
+      </button>
+
+      <span
+        id="adultsCount"
+        class="text-xl font-bold text-gray-900 min-w-[2rem] text-center"
+      >
+        1
+      </span>
+
+      <button
+        type="button"
+        id="increaseAdults"
+        class="w-10 h-10 rounded-full flex items-center justify-center
+               bg-yellow-400 text-gray-900
+               hover:bg-yellow-500 transition"
+      >
+        +
+      </button>
+    </div>
+  </div>
+
+  <!-- Niños -->
+  <div>
+    <label class="block text-gray-800 font-semibold mb-2">
+      {lang === 'es' ? '🧒 Niños (0–12 años)' :
+       lang === 'en' ? '🧒 Children (0–12)' :
+       lang === 'it' ? '🧒 Bambini (0–12)' :
+       lang === 'fr' ? '🧒 Enfants (0–12)' :
+       '🧒 Crianças (0–12)'}
+    </label>
+
+    <div class="flex items-center gap-4">
+      <button
+        type="button"
+        id="decreaseChildren"
+        class="w-10 h-10 rounded-full flex items-center justify-center
+               bg-gray-200 text-gray-700
+               hover:bg-gray-300 transition
+               disabled:opacity-40 disabled:cursor-not-allowed"
+        disabled
+      >
+        −
+      </button>
+
+      <span
+        id="childrenCount"
+        class="text-xl font-bold text-gray-900 min-w-[2rem] text-center"
+      >
+        0
+      </span>
+
+      <button
+        type="button"
+        id="increaseChildren"
+        class="w-10 h-10 rounded-full flex items-center justify-center
+               bg-yellow-400 text-gray-900
+               hover:bg-yellow-500 transition"
+      >
+        +
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Estado de participantes
+window.bookingState = window.bookingState || {};
+window.bookingState.participants = {
+  adults: 1,
+  children: 0
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const adultsCount = document.getElementById('adultsCount');
+  const childrenCount = document.getElementById('childrenCount');
+  const decreaseAdults = document.getElementById('decreaseAdults');
+  const increaseAdults = document.getElementById('increaseAdults');
+  const decreaseChildren = document.getElementById('decreaseChildren');
+  const increaseChildren = document.getElementById('increaseChildren');
+
+  function updateCounts() {
+    adultsCount.textContent = window.bookingState.participants.adults;
+    childrenCount.textContent = window.bookingState.participants.children;
+
+    decreaseAdults.disabled = window.bookingState.participants.adults <= 1;
+    decreaseChildren.disabled = window.bookingState.participants.children <= 0;
+
+    document.dispatchEvent(new CustomEvent('participantsUpdated'));
+  }
+
+  increaseAdults.addEventListener('click', () => {
+    window.bookingState.participants.adults++;
+    updateCounts();
+  });
+
+  decreaseAdults.addEventListener('click', () => {
+    if (window.bookingState.participants.adults > 1) {
+      window.bookingState.participants.adults--;
+      updateCounts();
+    }
+  });
+
+  increaseChildren.addEventListener('click', () => {
+    window.bookingState.participants.children++;
+    updateCounts();
+  });
+
+  decreaseChildren.addEventListener('click', () => {
+    if (window.bookingState.participants.children > 0) {
+      window.bookingState.participants.children--;
+      updateCounts();
+    }
+  });
+
+  updateCounts();
+});
+</script>

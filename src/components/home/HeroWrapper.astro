@@ -1,0 +1,150 @@
+---
+import HeroLeft from "./HeroLeft.astro";
+import HeroRight from "./HeroRight.astro";
+import SearchBox from "./SearchBox.astro";
+import TrustBar from "./TrustBar.astro";
+
+/* =========================
+   TYPES
+========================= */
+interface Tour {
+  name: string;
+  duration: string;
+  price: string;
+  tourLang: "es" | "en" | "it" | "fr";
+  url: string;
+}
+
+interface Props {
+  lang: "es" | "en" | "it" | "fr" | "pt";
+
+  // HERO (fallback, por compatibilidad)
+  heroImageUrl: string;
+  heroBadge?: string;
+
+  // SEARCHBOX
+  tours?: Tour[];
+
+  // TRUST
+  trustRating?: string;
+  trustReviews?: string;
+}
+
+const {
+  lang,
+  heroImageUrl,
+  heroBadge,
+  tours = [],
+  trustRating,
+  trustReviews,
+} = Astro.props;
+
+/* =========================
+   TEXTOS MULTI-IDIOMA
+========================= */
+const textsByLang = {
+  es: {
+    heroTitle: "Descubre Bélgica con guías locales",
+    heroSubtitle: "Free Tours y Tours Privados en Bruselas y Brujas",
+    heroDescription:
+      "Experiencias auténticas, grupos pequeños y cancelación gratuita.",
+    heroHighlighted: "Español, Inglés, Francés e Italiano",
+    searchTitle: "Encuentra tu tour ideal",
+    searchSubtitle: "Reserva en 2 minutos · Cancelación gratuita",
+    searchCta: "Ver tour",
+  },
+  en: {
+    heroTitle: "Discover Belgium with local guides",
+    heroSubtitle: "Free Tours and Private Tours in Brussels and Bruges",
+    heroDescription:
+      "Authentic experiences, small groups and free cancellation.",
+    heroHighlighted: "Spanish, English, French and Italian",
+    searchTitle: "Find your perfect tour",
+    searchSubtitle: "Book in 2 minutes · Free cancellation",
+    searchCta: "View tour",
+  },
+  it: {
+    heroTitle: "Scopri il Belgio con guide locali",
+    heroSubtitle: "Free Tours e Tour Privati a Bruxelles e Bruges",
+    heroDescription:
+      "Esperienze autentiche, piccoli gruppi e cancellazione gratuita.",
+    heroHighlighted: "Spagnolo, Inglese, Francese e Italiano",
+    searchTitle: "Trova il tour ideale",
+    searchSubtitle: "Prenota in 2 minuti · Cancellazione gratuita",
+    searchCta: "Vedi tour",
+  },
+  fr: {
+    heroTitle: "Découvrez la Belgique avec des guides locaux",
+    heroSubtitle: "Free Tours et Tours Privés à Bruxelles et Bruges",
+    heroDescription:
+      "Expériences authentiques, petits groupes et annulation gratuite.",
+    heroHighlighted: "Espagnol, Anglais, Français et Italien",
+    searchTitle: "Trouvez votre tour idéal",
+    searchSubtitle: "Réservation en 2 minutes · Annulation gratuite",
+    searchCta: "Voir le tour",
+  },
+  pt: {
+    heroTitle: "Descubra a Bélgica com guias locais",
+    heroSubtitle: "Free Tours e Tours Privados em Bruxelas e Bruges",
+    heroDescription:
+      "Experiências autênticas, pequenos grupos e cancelamento gratuito.",
+    heroHighlighted: "Espanhol, Inglês, Francês e Italiano",
+    searchTitle: "Encontre seu tour ideal",
+    searchSubtitle: "Reserve em 2 minutos · Cancelamento gratuito",
+    searchCta: "Ver tour",
+  },
+};
+
+const t = textsByLang[lang] || textsByLang.es;
+---
+
+<section class="relative overflow-hidden bg-neutral-950 text-white pt-14 pb-16 lg:pt-20 lg:pb-20">
+  <!-- DECORACIÓN -->
+  <div class="pointer-events-none absolute inset-0 opacity-30">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-yellow-400/20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-red-500/20 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="container relative mx-auto px-4 max-w-7xl">
+
+    <!-- HERO -->
+    <div class="grid lg:grid-cols-12 gap-10 items-start">
+      <div class="order-1 lg:col-span-7">
+        <HeroLeft
+          heroTitle={t.heroTitle}
+          heroSubtitle={t.heroSubtitle}
+          heroDescription={t.heroDescription}
+          heroHighlighted={t.heroHighlighted}
+          heroBadge={heroBadge}
+          trustRating={trustRating}
+          trustReviews={trustReviews}
+        />
+      </div>
+
+      <div class="order-2 hidden lg:block lg:col-span-5">
+        <HeroRight imageUrl={heroImageUrl} lang={lang} />
+      </div>
+    </div>
+
+    <!-- SEARCHBOX -->
+    <div class="order-2 mt-8 lg:mt-12">
+      <SearchBox
+        lang={lang}
+        title={t.searchTitle}
+        subtitle={t.searchSubtitle}
+        ctaLabel={t.searchCta}
+        tours={tours}
+      />
+    </div>
+
+    <!-- TRUST BAR (desactivado por ahora) -->
+    {/*
+    <div class="order-3 mt-6 lg:mt-8">
+      <TrustBar
+        rating={trustRating}
+        reviews={trustReviews}
+      />
+    </div>
+    */}
+  </div>
+</section>

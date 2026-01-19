@@ -1,0 +1,1188 @@
+---
+import BookingSteps from "./BookingSteps.astro";
+import BookingCalendar from "./BookingCalendar.astro";
+import ParticipantCounter from "./ParticipantCounter.astro";
+
+interface Props {
+  tour: any;
+  lang: string;
+}
+
+const { tour, lang } = Astro.props;
+const isFreeTour = tour?.pagoLibre === true || tour?.precio === 0;
+const isPrivateTour = tour?.tipo_tour === "privado";
+const isSpecialTour = tour?.tipo_tour === "especial"; // chocolate & cerveza
+
+
+const titleByLang: Record<string, string> = {
+  es: "Reserva tu experiencia",
+  en: "Book your experience",
+  it: "Prenota la tua esperienza",
+  fr: "Réservez votre expérience",
+  pt: "Reserve sua experiência",
+};
+
+const contactTitleByLang: Record<string, string> = {
+  es: "Tus datos de contacto",
+  en: "Your contact details",
+  it: "I tuoi dati di contatto",
+  fr: "Vos coordonnées",
+  pt: "Seus dados de contato",
+};
+
+const confirmTitleByLang: Record<string, string> = {
+  es: "Confirma tu reserva",
+  en: "Confirm your booking",
+  it: "Conferma la prenotazione",
+  fr: "Confirmez votre réservation",
+  pt: "Confirme sua reserva",
+};
+
+const bookingSummaryByLang: Record<string, string> = {
+  es: "Resumen de tu reserva",
+  en: "Booking summary",
+  it: "Riepilogo prenotazione",
+  fr: "Résumé de la réservation",
+  pt: "Resumo da reserva",
+};
+
+const privacyTextByLang: Record<string, string> = {
+  es: "Acepto los términos y condiciones y la política de privacidad",
+  en: "I accept the terms and conditions and privacy policy",
+  it: "Accetto i termini e condizioni e la privacy policy",
+  fr: "J'accepte les conditions générales et la politique de confidentialité",
+  pt: "Aceito os termos e condições e a política de privacidade",
+};
+
+const marketingTextByLang: Record<string, string> = {
+  es: "Quiero recibir información útil y recomendaciones de BelgoTours por email o WhatsApp.",
+  en: "I want to receive useful information and recommendations from BelgoTours by email or WhatsApp.",
+  it: "Desidero ricevere informazioni utili e consigli da BelgoTours via email o WhatsApp.",
+  fr: "Je souhaite recevoir des informations utiles et des recommandations de BelgoTours par email ou WhatsApp.",
+  pt: "Quero receber informações úteis e recomendações da BelgoTours por email ou WhatsApp.",
+};
+
+const howHeardLabelByLang: Record<string, string> = {
+  es: "¿Cómo nos conociste?",
+  en: "How did you hear about us?",
+  it: "Come ci hai conosciuto?",
+  fr: "Comment nous avez-vous connus ?",
+  pt: "Como nos conheceu?",
+};
+
+// ✅ Base de la API de Strapi compilada en build (NO se usa import.meta.env en el navegador)
+const STRAPI_API_BASE =
+  (import.meta.env.PUBLIC_STRAPI_URL || "http://localhost:1337/api").replace(/\/$/, "");
+---
+
+<div
+  id="bookingForm"
+  data-lang={lang}
+  data-api={STRAPI_API_BASE}
+  class="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden"
+>
+  <!-- CABECERA -->
+<div class="bg-white border-b border-gray-200 p-6 md:p-8">
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+    <!-- Título principal -->
+    <div>
+      <h2 class="text-2xl md:text-3xl font-extrabold text-gray-900 mb-1">
+        {titleByLang[lang] || titleByLang.es}
+      </h2>
+      <p class="text-gray-600 text-sm md:text-base line-clamp-2">
+        {tour?.titulo}
+      </p>
+    </div>
+
+    <!-- Badge informativo (duración + tipo de tour) -->
+    {(tour?.duracion || tour?.precio === 0) && (
+      <!-- Badge informativo -->
+<div class="flex items-center">
+  <div class="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-2 rounded-full text-sm font-medium">
+
+    {/* DURACIÓN */}
+    {!isPrivateTour && tour?.duracion && (
+      <span>
+        {(() => {
+          const total = Number(tour.duracion);
+          if (Number.isNaN(total)) return "";
+          const h = Math.floor(total / 60);
+          const m = total % 60;
+          if (h && m) return `${h} h ${m} min`;
+          if (h) return `${h} h`;
+          return `${m} min`;
+        })()}
+      </span>
+    )}
+
+    {!isPrivateTour && tour?.duracion && <span class="opacity-40">•</span>}
+
+    {/* TIPO / PRECIO */}
+    <span>
+      {isFreeTour && (
+        lang === "es"
+          ? "Free tour · pago libre"
+          : lang === "en"
+          ? "Free tour · pay what you want"
+          : lang === "it"
+          ? "Free tour · offerta libera"
+          : "Free tour"
+      )}
+
+      {isPrivateTour && tour?.precio && (
+        <>
+          {lang === "es" && `Desde ${tour.precio} € / grupo`}
+          {lang === "en" && `From €${tour.precio} / group`}
+          {lang === "it" && `Da ${tour.precio} € / gruppo`}
+          {lang === "fr" && `À partir de ${tour.precio} € / groupe`}
+        </>
+      )}
+
+      {isSpecialTour && tour?.precio && (
+        <>
+          {lang === "es" && `${tour.precio} € · pago al guía`}
+          {lang === "en" && `€${tour.precio} · pay the guide`}
+          {lang === "it" && `${tour.precio} € · pagamento alla guida`}
+          {lang === "fr" && `${tour.precio} € · paiement au guide`}
+        </>
+      )}
+    </span>
+
+  </div>
+</div>
+
+    )}
+
+  </div>
+</div>
+
+  <BookingSteps currentStep={1} lang={lang} />
+
+  <div class="p-6 md:p-8 space-y-10">
+    <!-- PASO 1: FECHA / HORARIO / PARTICIPANTES -->
+    <div id="step1" class="booking-step active space-y-6">
+        <h3 class="text-xl md:text-2xl font-bold text-gray-900">
+          {lang === "es" && "Elige fecha, horario y personas"}
+          {lang === "en" && "Choose date, time and participants"}
+          {lang === "it" && "Scegli data, orario e partecipanti"}
+          {lang === "fr" && "Choisissez date, horaire et participants"}
+        </h3>
+
+    <p class="text-sm text-gray-600">
+  {isFreeTour && (
+    lang === "es"
+      ? "Usaremos estos datos únicamente para enviarte la confirmación, el punto de encuentro y avisos importantes del tour."
+      : lang === "en"
+      ? "We will use this information only to send your confirmation, meeting point and important tour updates."
+      : lang === "it"
+      ? "Utilizzeremo questi dati esclusivamente per inviarti la conferma, il punto di incontro e comunicazioni importanti sul tour."
+      : "We will only use your data for tour confirmation."
+  )}
+
+  {isPrivateTour && (
+    lang === "es"
+      ? "Usaremos estos datos para diseñar tu tour privado a medida y ponernos en contacto contigo para definir los detalles."
+      : lang === "en"
+      ? "We’ll use this information to design your private tour and contact you to define the details."
+      : lang === "it"
+      ? "Utilizzeremo questi dati per progettare il tuo tour privato su misura e contattarti per definire i dettagli."
+      : "Nous utiliserons ces informations pour concevoir votre tour privé et vous contacter."
+  )}
+
+  {isSpecialTour && (
+    lang === "es"
+      ? "Usaremos estos datos para enviarte la confirmación de la reserva y los detalles del tour."
+      : lang === "en"
+      ? "We’ll use this information to send your booking confirmation and tour details."
+      : lang === "it"
+      ? "Utilizzeremo questi dati per inviarti la conferma della prenotazione e i dettagli del tour."
+      : "We will use this information to send your booking details."
+  )}
+</p>
+
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div class="bg-gray-50 rounded-2xl border border-gray-200 p-4 md:p-5">
+          <BookingCalendar tour={tour} lang={lang} />
+        </div>
+
+        <div class="bg-gray-50 rounded-2xl border border-gray-200 p-4 md:p-5 space-y-6">
+          <ParticipantCounter lang={lang} />
+
+          {isFreeTour && (
+  <p class="text-xs text-gray-500 leading-snug">
+    {lang === "es" && "Máx. 7 personas por reserva. Para grupos más grandes, realiza varias reservas."}
+    {lang === "en" && "Max. 7 people per booking. For larger groups, please make multiple bookings."}
+    {lang === "it" && "Massimo 7 persone per prenotazione. Per gruppi più grandi, effettua più prenotazioni."}
+    {lang === "fr" && "Maximum 7 personnes par réservation. Pour les groupes plus nombreux, effectuez plusieurs réservations."}
+  </p>
+)}
+
+
+        </div>
+      </div>
+    </div>
+
+<!-- PASO 2: DATOS DEL CLIENTE -->
+<div id="step2" class="booking-step hidden space-y-6">
+  <h3 class="text-2xl font-bold text-gray-900">
+    {contactTitleByLang[lang] || contactTitleByLang.es}
+  </h3>
+
+  <p class="text-sm text-gray-600">
+    {lang === "es" &&
+      "Usaremos estos datos únicamente para enviarte la confirmación, el punto de encuentro y avisos importantes del tour."}
+    {lang === "en" &&
+      "We will use this information only to send your confirmation, meeting point and important tour updates."}
+    {lang === "it" &&
+      "Utilizzeremo questi dati solo per inviarti la conferma, il punto d’incontro e aggiornamenti importanti sul tour."}
+    {lang === "fr" &&
+      "Nous utiliserons ces informations uniquement pour vous envoyer la confirmation, le point de rendez-vous et les informations importantes du tour."}
+  </p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Nombre -->
+    <div>
+      <label for="firstName" class="block text-gray-700 font-semibold mb-2">
+        {lang === "es" && "Nombre"}
+        {lang === "en" && "First name"}
+        {lang === "it" && "Nome"}
+        {lang === "fr" && "Prénom"} *
+      </label>
+      <input
+        id="firstName"
+        name="firstName"
+        type="text"
+        required
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        placeholder={lang === "es" ? "Ej: María" : "John"}
+      />
+    </div>
+
+    <!-- Apellidos -->
+    <div>
+      <label for="lastName" class="block text-gray-700 font-semibold mb-2">
+        {lang === "es" && "Apellidos"}
+        {lang === "en" && "Last name"}
+        {lang === "it" && "Cognome"}
+        {lang === "fr" && "Nom de famille"} *
+      </label>
+      <input
+        id="lastName"
+        name="lastName"
+        type="text"
+        required
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        placeholder={lang === "es" ? "Ej: González López" : "Doe"}
+      />
+    </div>
+
+    <!-- Ciudad -->
+    <div>
+      <label for="customerCity" class="block text-gray-700 font-semibold mb-2">
+        🏙️
+        {lang === "es" && "Ciudad de residencia"}
+        {lang === "en" && "City of residence"}
+        {lang === "it" && "Città di residenza"}
+        {lang === "fr" && "Ville de résidence"} *
+      </label>
+      <input
+        id="customerCity"
+        name="customerCity"
+        type="text"
+        required
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        placeholder="Madrid, Brussels, Mexico City..."
+      />
+    </div>
+
+    <!-- País -->
+    <div>
+      <label for="customerCountry" class="block text-gray-700 font-semibold mb-2">
+        🌍
+        {lang === "es" && "País"}
+        {lang === "en" && "Country"}
+        {lang === "it" && "Paese"}
+        {lang === "fr" && "Pays"} *
+      </label>
+      <input
+        id="customerCountry"
+        name="customerCountry"
+        type="text"
+        required
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        placeholder="España, México, Italia..."
+      />
+    </div>
+
+    <!-- Teléfono -->
+    <div class="md:col-span-2">
+      <label class="block text-gray-700 font-semibold mb-2">
+        📱
+        {lang === "es" && "Móvil (WhatsApp recomendado)"}
+        {lang === "en" && "Mobile phone (WhatsApp recommended)"}
+        {lang === "it" && "Cellulare (WhatsApp consigliato)"}
+        {lang === "fr" && "Téléphone portable (WhatsApp recommandé)"} *
+      </label>
+
+      <div class="flex gap-3">
+        <select
+          id="countryCode"
+          name="countryCode"
+          required
+          class="w-32 p-3 border border-gray-300 rounded-xl bg-white focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none text-sm"
+        >
+          <option value="">{lang === "es" ? "País" : "Code"}</option>
+          <option value="+34">🇪🇸 +34</option>
+          <option value="+32">🇧🇪 +32</option>
+          <option value="+33">🇫🇷 +33</option>
+          <option value="+39">🇮🇹 +39</option>
+          <option value="+44">🇬🇧 +44</option>
+          <option value="+49">🇩🇪 +49</option>
+          <option value="+351">🇵🇹 +351</option>
+          <option value="+52">🇲🇽 +52</option>
+          <option value="+1">🇺🇸/🇨🇦 +1</option>
+        </select>
+
+        <input
+          id="customerPhone"
+          name="customerPhone"
+          type="tel"
+          required
+          class="flex-1 p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+          placeholder="612 345 678"
+        />
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div>
+      <label for="customerEmail" class="block text-gray-700 font-semibold mb-2">
+        📧
+        {lang === "es" && "Correo electrónico"}
+        {lang === "en" && "Email address"}
+        {lang === "it" && "Indirizzo email"}
+        {lang === "fr" && "Adresse email"} *
+      </label>
+      <input
+        id="customerEmail"
+        name="customerEmail"
+        type="email"
+        required
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        placeholder="email@ejemplo.com"
+      />
+    </div>
+
+    <!-- Confirmar Email -->
+    <div>
+      <label for="customerEmailConfirm" class="block text-gray-700 font-semibold mb-2">
+        ✅
+        {lang === "es" && "Confirma tu correo"}
+        {lang === "en" && "Confirm your email"}
+        {lang === "it" && "Conferma la tua email"}
+        {lang === "fr" && "Confirmez votre email"} *
+      </label>
+      <input
+        id="customerEmailConfirm"
+        name="customerEmailConfirm"
+        type="email"
+        required
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        placeholder={lang === "es" ? "Repite tu correo" : "Repeat your email"}
+      />
+      <p id="emailMismatch" class="text-xs text-red-500 mt-1 hidden">
+        {lang === "es" && "Los correos no coinciden."}
+        {lang === "en" && "Emails do not match."}
+      </p>
+    </div>
+
+    <!-- Comentarios -->
+    <div class="md:col-span-2">
+      <label for="customerComments" class="block text-gray-700 font-semibold mb-2">
+        💬
+        {lang === "es" && "Comentarios (opcional)"}
+        {lang === "en" && "Comments (optional)"}
+        {lang === "it" && "Commenti (opzionale)"}
+        {lang === "fr" && "Commentaires (optionnel)"}
+      </label>
+      <textarea
+        id="customerComments"
+        name="customerComments"
+        rows="3"
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        placeholder={
+          lang === "es"
+            ? "Ej: viajamos con niños pequeños, silla de ruedas, etc."
+            : "Anything we should know?"
+        }
+      ></textarea>
+    </div>
+
+    <!-- Como nos conociste -->
+    <div>
+      <label for="howHeard" class="block text-gray-700 font-semibold mb-2">
+        {howHeardLabelByLang[lang] || howHeardLabelByLang.es}
+      </label>
+      <select
+        id="howHeard"
+        name="howHeard"
+        class="w-full p-3 border border-gray-300 rounded-xl bg-white focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none text-sm"
+      >
+        <option value="">{lang === "es" ? "Selecciona una opción" : "Select an option"}</option>
+        <option value="google">Web / Google</option>
+        <option value="flyer">Flyer</option>
+        <option value="instagram">Instagram</option>
+        <option value="facebook">Facebook</option>
+        <option value="youtube">YouTube</option>
+        <option value="friends">Amigos / Familia</option>
+        <option value="guruwalk">GuruWalk</option>
+        <option value="civitatis">Civitatis</option>
+        <option value="tripadvisor">TripAdvisor</option>
+        <option value="getyourguide">GetYourGuide</option>
+        <option value="freetour">FreeTour.com</option>
+        <option value="meeting-point">Punto de encuentro</option>
+        <option value="other">Otro</option>
+      </select>
+    </div>
+
+    <!-- Marketing -->
+    <div class="flex items-start gap-3 md:col-span-2">
+      <input
+        id="marketingConsent"
+        name="marketingConsent"
+        type="checkbox"
+        class="mt-1 accent-gray-900"
+      />
+      <span class="text-sm text-gray-700">
+        {marketingTextByLang[lang] || marketingTextByLang.es}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- PASO 3: RESUMEN + TÉRMINOS -->
+    <div id="step3" class="booking-step hidden space-y-6">
+      <h3 class="text-2xl font-bold text-gray-900">
+        ✅ {confirmTitleByLang[lang] || confirmTitleByLang.es}
+      </h3>
+
+      <div class="bg-gray-50 rounded-2xl border-2 border-gray-200 p-6 space-y-4">
+        <h4 class="font-semibold text-lg text-gray-800">
+          {bookingSummaryByLang[lang] || bookingSummaryByLang.es}
+        </h4>
+        <div class="space-y-3 text-gray-700 text-sm">
+          <div class="flex justify-between">
+            <span>Tour</span>
+            <span class="font-semibold text-right max-w-[60%]">
+              {tour?.titulo}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span>{lang === "es" ? "Fecha" : "Date"}</span>
+            <span class="font-semibold" id="summaryDate">--/--/----</span>
+          </div>
+          <div class="flex justify-between">
+            <span>{lang === "es" ? "Horario" : "Time"}</span>
+            <span class="font-semibold" id="summaryTime">--:--</span>
+          </div>
+          <div class="flex justify-between">
+            <span>
+              {lang === "es" ? "Participantes" : "Participants"}
+            </span>
+            <span class="font-semibold" id="summaryParticipants">--</span>
+          </div>
+          <div class="flex justify-between">
+            <span>{lang === "es" ? "Idioma" : "Language"}</span>
+            <span class="font-semibold uppercase">{lang}</span>
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            id="agreeToTerms"
+            name="agreeToTerms"
+            required
+            class="mt-1 text-blue-600 focus:ring-blue-500 rounded"
+          />
+          <span class="text-sm text-gray-700">
+            {privacyTextByLang[lang] || privacyTextByLang.es} *
+          </span>
+        </label>
+
+        <p class="text-xs text-gray-500">
+          {lang === "es" &&
+            "Al confirmar, recibirás un email automático con todos los detalles y un mensaje preparado para compartir por WhatsApp."}
+          {lang === "en" &&
+            "After confirming, you will receive an automatic email with all details and a pre-filled message to share on WhatsApp."}
+        </p>
+      </div>
+
+      <!-- CONFIRMAR RESERVA / SOLICITUD -->
+<button
+  id="confirmBooking"
+  type="button"
+  class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-xl transition duration-300 transform hover:scale-105 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none"
+  disabled
+>
+  {isPrivateTour && (
+    <>
+      {lang === "es" && "📩 Enviar solicitud"}
+      {lang === "en" && "📩 Send request"}
+      {lang === "it" && "📩 Invia richiesta"}
+      {lang === "fr" && "📩 Envoyer la demande"}
+      {!["es", "en", "it", "fr"].includes(lang) && "📩 Send request"}
+    </>
+  )}
+
+  {!isPrivateTour && (
+    <>
+      {lang === "es" && "✅ Confirmar reserva"}
+      {lang === "en" && "✅ Confirm booking"}
+      {lang === "it" && "✅ Conferma prenotazione"}
+      {lang === "fr" && "✅ Confirmer la réservation"}
+      {!["es", "en", "it", "fr"].includes(lang) && "✅ Confirm booking"}
+    </>
+  )}
+</button>
+
+</div>
+
+<!-- VISTA DE ÉXITO (fallback si no redirigimos) -->
+<div id="bookingSuccess" class="hidden space-y-4 text-center py-10">
+
+  <!-- TÍTULO -->
+  <h3 class="text-2xl md:text-3xl font-bold text-green-600 mb-2">
+    {isPrivateTour && (
+      <>
+        {lang === "es" && "✅ Solicitud confirmada"}
+        {lang === "en" && "✅ Request confirmed"}
+        {lang === "it" && "✅ Richiesta confermata"}
+        {lang === "fr" && "✅ Demande confirmée"}
+        {!["es", "en", "it", "fr"].includes(lang) && "✅ Request confirmed"}
+      </>
+    )}
+
+    {!isPrivateTour && (
+      <>
+        {lang === "es" && "🎉 ¡Reserva confirmada!"}
+        {lang === "en" && "🎉 Booking confirmed!"}
+        {lang === "it" && "🎉 Prenotazione confermata!"}
+        {lang === "fr" && "🎉 Réservation confirmée !"}
+        {!["es", "en", "it", "fr"].includes(lang) && "🎉 Booking confirmed!"}
+      </>
+    )}
+  </h3>
+
+  <!-- TEXTO -->
+  <p class="text-gray-700 text-sm md:text-base max-w-xl mx-auto">
+    {isPrivateTour && (
+      <>
+        {lang === "es" &&
+          "Hemos recibido tu solicitud. Te contactaremos por email o WhatsApp para definir el itinerario, la fecha final y el precio del tour privado."}
+        {lang === "en" &&
+          "We’ve received your request. We’ll contact you by email or WhatsApp to define the itinerary, final date and price of your private tour."}
+        {lang === "it" &&
+          "Abbiamo ricevuto la tua richiesta. Ti contatteremo via email o WhatsApp per definire itinerario, data finale e prezzo del tour privato."}
+        {lang === "fr" &&
+          "Nous avons reçu votre demande. Nous vous contacterons par email ou WhatsApp pour définir l’itinéraire, la date finale et le prix du tour privé."}
+        {!["es", "en", "it", "fr"].includes(lang) &&
+          "We’ve received your request and will contact you shortly."}
+      </>
+    )}
+
+    {!isPrivateTour && (
+      <>
+        {lang === "es" &&
+          "Te hemos enviado un email con todos los detalles del tour. Si no lo ves en unos minutos, revisa tu carpeta de spam o promociones."}
+        {lang === "en" &&
+          "We have sent you an email with all the tour details. If you don't see it in a few minutes, please check your spam or promotions folder."}
+        {lang === "it" &&
+          "Ti abbiamo inviato un’email con tutti i dettagli del tour. Se non la vedi, controlla la cartella spam o promozioni."}
+        {lang === "fr" &&
+          "Nous vous avons envoyé un email avec tous les détails du tour. Pensez à vérifier votre dossier spam ou promotions."}
+        {!["es", "en", "it", "fr"].includes(lang) &&
+          "We have sent you an email with the tour details."}
+      </>
+    )}
+  </p>
+
+  <!-- BOTÓN SECUNDARIO -->
+  <button
+    id="newBooking"
+    type="button"
+    class="mt-4 inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-800 font-semibold rounded-xl hover:bg-gray-100 transition"
+  >
+    {isPrivateTour && lang === "es" && "Volver a BelgoTours"}
+    {isPrivateTour && lang === "en" && "Back to BelgoTours"}
+    {isPrivateTour && lang === "it" && "Torna a BelgoTours"}
+    {isPrivateTour && lang === "fr" && "Retour à BelgoTours"}
+
+    {!isPrivateTour && lang === "es" && "Hacer otra reserva"}
+    {!isPrivateTour && lang === "en" && "Make another booking"}
+    {!isPrivateTour && lang === "it" && "Fai un'altra prenotazione"}
+    {!isPrivateTour && lang === "fr" && "Faire une autre réservation"}
+  </button>
+
+</div>
+
+<!-- NAVEGACIÓN -->
+<div
+  id="bookingNav"
+  class="flex justify-between mt-4 pt-4 border-t border-gray-200"
+>
+  <button
+    id="prevStep"
+    type="button"
+    class="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+    disabled
+  >
+    {lang === "es" && "← Anterior"}
+    {lang === "en" && "← Previous"}
+    {lang === "it" && "← Precedente"}
+    {lang === "fr" && "← Précédent"}
+    {!["es", "en", "it", "fr"].includes(lang) &&
+      "← Previous"}
+  </button>
+
+  <!-- SIGUIENTE (FLUJO) -->
+  <button
+    id="nextStep"
+    type="button"
+    class="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition transform hover:scale-105 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none"
+    disabled
+  >
+    {lang === "es" && "Siguiente →"}
+    {lang === "en" && "Next →"}
+    {lang === "it" && "Successivo →"}
+    {lang === "fr" && "Suivant →"}
+    {!["es", "en", "it", "fr"].includes(lang) && "Next →"}
+  </button>
+</div>
+
+  </div>
+</div>
+
+  </div>
+</div>
+
+<style>
+  .booking-step {
+    display: none;
+  }
+  .booking-step.active {
+    display: block;
+  }
+  .booking-step.hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("🚀 Inicializando BookingForm 2030...");
+
+    const root = document.getElementById("bookingForm");
+    if (!root) return;
+
+    const lang =
+      root.dataset.lang ||
+      document.documentElement.getAttribute("lang") ||
+      "es";
+
+    const apiBase =
+      root.dataset.api || "http://localhost:1337/api";
+
+    const steps = [
+      document.getElementById("step1"),
+      document.getElementById("step2"),
+      document.getElementById("step3"),
+    ];
+
+    const successView = document.getElementById("bookingSuccess");
+    const navBar = document.getElementById("bookingNav");
+    const prevBtn = document.getElementById("prevStep");
+    const nextBtn = document.getElementById("nextStep");
+    const confirmBtn = document.getElementById("confirmBooking");
+    const newBookingBtn = document.getElementById("newBooking");
+    const terms = document.getElementById("agreeToTerms");
+
+    const emailInput = document.getElementById("customerEmail");
+    const emailConfirmInput =
+      document.getElementById("customerEmailConfirm");
+    const emailMismatch = document.getElementById("emailMismatch");
+
+    const summaryDate = document.getElementById("summaryDate");
+    const summaryTime = document.getElementById("summaryTime");
+    const summaryParticipants =
+      document.getElementById("summaryParticipants");
+
+    let currentStep = 1;
+    let isSubmitting = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const tracking = {
+      utm_source: urlParams.get("utm_source") || undefined,
+      utm_medium: urlParams.get("utm_medium") || undefined,
+      utm_campaign: urlParams.get("utm_campaign") || undefined,
+      utm_content: urlParams.get("utm_content") || undefined,
+      gclid: urlParams.get("gclid") || undefined,
+      referrer: document.referrer || undefined,
+    };
+
+    window.bookingState = window.bookingState || {};
+    window.bookingState.participants =
+      window.bookingState.participants || { adults: 1, children: 0 };
+    window.bookingState.tracking = tracking;
+
+    function showStep(stepNumber) {
+      steps.forEach((s, i) => {
+        if (!s) return;
+        const idx = i + 1;
+        if (idx === stepNumber) {
+          s.classList.remove("hidden");
+          s.classList.add("active");
+        } else {
+          s.classList.remove("active");
+          s.classList.add("hidden");
+        }
+      });
+
+      if (successView) successView.classList.add("hidden");
+
+      currentStep = stepNumber;
+      updateNavigation();
+
+      if (stepNumber === 3) {
+        updateSummary();
+      }
+    }
+
+    function showSuccess() {
+      steps.forEach((s) => {
+        if (!s) return;
+        s.classList.remove("active");
+        s.classList.add("hidden");
+      });
+      if (navBar) navBar.classList.add("hidden");
+      if (successView) successView.classList.remove("hidden");
+    }
+
+    function validateStep1(showUI = false) {
+      const state = window.bookingState || {};
+      const hasDate = !!state.selectedDate;
+      const hasTime = !!state.selectedTime;
+      const adults = Number(state.participants?.adults || 0);
+      const hasParticipants = adults > 0;
+
+      const ok =
+        hasDate && hasTime && hasParticipants && state.horarioId;
+
+      if (!ok && showUI) {
+        const faltantes = [];
+        if (!hasDate) faltantes.push("fecha");
+        if (!hasTime) faltantes.push("horario");
+        if (!hasParticipants) faltantes.push("personas");
+        alert("Por favor selecciona " + faltantes.join(", ") + ".");
+      }
+      return ok;
+    }
+
+    function validateStep2(showUI = false) {
+      const firstName =
+        document.getElementById("firstName")?.value?.trim();
+      const lastName =
+        document.getElementById("lastName")?.value?.trim();
+      const city =
+        document.getElementById("customerCity")?.value?.trim();
+      const country =
+        document.getElementById("customerCountry")?.value?.trim();
+      const code =
+        document.getElementById("countryCode")?.value?.trim();
+      const phone =
+        document.getElementById("customerPhone")?.value?.trim();
+      const email = emailInput?.value?.trim();
+      const emailConfirm = emailConfirmInput?.value?.trim();
+
+      const emailMatch =
+        !!email && !!emailConfirm && email === emailConfirm;
+
+      if (emailMismatch) {
+        if (email && emailConfirm && !emailMatch) {
+          emailMismatch.classList.remove("hidden");
+        } else {
+          emailMismatch.classList.add("hidden");
+        }
+      }
+
+      const ok =
+        !!firstName &&
+        !!lastName &&
+        !!city &&
+        !!country &&
+        !!code &&
+        !!phone &&
+        !!email &&
+        !!emailConfirm &&
+        emailMatch;
+
+      if (!ok && showUI) {
+        alert(
+          "Por favor completa todos los datos obligatorios y asegúrate de que el email coincida."
+        );
+      }
+
+      return ok;
+    }
+
+    function validateStep3(showUI = false) {
+      const checked = !!terms?.checked;
+      if (!checked && showUI) {
+        alert(
+          "Debes aceptar los términos y condiciones para continuar."
+        );
+      }
+      return checked;
+    }
+
+    function updateNavigation() {
+      if (!prevBtn || !nextBtn) return;
+
+      prevBtn.disabled = currentStep === 1;
+      nextBtn.disabled = false;
+
+      if (currentStep === 1) {
+        nextBtn.disabled = !validateStep1(false);
+      } else if (currentStep === 2) {
+        nextBtn.disabled = !validateStep2(false);
+      }
+
+      if (currentStep === 3) {
+        nextBtn.classList.add("hidden");
+        if (confirmBtn) {
+          confirmBtn.disabled = !validateStep3(false) || isSubmitting;
+        }
+      } else {
+        nextBtn.classList.remove("hidden");
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+        }
+      }
+    }
+
+    function updateSummary() {
+      const localeMap = {
+        es: "es-ES",
+        en: "en-GB",
+        it: "it-IT",
+        fr: "fr-FR",
+      };
+      const locale = localeMap[lang] || "es-ES";
+
+      const state = window.bookingState || {};
+      if (summaryDate && state.selectedDate) {
+        const date = new Date(state.selectedDate);
+        summaryDate.textContent = date.toLocaleDateString(locale, {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+      }
+      if (summaryTime && state.selectedTime) {
+        summaryTime.textContent = state.selectedTime;
+      }
+      if (summaryParticipants && state.participants) {
+        summaryParticipants.textContent = `${state.participants.adults} adultos, ${state.participants.children} niños`;
+      }
+    }
+
+    window.addEventListener("dateSelected", () => {
+      updateNavigation();
+      setTimeout(updateNavigation, 150);
+    });
+
+    window.addEventListener("timeSelected", () => {
+      updateNavigation();
+    });
+
+    document.addEventListener("participantsUpdated", () => {
+      updateNavigation();
+    });
+
+    emailInput?.addEventListener("input", () => validateStep2(false));
+    emailConfirmInput?.addEventListener("input", () => {
+      validateStep2(false);
+      updateNavigation();
+    });
+
+    terms?.addEventListener("change", () => {
+      if (currentStep === 3 && confirmBtn) {
+        confirmBtn.disabled = !validateStep3(false) || isSubmitting;
+      }
+    });
+
+    prevBtn?.addEventListener("click", () => {
+      if (currentStep > 1) {
+        showStep(currentStep - 1);
+      }
+    });
+
+    nextBtn?.addEventListener("click", async () => {
+      if (currentStep === 1) {
+        if (!validateStep1(true)) return;
+        showStep(2);
+        return;
+      }
+      if (currentStep === 2) {
+        if (!validateStep2(true)) return;
+        showStep(3);
+        return;
+      }
+    });
+
+    newBookingBtn?.addEventListener("click", () => {
+      window.location.reload();
+    });
+
+    confirmBtn?.addEventListener("click", submitBooking);
+
+    function setConfirmButtonTextDefault() {
+      if (!confirmBtn) return;
+      if (lang === "es")
+        confirmBtn.textContent = "✅ Confirmar reserva gratis";
+      else if (lang === "en")
+        confirmBtn.textContent = "✅ Confirm free booking";
+      else if (lang === "it")
+        confirmBtn.textContent =
+          "✅ Conferma la prenotazione gratuita";
+      else if (lang === "fr")
+        confirmBtn.textContent =
+          "✅ Confirmer la réservation gratuite";
+      else confirmBtn.textContent = "✅ Confirm booking";
+    }
+
+    async function submitBooking() {
+      if (isSubmitting) return;
+      if (!validateStep3(true)) return;
+
+      const state = window.bookingState || {};
+      const horarioId = state.horarioId;
+      if (!horarioId) {
+        alert(
+          "Ha ocurrido un problema con el horario seleccionado. Vuelve al paso 1 y elige de nuevo."
+        );
+        showStep(1);
+        return;
+      }
+
+      const firstName =
+        document.getElementById("firstName")?.value?.trim();
+      const lastName =
+        document.getElementById("lastName")?.value?.trim();
+      const city =
+        document.getElementById("customerCity")?.value?.trim();
+      const country =
+        document.getElementById("customerCountry")?.value?.trim();
+      const code =
+        document.getElementById("countryCode")?.value?.trim();
+      const phone =
+        document.getElementById("customerPhone")?.value?.trim();
+      const email = emailInput?.value?.trim();
+      const emailConfirm = emailConfirmInput?.value?.trim();
+      const comments =
+        document.getElementById("customerComments")?.value?.trim() ||
+        "";
+      const howHeard =
+        document.getElementById("howHeard")?.value || "";
+      const marketingConsent =
+        document.getElementById("marketingConsent")?.checked ||
+        false;
+
+      const adultos = Number(state.participants?.adults || 1);
+      const ninos = Number(state.participants?.children || 0);
+
+      if (
+        !firstName ||
+        !lastName ||
+        !city ||
+        !country ||
+        !code ||
+        !phone ||
+        !email ||
+        !emailConfirm
+      ) {
+        alert(
+          "Faltan datos obligatorios. Vuelve al paso anterior."
+        );
+        showStep(2);
+        return;
+      }
+
+      if (email !== emailConfirm) {
+        alert("Los correos no coinciden.");
+        showStep(2);
+        return;
+      }
+
+      isSubmitting = true;
+      if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "⏳ Procesando...";
+      }
+
+      try {
+        // 1️⃣ PAYLOAD para /reservas/confirmar (Strapi v5)
+        const confirmarPayload = {
+          horarioId,
+          nombre: firstName,
+          apellidos: lastName,
+          email,
+          telefono: `${code} ${phone}`,
+          ciudad: city,
+          pais: country,
+          adultos,
+          ninos,
+          idioma_cliente: lang,
+          comentarios_cliente: comments || undefined,
+          como_nos_conociste: howHeard || undefined,
+          marketing_consent: marketingConsent,
+          ...tracking,
+        };
+
+        // 2️⃣ Llamar a /reservas/confirmar
+        const resConfirm = await fetch(
+          `${apiBase}/reservas/confirmar`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(confirmarPayload),
+          }
+        );
+
+        if (!resConfirm.ok) {
+          const errJson = await resConfirm
+            .json()
+            .catch(() => ({}));
+          console.error("❌ Error en /reservas/confirmar:", errJson);
+
+          const msg =
+            errJson?.error?.message ||
+            errJson?.message ||
+            `Error ${resConfirm.status}`;
+
+          alert(
+            lang === "es"
+              ? `No se pudo confirmar la reserva: ${msg}`
+              : `Could not confirm booking: ${msg}`
+          );
+
+          isSubmitting = false;
+          if (confirmBtn) {
+            confirmBtn.disabled = !validateStep3(false);
+            setConfirmButtonTextDefault();
+          }
+          return;
+        }
+
+        const dataConfirm = await resConfirm.json().catch(() => ({}));
+        console.log("✅ Respuesta confirmar:", dataConfirm);
+
+        const confirmarToken =
+          dataConfirm?.confirmarToken ||
+          dataConfirm?.token ||
+          dataConfirm?.checkoutToken;
+
+        if (!confirmarToken) {
+          console.error(
+            "❌ No se obtuvo confirmarToken en la respuesta:",
+            dataConfirm
+          );
+          alert(
+            lang === "es"
+              ? "Error interno: no se pudo generar el token de confirmación."
+              : "Internal error: could not generate confirmation token."
+          );
+          isSubmitting = false;
+          if (confirmBtn) {
+            confirmBtn.disabled = !validateStep3(false);
+            setConfirmButtonTextDefault();
+          }
+          return;
+        }
+
+        // 3️⃣ Llamar a /reservas/finalizar con el token
+        const resFinal = await fetch(`${apiBase}/reservas/finalizar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: confirmarToken }),
+        });
+
+        if (!resFinal.ok) {
+          const errJson = await resFinal.json().catch(() => ({}));
+          console.error("❌ Error en /reservas/finalizar:", errJson);
+
+          const msg =
+            errJson?.error?.message ||
+            errJson?.message ||
+            `Error ${resFinal.status}`;
+
+          alert(
+            lang === "es"
+              ? `No se pudo finalizar la reserva: ${msg}`
+              : `Could not complete booking: ${msg}`
+          );
+
+          isSubmitting = false;
+          if (confirmBtn) {
+            confirmBtn.disabled = !validateStep3(false);
+            setConfirmButtonTextDefault();
+          }
+          return;
+        }
+
+        const dataFinal = await resFinal.json().catch(() => ({}));
+        console.log("🎉 Reserva finalizada:", dataFinal);
+
+        const reservaId =
+          dataFinal?.reservaId ||
+          dataFinal?.id ||
+          dataFinal?.data?.id ||
+          null;
+
+        const safeLang = ["es", "en", "it", "fr"].includes(lang)
+          ? lang
+          : "es";
+
+        if (reservaId) {
+          // Redireccionamos a la página de éxito con el ID real
+          window.location.href = `/${safeLang}/booking-success?id=${encodeURIComponent(
+            reservaId
+          )}`;
+          return;
+        }
+
+        // Fallback: mostrar pantalla de éxito sin ID
+        showSuccess();
+        isSubmitting = false;
+      } catch (e) {
+        console.error("❌ Excepción en submitBooking:", e);
+        alert(
+          "❌ No se pudo completar la reserva. Revisa la API de Strapi (/reservas/confirmar y /reservas/finalizar) y los permisos de CORS/public."
+        );
+        isSubmitting = false;
+        if (confirmBtn) {
+          confirmBtn.disabled = !validateStep3(false);
+          setConfirmButtonTextDefault();
+        }
+      }
+    }
+
+    showStep(1);
+    updateNavigation();
+  });
+</script>

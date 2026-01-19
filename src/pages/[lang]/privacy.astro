@@ -1,0 +1,224 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import TourHeader from "@/components/TourHeader.astro";
+import Footer from "@/components/Footer.astro";
+
+const { lang } = Astro.params as { lang: "es" | "en" | "it" | "fr" | "pt" };
+
+const t = {
+  es: {
+    title: "Política de Privacidad | BelgoTours",
+    h1: "Política de Privacidad",
+    sections: [
+      {
+        h2: "1. Responsable del tratamiento",
+        content: `
+          BelgoTours, con sede en Bruselas, es responsable del tratamiento de los
+          datos personales facilitados por los usuarios a través del sitio web
+          belgotours.com.
+        `,
+      },
+      {
+        h2: "2. Finalidad del tratamiento",
+        list: [
+          "Gestión de reservas de free tours y visitas privadas.",
+          "Envío de confirmaciones y comunicaciones operativas.",
+          "Mejora de la experiencia del usuario.",
+        ],
+      },
+      {
+        h2: "3. Base legal",
+        content: `
+          La base legal del tratamiento es el consentimiento del usuario conforme
+          al Reglamento General de Protección de Datos (RGPD, art. 6.1).
+        `,
+      },
+      {
+        h2: "4. Derechos del usuario",
+        content: `
+          El usuario puede ejercer sus derechos de acceso, rectificación,
+          cancelación u oposición escribiendo a
+          <a href="mailto:contact@belgotours.com">contact@belgotours.com</a>.
+        `,
+      },
+    ],
+  },
+
+  en: {
+    title: "Privacy Policy | BelgoTours",
+    h1: "Privacy Policy",
+    sections: [
+      {
+        h2: "1. Data Controller",
+        content: `
+          BelgoTours, based in Brussels, is responsible for processing personal
+          data provided by users through the belgotours.com website.
+        `,
+      },
+      {
+        h2: "2. Purpose of processing",
+        list: [
+          "Management of free tour and private tour bookings.",
+          "Sending confirmations and operational communications.",
+          "Improving the user experience.",
+        ],
+      },
+      {
+        h2: "3. Legal basis",
+        content: `
+          The legal basis for processing is the user’s consent in accordance with
+          the GDPR (art. 6.1).
+        `,
+      },
+      {
+        h2: "4. User rights",
+        content: `
+          Users may exercise their rights by contacting
+          <a href="mailto:contact@belgotours.com">contact@belgotours.com</a>.
+        `,
+      },
+    ],
+  },
+
+  it: {
+    title: "Informativa sulla Privacy | BelgoTours",
+    h1: "Informativa sulla Privacy",
+    sections: [
+      {
+        h2: "1. Titolare del trattamento",
+        content: `
+          BelgoTours, con sede a Bruxelles, è responsabile del trattamento dei
+          dati personali forniti dagli utenti tramite il sito belgotours.com.
+        `,
+      },
+      {
+        h2: "2. Finalità del trattamento",
+        list: [
+          "Gestione delle prenotazioni di free tour e tour privati.",
+          "Invio di conferme e comunicazioni operative.",
+          "Miglioramento dell’esperienza utente.",
+        ],
+      },
+      {
+        h2: "3. Base giuridica",
+        content: `
+          La base giuridica del trattamento è il consenso dell’utente ai sensi
+          del GDPR (art. 6.1).
+        `,
+      },
+      {
+        h2: "4. Diritti dell’utente",
+        content: `
+          L’utente può esercitare i propri diritti scrivendo a
+          <a href="mailto:contact@belgotours.com">contact@belgotours.com</a>.
+        `,
+      },
+    ],
+  },
+
+  fr: {
+    title: "Politique de Confidentialité | BelgoTours",
+    h1: "Politique de Confidentialité",
+    sections: [
+      {
+        h2: "1. Responsable du traitement",
+        content: `
+          BelgoTours, basé à Bruxelles, est responsable du traitement des données
+          personnelles fournies par les utilisateurs via le site belgotours.com.
+        `,
+      },
+      {
+        h2: "2. Finalité du traitement",
+        list: [
+          "Gestion des réservations de free tours et de visites privées.",
+          "Envoi de confirmations et de communications opérationnelles.",
+          "Amélioration de l’expérience utilisateur.",
+        ],
+      },
+      {
+        h2: "3. Base légale",
+        content: `
+          La base légale du traitement est le consentement de l’utilisateur
+          conformément au RGPD (art. 6.1).
+        `,
+      },
+      {
+        h2: "4. Droits de l’utilisateur",
+        content: `
+          L’utilisateur peut exercer ses droits en écrivant à
+          <a href="mailto:contact@belgotours.com">contact@belgotours.com</a>.
+        `,
+      },
+    ],
+  },
+
+  pt: {
+    title: "Política de Privacidade | BelgoTours",
+    h1: "Política de Privacidade",
+    sections: [
+      {
+        h2: "1. Responsável pelo tratamento",
+        content: `
+          A BelgoTours, com sede em Bruxelas, é responsável pelo tratamento dos
+          dados pessoais fornecidos pelos utilizadores através do site
+          belgotours.com.
+        `,
+      },
+      {
+        h2: "2. Finalidade do tratamento",
+        list: [
+          "Gestão de reservas de free tours e tours privados.",
+          "Envio de confirmações e comunicações operacionais.",
+          "Melhoria da experiência do utilizador.",
+        ],
+      },
+      {
+        h2: "3. Base legal",
+        content: `
+          A base legal para o tratamento é o consentimento do utilizador de acordo
+          com o RGPD (art. 6.1).
+        `,
+      },
+      {
+        h2: "4. Direitos do utilizador",
+        content: `
+          O utilizador pode exercer os seus direitos escrevendo para
+          <a href="mailto:contact@belgotours.com">contact@belgotours.com</a>.
+        `,
+      },
+    ],
+  },
+};
+
+const copy = t[lang] || t.en;
+---
+
+<Layout title={copy.title}>
+  <TourHeader simple />
+
+  <main class="bg-white">
+    <section class="max-w-3xl mx-auto px-6 py-16 prose prose-gray">
+      <h1>{copy.h1}</h1>
+
+      {copy.sections.map(section => (
+        <>
+          <h2>{section.h2}</h2>
+
+          {section.content && (
+            <p set:html={section.content} />
+          )}
+
+          {section.list && (
+            <ul>
+              {section.list.map(item => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          )}
+        </>
+      ))}
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</Layout>

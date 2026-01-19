@@ -1,0 +1,49 @@
+---
+const { tour, lang } = Astro.props;
+---
+
+<form
+  class="space-y-4"
+  method="POST"
+  action="/api/private-request"
+>
+  <input type="hidden" name="tour_slug" value={tour.slug} />
+  <input type="hidden" name="idioma" value={lang} />
+  <input type="hidden" name="tipo_experiencia" value="privado" />
+
+  <div>
+    <label class="block text-sm font-medium">Nombre</label>
+    <input required name="nombre" class="w-full border rounded-lg p-3" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium">Email</label>
+    <input required type="email" name="email" class="w-full border rounded-lg p-3" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium">WhatsApp</label>
+    <input required name="telefono" class="w-full border rounded-lg p-3" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium">Personas</label>
+    <input type="number" min="1" name="personas" class="w-full border rounded-lg p-3" />
+  </div>
+
+  <div>
+    <label class="block text-sm font-medium">Mensaje (opcional)</label>
+    <textarea name="mensaje" rows="3" class="w-full border rounded-lg p-3"></textarea>
+  </div>
+
+  <button
+    class="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-xl"
+  >
+    Enviar solicitud
+  </button>
+
+  <p class="text-sm text-gray-500 text-center">
+    Te contactaremos por WhatsApp para definir fecha y precio.  
+    Cancelación gratuita.
+  </p>
+</form>

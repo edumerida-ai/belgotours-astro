@@ -1,0 +1,169 @@
+---
+interface Props {
+  lang: string;
+}
+
+const { lang } = Astro.props;
+
+// Base URL de Strapi (desde .env)
+const STRAPI_API = import.meta.env.PUBLIC_STRAPI_URL;
+
+// ---------------------------------------------
+// Textos por idioma
+// ---------------------------------------------
+const textsByLang = {
+  es: {
+    title: "Lo que dicen nuestros viajeros",
+    subtitle: "Opiniones reales y verificadas de personas que han vivido nuestros tours.",
+    moreReviews: "Mostrar más reseñas",
+    noReviews: "Aún no hay reseñas disponibles en este idioma."
+  },
+  en: {
+    title: "What our travelers say",
+    subtitle: "Real, verified reviews from people who experienced our tours.",
+    moreReviews: "Show more reviews",
+    noReviews: "No reviews available in this language yet."
+  },
+  it: {
+    title: "Cosa dicono i nostri viaggiatori",
+    subtitle: "Recensioni reali e verificate di chi ha vissuto i nostri tour.",
+    moreReviews: "Mostra altre recensioni",
+    noReviews: "Nessuna recensione disponibile in questa lingua."
+  },
+  fr: {
+    title: "Ce que disent nos voyageurs",
+    subtitle: "Avis réels et vérifiés de voyageurs ayant participé à nos tours.",
+    moreReviews: "Voir plus d’avis",
+    noReviews: "Aucun avis disponible dans cette langue."
+  },
+  pt: {
+    title: "O que dizem nossos viajantes",
+    subtitle: "Avaliações reais e verificadas de quem viveu nossos tours.",
+    moreReviews: "Ver mais avaliações",
+    noReviews: "Ainda não há avaliações neste idioma."
+  }
+};
+
+const t = textsByLang[lang] || textsByLang.es;
+
+// ---------------------------------------------
+// Fetch reviews públicas para HOME
+// ---------------------------------------------
+const params = new URLSearchParams();
+params.set("idioma", lang);
+
+const url = `${STRAPI_API}/public/reviews?${params.toString()}`;
+
+let reviews = [];
+
+try {
+  const res = await fetch(url);
+  if (res.ok) {
+    const json = await res.json();
+    reviews = json?.data ?? [];
+  } else {
+    console.error("❌ Error HTTP reviews home:", res.status);
+  }
+} catch (e) {
+  console.error("❌ Error loading home reviews", e);
+}
+
+// ---------------------------------------------
+// Agrupar por tour_slug y limitar a 2 por tour
+// ---------------------------------------------
+const reviewsByTour = {};
+
+for (const r of reviews) {
+  const slug = r.tour_slug;
+  if (!slug) continue;
+
+  if (!reviewsByTour[slug]) {
+    reviewsByTour[slug] = [];
+  }
+
+  if (reviewsByTour[slug].length < 2) {
+    reviewsByTour[slug].push(r);
+  }
+}
+
+const tourEntries = Object.entries(reviewsByTour).slice(0, 3);
+
+---
+
+<section id="reviews" class="bg-[#0A0A0A] py-20">
+  <div class="max-w-7xl mx-auto px-4">
+
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <h2 class="text-3xl md:text-4xl font-semibold text-white mb-4">
+        {t.title}
+      </h2>
+      <p class="text-[#6B7280] text-lg">
+        {t.subtitle}
+      </p>
+    </div>
+
+    <!-- Reviews por tour -->
+    {tourEntries.length > 0 ? (
+      <div class="space-y-14">
+        {tourEntries.map(([slug, items]) => (
+          <div>
+            
+
+
+            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((r) => (
+                <article class="bg-[#111111] rounded-2xl p-6 shadow-md">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="text-white font-medium">
+                      {r.cliente_nombre}
+                    </span>
+                    <span class="text-[#FACC15] text-sm">
+                      {"★".repeat(r.rating_general)}
+                    </span>
+                  </div>
+
+                  <p class="text-[#6B7280] text-sm leading-relaxed line-clamp-4">
+                    {r.comentario_publico || "El viajero dejó una valoración sin comentario."}
+                  </p>
+
+                  <div class="mt-4 text-xs text-[#6B7280] flex justify-between">
+                    <span>{r.cliente_pais || ""}</span>
+                    <span>{new Date(r.fecha_tour).toLocaleDateString()}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p class="text-center text-[#6B7280]">
+        {t.noReviews}
+      </p>
+    )}
+
+    <!-- CTA -->
+    <div class="mt-20 flex flex-col sm:flex-row items-center justify-center gap-4">
+  <button
+    id="loadMoreReviews"
+    type="button"
+    class="bg-[#FACC15] text-black font-semibold px-8 py-4 rounded-xl hover:opacity-90 transition"
+    aria-label={t.moreReviews}
+  >
+    {t.moreReviews}
+  </button>
+</div>
+
+
+  </div>
+</section>
+
+<style>
+  .line-clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+interface Props {
+  lang?: string;
+}
+
+const { lang = "es" } = Astro.props;
+
+// Número WhatsApp (formato internacional SIN +)
+const PHONE = "32489829468";
+
+// Mensajes por idioma (URL encoded)
+const messages = {
+  es: "Hola%20BelgoTours%20👋%20Tengo%20una%20consulta%20sobre%20los%20tours.",
+  en: "Hello%20BelgoTours%20👋%20I%20have%20a%20question%20about%20your%20tours.",
+  it: "Ciao%20BelgoTours%20👋%20Ho%20una%20domanda%20sui%20tour.",
+  fr: "Bonjour%20BelgoTours%20👋%20J’ai%20une%20question%20sur%20vos%20tours.",
+  pt: "Olá%20BelgoTours%20👋%20Tenho%20uma%20pergunta%20sobre%20os%20tours."
+};
+
+const text = messages[lang] || messages.es;
+const href = `https://wa.me/${PHONE}?text=${text}`;
+---
+
+<a
+  href={href}
+  class="whatsapp-float"
+  target="_blank"
+  rel="noopener"
+  aria-label="WhatsApp BelgoTours"
+>
+  <!-- Icono WhatsApp (SVG inline, ultra ligero) -->
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M19.11 17.38c-.27-.14-1.61-.8-1.86-.89-.25-.09-.43-.14-.61.14-.18.27-.7.89-.86 1.07-.16.18-.32.2-.59.07-.27-.14-1.14-.42-2.17-1.33-.8-.71-1.34-1.59-1.5-1.86-.16-.27-.02-.42.12-.56.12-.12.27-.32.41-.48.14-.16.18-.27.27-.45.09-.18.05-.34-.02-.48-.07-.14-.61-1.48-.84-2.03-.22-.53-.44-.46-.61-.47l-.52-.01c-.18 0-.48.07-.73.34-.25.27-.95.93-.95 2.27 0 1.34.97 2.63 1.11 2.81.14.18 1.91 2.92 4.63 4.1.65.28 1.16.45 1.56.57.66.21 1.26.18 1.73.11.53-.08 1.61-.66 1.84-1.3.23-.64.23-1.18.16-1.3-.07-.11-.25-.18-.52-.32z"
+    />
+    <path
+      fill="currentColor"
+      d="M16.02 3C9.4 3 4 8.4 4 15.02c0 2.65.87 5.09 2.35 7.05L5 29l7.15-1.87A11.93 11.93 0 0 0 16.02 27c6.62 0 12.02-5.4 12.02-11.98C28.04 8.4 22.64 3 16.02 3zm0 21.82c-2.23 0-4.28-.65-6.02-1.77l-.43-.27-4.24 1.11 1.13-4.13-.28-.44a9.82 9.82 0 0 1-1.56-5.3c0-5.44 4.43-9.87 9.88-9.87s9.88 4.43 9.88 9.87-4.43 9.87-9.88 9.87z"
+    />
+  </svg>
+</a>
+
+<style>
+.whatsapp-float {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  z-index: 60;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.whatsapp-float:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+}
+
+.whatsapp-float svg {
+  width: 26px;
+  height: 26px;
+}
+</style>

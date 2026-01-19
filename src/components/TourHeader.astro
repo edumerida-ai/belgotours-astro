@@ -1,0 +1,39 @@
+---
+interface Props {
+  lang?: string;
+}
+
+const { lang = "es" } = Astro.props;
+---
+
+<header class="w-full bg-black/85 text-white backdrop-blur-md">
+  <div class="container flex items-center py-4">
+    <!-- Logo -->
+    <a
+      href={`/${lang}`}
+      class="flex items-center gap-2 sm:gap-3"
+      aria-label="BelgoTours"
+    >
+      <img
+        src="/Logo-belgotours.webp"
+        alt="BelgoTours"
+        width="40"
+        height="40"
+        class="h-9 sm:h-10 w-auto object-contain"
+        loading="eager"
+        decoding="async"
+      />
+
+      <!-- Brand name -->
+      <span
+        class="
+          text-base sm:text-lg md:text-xl
+          font-semibold tracking-wide
+          leading-none
+        "
+      >
+        BelgoTours
+      </span>
+    </a>
+  </div>
+</header>

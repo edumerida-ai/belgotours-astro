@@ -1,0 +1,76 @@
+---
+// SOLO REDIRECCIÓN - SIN CONTENIDO DUPLICADO
+// Usamos JavaScript puro porque astro:redirect no está disponible
+
+const primaryLanguages = ['es', 'en', 'it', 'fr', 'pt'];
+const fallbackLanguage = 'en';
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belgotours - Redirigiendo...</title>
+  <script>
+    // Detección de idioma en el cliente
+    function detectLanguage() {
+      const primaryLanguages = ['es', 'en', 'it', 'fr', 'pt'];
+      const fallbackLanguage = 'en';
+      
+      // 1. Verificar si hay un idioma en la URL
+      const pathLang = window.location.pathname.split('/')[1];
+      if (primaryLanguages.includes(pathLang)) {
+        return pathLang;
+      }
+      
+      // 2. Detectar idioma del navegador
+      const browserLang = navigator.language || navigator.userLanguage;
+      const mainLang = browserLang.split('-')[0];
+      
+      if (primaryLanguages.includes(mainLang)) {
+        return mainLang;
+      }
+      
+      // 3. Fallback a inglés
+      return fallbackLanguage;
+    }
+    
+    // Redirigir inmediatamente
+const detectedLang = detectLanguage();
+window.location.href = `/${detectedLang}/`;
+
+  </script>
+</head>
+<body>
+  <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-family: Arial, sans-serif;">
+    <div style="text-align: center;">
+      <h1 style="font-size: 2rem; margin-bottom: 1rem;">🌍 Belgotours</h1>
+      <p style="font-size: 1.2rem;">Redirigiendo a tu idioma...</p>
+      <div style="margin-top: 2rem;">
+        <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  
+  <!-- Fallback por si JavaScript está desactivado -->
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=/es/">
+    <p>Por favor, habilita JavaScript o ve directamente a: 
+      <a href="/es/">Español</a> | 
+      <a href="/en/">English</a> | 
+      <a href="/it/">Italiano</a> | 
+      <a href="/fr/">Français</a> | 
+      <a href="/pt/">Português</a>
+    </p>
+  </noscript>
+</body>
+</html>
+

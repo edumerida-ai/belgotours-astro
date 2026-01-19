@@ -1,0 +1,112 @@
+// Datos maestros de todos los tours
+export const toursData = {
+  'free-tour-bruselas-espanol': {
+    id: 1,
+    slug: 'free-tour-bruselas-espanol',
+    titulo: 'Free Tour Bruselas Esencial',
+    subtitulo: 'Descubre los imprescindibles con guías locales certificados',
+    tipo: 'free-tour',
+    ciudad: 'bruselas',
+    idioma: 'espanol',
+    precio: 0,
+    moneda: '€',
+    tipoPrecio: 'Precio libre - tú decides al final',
+    duracion: '2.5 horas',
+    maxPersonas: 20,
+    rating: 4.92,
+    totalReviews: 1247,
+    
+    // HERO SECTION
+    hero: {
+      video: 'https://player.vimeo.com/video/987654321',
+      imagen: 'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=1200&h=600&fit=crop',
+      badges: ['MÁS VENDIDO 2024', 'GUÍA 5 ESTRELLAS', 'CANCELACIÓN GRATIS']
+    },
+    
+    // ITINERARIO
+    itinerario: [
+      {
+        orden: 1,
+        titulo: 'Grand Place',
+        duracion: '30 min',
+        descripcion: 'Empezamos en la plaza más bonita del mundo según Victor Hugo',
+        imagen: 'https://images.unsplash.com/photo-1628746220626-43ff86c7b23d?w=400&h=300&fit=crop',
+        icono: '🏛️'
+      },
+      {
+        orden: 2,
+        titulo: 'Manneken Pis',
+        duracion: '15 min',
+        descripcion: 'El niño más famoso de Bruselas y sus curiosas historias',
+        imagen: 'https://images.unsplash.com/photo-1551641503-1ab53bbf7980?w=400&h=300&fit=crop',
+        icono: '👶'
+      },
+      // ... más puntos
+    ],
+    
+    // ELEMENTOS ÚNICOS 2026
+    elementosUnicos: {
+      arQr: 'https://ar.belgotours.com/free-bruselas',
+      gamificacion: true,
+      aiAssistant: true,
+      metaverse: true,
+      liveAnalytics: true
+    }
+  },
+  
+  'free-tour-brujas-magica': {
+    id: 2,
+    slug: 'free-tour-brujas-magica',
+    titulo: 'Free Tour Brujas Mágica',
+    subtitulo: 'La Venecia del Norte te espera con sus canales medievales',
+    tipo: 'free-tour',
+    ciudad: 'brujas',
+    idioma: 'espanol',
+    precio: 0,
+    moneda: '€',
+    tipoPrecio: 'Precio libre',
+    duracion: '3 horas',
+    maxPersonas: 15,
+    rating: 4.89,
+    totalReviews: 967,
+    
+    hero: {
+      video: 'https://player.vimeo.com/video/987654322',
+      imagen: 'https://images.unsplash.com/photo-1599661044176-35d063b4d8bf?w=1200&h=600&fit=crop',
+      badges: ['NUEVO', 'GRUPOS REDUCIDOS', 'RUTA SECRETA']
+    },
+    
+    elementosUnicos: {
+      arQr: 'https://ar.belgotours.com/free-brujas',
+      gamificacion: true,
+      aiAssistant: true,
+      metaverse: false,
+      liveAnalytics: true
+    }
+  },
+  
+  'tour-privado-bruselas': {
+    id: 3,
+    slug: 'tour-privado-bruselas',
+    titulo: 'Tour Privado Bruselas Personalizado',
+    subtitulo: 'Experiencia exclusiva con itinerario 100% a tu medida',
+    tipo: 'privado',
+    ciudad: 'bruselas',
+    idioma: 'multiples',
+    precio: 89,
+    moneda: '€',
+    tipoPrecio: 'por persona',
+    duracion: '4 horas',
+    maxPersonas: 8,
+    rating: 5.0,
+    totalReviews: 356,
+    
+    elementosUnicos: {
+      arQr: 'https://ar.belgotours.com/privado-bruselas',
+      gamificacion: false,
+      aiAssistant: true,
+      metaverse: true,
+      liveAnalytics: true
+    }
+  }
+};

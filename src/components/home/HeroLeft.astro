@@ -1,0 +1,37 @@
+---
+interface Props {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroDescription: string;
+  heroHighlighted?: string;
+}
+
+const {
+  heroTitle,
+  heroSubtitle,
+  heroDescription,
+  heroHighlighted,
+} = Astro.props;
+---
+
+<div class="space-y-6">
+
+  <!-- H1 PRINCIPAL (SEO / GEO) -->
+  <h1 class="text-4xl font-extrabold leading-tight text-white md:text-5xl lg:text-6xl">
+    {heroTitle}
+  </h1>
+
+  <!-- H2 SUBTÍTULO ESTRATÉGICO -->
+  <h2 class="text-xl font-semibold text-yellow-400 md:text-2xl">
+    {heroSubtitle}
+  </h2>
+
+  <!-- DESCRIPCIÓN CLARA -->
+  <p class="max-w-2xl text-base text-white/80 md:text-lg">
+    {heroDescription}
+    {heroHighlighted && (
+      <span class="font-semibold text-yellow-400"> {heroHighlighted}</span>
+    )}
+  </p>
+
+</div>

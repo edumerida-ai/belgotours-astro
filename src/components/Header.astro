@@ -1,0 +1,208 @@
+---
+interface Props {
+  lang?: "es" | "en" | "it" | "fr" | "pt";
+  showLanguageSelector?: boolean;
+}
+
+const {
+  lang = "es",
+  showLanguageSelector = true
+} = Astro.props;
+
+// =========================
+// TEXTOS POR IDIOMA
+// =========================
+const TEXTS = {
+  es: {
+    tours: "Tours",
+    guides: "Guías",
+    blog: "Blog",
+    contact: "Contacto",
+  },
+  en: {
+    tours: "Tours",
+    guides: "Guides",
+    blog: "Blog",
+    contact: "Contact",
+  },
+  it: {
+    tours: "Tour",
+    guides: "Guide",
+    blog: "Blog",
+    contact: "Contatto",
+  },
+  fr: {
+    tours: "Tours",
+    guides: "Guides",
+    blog: "Blog",
+    contact: "Contact",
+  },
+  pt: {
+    tours: "Tours",
+    guides: "Guias",
+    blog: "Blog",
+    contact: "Contato",
+  },
+};
+
+const t = TEXTS[lang] ?? TEXTS.es;
+
+// =========================
+// IDIOMAS DISPONIBLES
+// =========================
+const languages = [
+  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "it", name: "Italiano", flag: "🇮🇹" },
+  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "pt", name: "Português", flag: "🇵🇹" },
+];
+---
+
+<header class="w-full bg-brand-black text-white border-b border-white/10 backdrop-blur-lg">
+  <div class="container flex items-center justify-between py-4">
+
+    <!-- LOGO -->
+    <a href={`/${lang}`} class="flex items-center gap-3">
+      <img
+        src="/Logo-belgotours.webp"
+        alt="BelgoTours"
+        class="h-10 w-auto"
+        loading="lazy"
+      />
+      <span class="text-lg font-semibold tracking-wide">BelgoTours</span>
+    </a>
+
+    <!-- NAV Desktop -->
+    <nav class="hidden md:flex items-center gap-6 text-sm">
+      <a href={`/${lang}#tours`} class="hover:text-brand-yellow transition">
+        {t.tours}
+      </a>
+      <a href={`/${lang}#guides`} class="hover:text-brand-yellow transition">
+        {t.guides}
+      </a>
+      <a href={`/${lang}/blog`} class="hover:text-brand-yellow transition">
+        {t.blog}
+      </a>
+      <a
+        href="https://wa.me/XXXXXXXXXXX"
+        target="_blank"
+        rel="noopener"
+        class="hover:text-brand-yellow transition"
+      >
+        {t.contact}
+      </a>
+    </nav>
+
+    <!-- ACCIONES DERECHA -->
+    <div class="flex items-center gap-4">
+
+      <!-- 🌐 SELECTOR DE IDIOMA -->
+      {showLanguageSelector && (
+        <div class="relative hidden md:block">
+          <button
+            id="langGlobalBtn"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+          >
+            <span>🌐</span>
+            <span class="font-medium uppercase">{lang}</span>
+          </button>
+
+          <div
+            id="langGlobalMenu"
+            class="absolute right-0 mt-2 w-40 bg-brand-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl opacity-0 invisible translate-y-2 transition-all duration-200 z-50"
+          >
+            {languages.map(l => (
+              <a
+                href={`/${l.code}`}
+                class={`flex items-center gap-3 px-4 py-3 text-sm hover:bg-white/10 transition
+                ${l.code === lang ? "text-brand-yellow font-semibold" : "text-white"}`}
+              >
+                <span class="text-lg">{l.flag}</span>
+                <span>{l.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- MENU MOBILE -->
+      <button
+        id="mobileMenuBtn"
+        class="md:hidden w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition"
+      >
+        ☰
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE MENU -->
+  <div
+    id="mobileMenu"
+    class="md:hidden max-h-0 overflow-hidden transition-all duration-300 bg-brand-black/95 border-t border-white/10"
+  >
+    <nav class="flex flex-col p-4 space-y-4 text-lg">
+      <a href={`/${lang}#tours`} class="hover:text-brand-yellow transition">
+        {t.tours}
+      </a>
+      <a href={`/${lang}#guides`} class="hover:text-brand-yellow transition">
+        {t.guides}
+      </a>
+      <a href={`/${lang}/blog`} class="hover:text-brand-yellow transition">
+        {t.blog}
+      </a>
+      <a href={`/${lang}/contacto`} class="hover:text-brand-yellow transition">
+        {t.contact}
+      </a>
+
+      <hr class="border-white/10" />
+
+      {showLanguageSelector && (
+        <div class="flex flex-col space-y-2">
+          {languages.map(l => (
+            <a
+              href={`/${l.code}`}
+              class={`flex items-center gap-3 px-2 py-2 rounded-lg transition
+              ${l.code === lang ? "text-brand-yellow font-semibold" : "text-white/80 hover:text-white"}`}
+            >
+              <span class="text-xl">{l.flag}</span>
+              <span>{l.name}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </nav>
+  </div>
+</header>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("langGlobalBtn");
+  const menu = document.getElementById("langGlobalMenu");
+
+  if (btn && menu) {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.toggle("opacity-0");
+      menu.classList.toggle("invisible");
+      menu.classList.toggle("translate-y-2");
+    });
+
+    document.addEventListener("click", () => {
+      menu.classList.add("opacity-0", "invisible", "translate-y-2");
+    });
+  }
+
+  const mobileBtn = document.getElementById("mobileMenuBtn");
+  const mobileMenu = document.getElementById("mobileMenu");
+
+  if (mobileBtn && mobileMenu) {
+    mobileBtn.addEventListener("click", () => {
+      mobileMenu.style.maxHeight =
+        mobileMenu.style.maxHeight && mobileMenu.style.maxHeight !== "0px"
+          ? "0px"
+          : mobileMenu.scrollHeight + "px";
+    });
+  }
+});
+</script>

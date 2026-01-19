@@ -1,0 +1,96 @@
+---
+const STRAPI_URL = import.meta.env.PUBLIC_STRAPI_URL || "http://168.119.183.247:1337/api";
+
+interface Props {
+  tourId: number | string;
+  idioma: string;
+}
+
+const { tourId, idioma } = Astro.props;
+
+// Construimos la query de forma segura
+const params = new URLSearchParams();
+
+if (tourId) {
+  params.set("filters[tour][id][$eq]", String(tourId));
+}
+if (idioma) {
+  params.set("filters[idioma][$eq]", idioma);
+}
+
+// Solo reseñas aprobadas y visibles en web
+params.set("filters[estado][$eq]", "aprobada");
+params.set("filters[visible_web][$eq]", "true");
+
+// Orden: más recientes primero
+params.append("sort[0]", "createdAt:desc");
+
+// Máximo 5 reseñas para el bloque principal
+params.set("pagination[limit]", "5");
+
+const url = `${STRAPI_URL}/reviews?${params.toString()}`;
+
+let reseñas: any[] = [];
+try {
+  const response = await fetch(url);
+  if (response.ok) {
+    const json = await response.json();
+    reseñas = json?.data ?? [];
+  } else {
+    console.error("❌ Error al obtener reseñas:", response.status, await response.text());
+  }
+} catch (err) {
+  console.error("❌ Error de red al obtener reseñas:", err);
+}
+---
+
+<div class="reviews-section py-8">
+  <h2 class="text-2xl font-bold mb-4">Opiniones de viajeros</h2>
+
+  {reseñas.length > 0 ? (
+    <ul class="space-y-4">
+      {reseñas.map((r) => {
+        const attrs = r.attributes || {};
+        const rating = attrs.rating_general ?? 0;
+        const comentario = attrs.comentario_publico ?? "";
+        const nombre = attrs.cliente_nombre ?? "Viajero verificado";
+        const fecha = attrs.fecha_tour || attrs.createdAt;
+
+        return (
+          <li class="border rounded-xl p-4 bg-white shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-yellow-500">
+                  {"⭐".repeat(rating || 0)}
+                </span>
+                <span class="text-sm text-gray-700">
+                  ({rating}/5)
+                </span>
+              </div>
+              {fecha && (
+                <span class="text-sm text-gray-500">
+                  {new Date(fecha).toLocaleDateString(idioma === "en" ? "en-US" :
+                                                      idioma === "it" ? "it-IT" :
+                                                      idioma === "fr" ? "fr-FR" :
+                                                      "es-ES")}
+                </span>
+              )}
+            </div>
+
+            <p class="text-sm text-gray-700 font-semibold mb-1">
+              {nombre}
+            </p>
+
+            <p class="text-gray-800">
+              {comentario || "El viajero dejó una valoración sin comentario público."}
+            </p>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <p class="text-gray-600 italic">
+      Aún no hay reseñas disponibles para este tour en este idioma.
+    </p>
+  )}
+</div>

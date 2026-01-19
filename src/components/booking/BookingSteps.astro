@@ -1,0 +1,106 @@
+---
+// src/components/booking/BookingSteps.astro
+
+interface Props {
+  currentStep: number;
+  lang: string;
+}
+
+const { currentStep, lang } = Astro.props;
+
+const steps = [
+  { 
+    number: 1, 
+    label: {
+      es: 'Fecha & Grupo',
+      en: 'Date & Group', 
+      it: 'Data & Gruppo',
+      fr: 'Date & Groupe',
+      pt: 'Data & Grupo'
+    }
+  },
+  { 
+    number: 2, 
+    label: {
+      es: 'Tus Datos',
+      en: 'Your Details',
+      it: 'I tuoi Dati', 
+      fr: 'Vos Coordonnées',
+      pt: 'Seus Dados'
+    }
+  },
+  { 
+    number: 3, 
+    label: {
+      es: 'Confirmar',
+      en: 'Confirm',
+      it: 'Conferma',
+      fr: 'Confirmer', 
+      pt: 'Confirmar'
+    }
+  }
+];
+---
+
+<div class="flex justify-center mb-8">
+  <div class="flex items-center space-x-4 md:space-x-6">
+    {steps.map((step, index) => (
+      <div class="flex items-center">
+        <!-- Paso -->
+        <div class="flex flex-col items-center">
+          <!-- Círculo -->
+          <div
+            class={`w-11 h-11 rounded-full flex items-center justify-center border-2 font-semibold text-sm transition-all duration-300
+              ${
+                currentStep === step.number
+                  ? 'bg-yellow-400 border-yellow-400 text-gray-900'
+                  : currentStep > step.number
+                  ? 'bg-gray-900 border-gray-900 text-white'
+                  : 'bg-white border-gray-300 text-gray-400'
+              }`}
+          >
+            {currentStep > step.number ? (
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              step.number
+            )}
+          </div>
+
+          <!-- Label (desktop) -->
+          <span
+            class={`text-xs mt-2 font-medium hidden md:block ${
+              currentStep >= step.number
+                ? 'text-gray-800'
+                : 'text-gray-400'
+            }`}
+          >
+            {step.label[lang] || step.label.es}
+          </span>
+        </div>
+
+        <!-- Conector -->
+        {index < steps.length - 1 && (
+          <div
+            class={`w-6 md:w-10 h-0.5 transition-colors duration-300 ${
+              currentStep > step.number
+                ? 'bg-gray-900'
+                : 'bg-gray-300'
+            }`}
+          ></div>
+        )}
+      </div>
+    ))}
+  </div>
+</div>

@@ -1,0 +1,113 @@
+---
+import "@/styles/global.css";
+import WhatsAppFloat from "@/components/WhatsAppFloat.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+}
+
+const { title, description, canonical } = Astro.props;
+const currentUrl = Astro.url.pathname;
+const currentLang = currentUrl.split('/')[1] || 'es';
+
+// Detectar si estamos dentro de una página de tours,
+// donde NO debe aparecer el selector de idioma global
+// ni el WhatsApp flotante
+const isTourPage = currentUrl.includes('/tours/');
+const showLanguageSelector = !isTourPage;
+
+// Generar etiquetas hreflang para SEO multi-idioma
+const languages = ['es', 'en', 'it', 'fr', 'pt'];
+---
+
+<!DOCTYPE html>
+<html lang={currentLang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- FAVICONS -->
+  <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    {languages.map((lang) => (
+      <link
+        rel="alternate"
+        hreflang={lang}
+        href={`https://belgotours.com/${lang}${currentUrl.replace(/^\/[a-z]{2}/, '')}`}
+      />
+    ))}
+
+    <link rel="alternate" hreflang="x-default" href="https://belgotours.com/en/" />
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={`https://belgotours.com${currentUrl}`} />
+    <meta property="og:image" content="https://belgotours.com/og-image.jpg" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Tipografía global (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --font-sans: Inter, system-ui, sans-serif;
+        --bg-page: #f9fafb;
+        --color-text: #0f172a;
+        --color-muted: #6b7280;
+        --color-primary: #0f172a;
+        --color-secondary: #facc15;
+        --color-card: #ffffff;
+        --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.18);
+      }
+      body {
+        margin: 0;
+        font-family: var(--font-sans);
+        background: var(--bg-page);
+        color: var(--color-text);
+      }
+      link[rel='alternate'] {
+        display: none !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <slot name="header" />
+
+    <!-- MAIN CONTENT -->
+    <main>
+      <slot />
+    </main>
+
+    <!-- WHATSAPP FLOTANTE GLOBAL
+         ❌ NO aparece en /tours/*
+         ✅ Sí aparece en home, blog, info, etc. -->
+    {!isTourPage && (
+      <WhatsAppFloat lang={currentLang} />
+    )}
+
+  </body>
+</html>
