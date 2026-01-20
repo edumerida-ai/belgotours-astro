@@ -10,19 +10,18 @@ interface Props {
 
 const { title, description, canonical } = Astro.props;
 const currentUrl = Astro.url.pathname;
-const currentLang = currentUrl.split('/')[1] || 'es';
+const currentLang = currentUrl.split("/")[1] || "es";
 
-// Detectar si estamos dentro de una página de tours,
-// donde NO debe aparecer el selector de idioma global
-// ni el WhatsApp flotante
-const isTourDetailPage =
-  /^\/(es|en|it|fr|pt)?\/tours\/[^/]+\/?$/.test(currentUrl);
+/**
+ * SOLO páginas de detalle de tour:
+ * /es/tours/slug
+ */
+const isTourDetailPage = /^\/[a-z]{2}\/tours\/[^/]+\/?$/.test(currentUrl);
 
-const showLanguageSelector = !isTourPage;
-
-// Generar etiquetas hreflang para SEO multi-idioma
-const languages = ['es', 'en', 'it', 'fr', 'pt'];
+// Generar etiquetas hreflang
+const languages = ["es", "en", "it", "fr", "pt"];
 ---
+
 
 <!DOCTYPE html>
 <html lang={currentLang}>
