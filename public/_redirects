@@ -1,1 +1,40 @@
+# ======================================
+# HOME / IDIOMAS (URLs antiguas)
+# ======================================
+
+/en/                              /en                              301
+/it/                              /it                              301
+/fr/                              /fr                              301
+
+# Nota: la home raíz / NO se redirige
+# https://belgotours.com/ ya es válida
+
+
+# ======================================
+# FREE TOURS (URLs antiguas)
+# ======================================
+
+/free-tour-bruselas-espanol/              /es/tours/free-tour-bruselas        301
+/en/free-tour-brussels-english/           /en/tours/free-tour-brussels        301
+/it/free-tour-di-bruxelles-in-italiano/   /it/tours/free-tour-bruxelles       301
+
+
+# ======================================
+# TÉRMINOS Y CONDICIONES (URLs antiguas)
+# ======================================
+
+/terminos-privacidad-belgotours/           /es/terms     301
+/en/privacy-terms-belgotours/              /en/terms     301
+/it/condizioni-di-privacy-belgotours/      /it/terms     301
+/fr/conditions-de-confidentialite-belgotours/ /fr/terms  301
+
+
+# ======================================
+# POLÍTICA DE PRIVACIDAD (URLs antiguas)
+# ======================================
+
+/politica-de-privacidad/        /es/privacy     301
+/en/privacy-policy/             /en/privacy     301
+/it/informativa-sulla-privacy/  /it/privacy     301
+/fr/politique-de-confidentialite/ /fr/privacy  301
 
