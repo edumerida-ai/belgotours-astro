@@ -4,8 +4,7 @@
 //  Usado por Homepage Premium 2026 + Tours + Reviews
 // -------------------------------------------------------------
 
-const STRAPI_URL =
-  import.meta.env.PUBLIC_STRAPI_URL || 'http://api.dev.belgotours.com:8080';
+const STRAPI_URL = import.meta.env.PUBLIC_STRAPI_URL;
 
 
 // -------------------------------------------------------------

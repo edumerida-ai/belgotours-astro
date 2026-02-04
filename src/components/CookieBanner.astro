@@ -1,0 +1,76 @@
+---
+const COOKIE_KEY = "belgotours_cookies_accepted";
+const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
+---
+
+<div
+  id="cookie-banner"
+  class="fixed bottom-4 left-4 right-4 z-[9999] hidden
+         max-w-5xl mx-auto
+         bg-white shadow-2xl border border-gray-200
+         rounded-2xl p-4 md:p-6"
+>
+  <div class="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
+
+    <p class="text-sm text-gray-700 leading-relaxed">
+      Utilizamos cookies propias para mejorar la experiencia y garantizar el
+      correcto funcionamiento del sitio.
+      <a href="/cookies" class="underline font-medium">
+        Más información
+      </a>
+    </p>
+
+    <button
+      id="accept-cookies"
+      class="bg-yellow-400 hover:bg-yellow-300
+             text-black font-bold
+             px-6 py-3 rounded-xl
+             transition shrink-0"
+      type="button"
+    >
+      Aceptar
+    </button>
+
+  </div>
+</div>
+
+<script>
+  const COOKIE_KEY = "belgotours_cookies_accepted";
+  const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
+
+  const banner = document.getElementById("cookie-banner");
+  const button = document.getElementById("accept-cookies");
+
+  if (!banner || !button) {
+    // Seguridad: si el componente no está en DOM
+    console.warn("CookieBanner: elementos no encontrados");
+  } else {
+
+    function hasConsent() {
+      try {
+        const raw = localStorage.getItem(COOKIE_KEY);
+        if (!raw) return false;
+
+        const data = JSON.parse(raw);
+        return data?.expires && Date.now() < data.expires;
+      } catch {
+        return false;
+      }
+    }
+
+    function setConsent() {
+      const expires = Date.now() + ONE_YEAR_MS;
+      localStorage.setItem(
+        COOKIE_KEY,
+        JSON.stringify({ expires })
+      );
+      banner.classList.add("hidden");
+    }
+
+    if (!hasConsent()) {
+      banner.classList.remove("hidden");
+    }
+
+    button.addEventListener("click", setConsent);
+  }
+</script>

@@ -1,6 +1,8 @@
 ---
 import "@/styles/global.css";
 import WhatsAppFloat from "@/components/WhatsAppFloat.astro";
+import CookieBanner from "@/components/CookieBanner.astro";
+
 
 interface Props {
   title: string;
@@ -95,21 +97,23 @@ const languages = ["es", "en", "it", "fr", "pt"];
   </head>
 
   <body>
-    <!-- HEADER -->
-    <slot name="header" />
+  <!-- HEADER -->
+  <slot name="header" />
 
-    <!-- MAIN CONTENT -->
-    <main>
-      <slot />
-    </main>
+  <!-- MAIN CONTENT -->
+  <main>
+    <slot />
+  </main>
 
-    <!-- WHATSAPP FLOTANTE GLOBAL
-         ❌ NO aparece en /tours/*
-         ✅ Sí aparece en home, blog, info, etc. -->
-    {!isTourDetailPage && (
-  <WhatsAppFloat lang={currentLang} />
-)}
+  <!-- COOKIE BANNER (GLOBAL) -->
+  <CookieBanner />
 
+  <!-- WHATSAPP FLOTANTE
+       ❌ NO en /tours/*
+       ✅ Sí en home, blog, info -->
+  {!isTourDetailPage && (
+    <WhatsAppFloat lang={currentLang} />
+  )}
+</body>
 
-  </body>
 </html>
