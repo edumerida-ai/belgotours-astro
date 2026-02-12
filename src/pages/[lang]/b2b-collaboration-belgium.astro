@@ -164,6 +164,8 @@ const t = {
 const copy = t[lang] || t.en;
 ---
 
+
+
 <Layout title={copy.title} description={copy.description}>
   <TourHeader simple />
 
@@ -243,4 +245,59 @@ const copy = t[lang] || t.en;
 
   <!-- 🔒 CLAVE: PASAMOS LANG -->
   <Footer lang={lang} />
+
+  <script is:inline>
+  const currentLang = {JSON.stringify(lang)};
+
+  const form = document.getElementById("b2bForm");
+  const successMsg = document.getElementById("successMsg");
+  const submitBtn = document.getElementById("submitBtn");
+
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+
+      const payload = {
+        name: formData.get("name"),
+        company: formData.get("company"),
+        email: formData.get("email"),
+        collaboration_type: formData.get("collaboration_type"),
+        language: currentLang,
+        source: "B2B Landing"
+      };
+
+      try {
+        const res = await fetch(
+          "https://api.belgotours.com/api/b2b-leads",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error?.message || "Submission failed");
+        }
+
+        form.reset();
+        successMsg.classList.remove("hidden");
+
+      } catch (err) {
+        alert("Error sending request. Please try again.");
+        console.error(err);
+      }
+
+      submitBtn.disabled = false;
+    });
+  }
+</script>
 </Layout>

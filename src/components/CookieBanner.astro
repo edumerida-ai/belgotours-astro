@@ -1,76 +1,143 @@
 ---
-const COOKIE_KEY = "belgotours_cookies_accepted";
+interface Props {
+  lang: string;
+}
+
+const { lang = "es" } = Astro.props;
+
+const COOKIE_KEY = "belgotours_cookie_consent";
 const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
+
+const t = {
+  es: {
+    text:
+      "Utilizamos cookies propias y de terceros para mejorar la experiencia, analizar el tráfico y personalizar contenidos.",
+    more: "Más información",
+    accept: "Aceptar todo",
+    reject: "Rechazar",
+    settings: "Configurar",
+  },
+  en: {
+    text:
+      "We use our own and third-party cookies to improve your experience, analyze traffic and personalize content.",
+    more: "Learn more",
+    accept: "Accept all",
+    reject: "Reject",
+    settings: "Customize",
+  },
+  it: {
+    text:
+      "Utilizziamo cookie propri e di terze parti per migliorare l’esperienza, analizzare il traffico e personalizzare i contenuti.",
+    more: "Maggiori informazioni",
+    accept: "Accetta tutto",
+    reject: "Rifiuta",
+    settings: "Configura",
+  },
+  fr: {
+    text:
+      "Nous utilisons des cookies propres et tiers pour améliorer l’expérience, analyser le trafic et personnaliser le contenu.",
+    more: "En savoir plus",
+    accept: "Tout accepter",
+    reject: "Refuser",
+    settings: "Configurer",
+  },
+};
+
+const copy = t[lang] || t.es;
 ---
 
 <div
   id="cookie-banner"
-  class="fixed bottom-4 left-4 right-4 z-[9999] hidden
-         max-w-5xl mx-auto
-         bg-white shadow-2xl border border-gray-200
-         rounded-2xl p-4 md:p-6"
+  class="fixed bottom-0 left-0 right-0 z-[9999] hidden
+         bg-white border-t border-gray-200
+         shadow-2xl p-6 md:p-8"
 >
-  <div class="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
 
-    <p class="text-sm text-gray-700 leading-relaxed">
-      Utilizamos cookies propias para mejorar la experiencia y garantizar el
-      correcto funcionamiento del sitio.
-      <a href="/cookies" class="underline font-medium">
-        Más información
+    <p class="text-sm md:text-base text-gray-700 leading-relaxed max-w-3xl">
+      {copy.text}
+      <a href={`/${lang}/cookies`} class="underline font-medium ml-1">
+        {copy.more}
       </a>
     </p>
 
-    <button
-      id="accept-cookies"
-      class="bg-yellow-400 hover:bg-yellow-300
-             text-black font-bold
-             px-6 py-3 rounded-xl
-             transition shrink-0"
-      type="button"
-    >
-      Aceptar
-    </button>
+    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
 
+      <button
+        id="reject-cookies"
+        type="button"
+        class="border border-gray-300
+               text-gray-800 font-medium
+               px-5 py-3 rounded-xl
+               hover:bg-gray-100 transition"
+      >
+        {copy.reject}
+      </button>
+
+      <button
+        id="settings-cookies"
+        type="button"
+        class="text-gray-800 underline font-medium
+               px-4 py-3 transition"
+      >
+        {copy.settings}
+      </button>
+
+      <button
+        id="accept-cookies"
+        type="button"
+        class="bg-black text-white font-semibold
+               px-6 py-3 rounded-xl
+               hover:bg-gray-900 transition"
+      >
+        {copy.accept}
+      </button>
+
+    </div>
   </div>
 </div>
 
-<script>
-  const COOKIE_KEY = "belgotours_cookies_accepted";
+<script is:inline>
+  const COOKIE_KEY = "belgotours_cookie_consent";
   const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 
   const banner = document.getElementById("cookie-banner");
-  const button = document.getElementById("accept-cookies");
+  const acceptBtn = document.getElementById("accept-cookies");
+  const rejectBtn = document.getElementById("reject-cookies");
+  const settingsBtn = document.getElementById("settings-cookies");
 
-  if (!banner || !button) {
-    // Seguridad: si el componente no está en DOM
-    console.warn("CookieBanner: elementos no encontrados");
-  } else {
-
-    function hasConsent() {
-      try {
-        const raw = localStorage.getItem(COOKIE_KEY);
-        if (!raw) return false;
-
-        const data = JSON.parse(raw);
-        return data?.expires && Date.now() < data.expires;
-      } catch {
-        return false;
-      }
+  function getConsent() {
+    try {
+      const raw = localStorage.getItem(COOKIE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
     }
-
-    function setConsent() {
-      const expires = Date.now() + ONE_YEAR_MS;
-      localStorage.setItem(
-        COOKIE_KEY,
-        JSON.stringify({ expires })
-      );
-      banner.classList.add("hidden");
-    }
-
-    if (!hasConsent()) {
-      banner.classList.remove("hidden");
-    }
-
-    button.addEventListener("click", setConsent);
   }
+
+  function setConsent(type) {
+    const expires = Date.now() + ONE_YEAR_MS;
+    localStorage.setItem(
+      COOKIE_KEY,
+      JSON.stringify({ type, expires })
+    );
+    banner.classList.add("hidden");
+  }
+
+  function isValidConsent(data) {
+    return data?.expires && Date.now() < data.expires;
+  }
+
+  const consent = getConsent();
+
+  if (!isValidConsent(consent)) {
+    banner.classList.remove("hidden");
+  }
+
+  acceptBtn?.addEventListener("click", () => setConsent("all"));
+  rejectBtn?.addEventListener("click", () => setConsent("essential"));
+  settingsBtn?.addEventListener("click", () => {
+    alert("Cookie settings panel coming soon.");
+  });
 </script>
