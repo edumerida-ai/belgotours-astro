@@ -1,6 +1,7 @@
 ---
 export const prerender = false;  // ⬅️ 🔥 ESTA LÍNEA ES LA CLAVE
 import Layout from "../../layouts/Layout.astro";
+import { DateTime } from "luxon";
 
 const { lang } = Astro.params;
 
@@ -12,6 +13,9 @@ const STRAPI_URL =
 
 let reserva = null;
 let error = null;
+
+let fechaFormateada = "";
+let horaFormateada = "";
 
 // =============================
 // TRADUCCIONES
@@ -78,12 +82,22 @@ if (!reservaId) {
     const res = await fetch(url);
 
     if (!res.ok) {
-      error = T.error[lang];
-    } else {
-      const json = await res.json();
-      reserva = json?.data || null;
-      if (!reserva) error = T.error[lang];
-    }
+  error = T.error[lang];
+} else {
+  const json = await res.json();
+  reserva = json?.data || null;
+
+  if (!reserva) {
+    error = T.error[lang];
+  } else if (reserva.fecha_hora_tour) {
+    const dt = DateTime.fromISO(reserva.fecha_hora_tour, {
+      zone: "Europe/Brussels"
+    });
+
+    fechaFormateada = dt.setLocale(lang).toLocaleString(DateTime.DATE_FULL);
+    horaFormateada = dt.toFormat("HH:mm");
+  }
+}
   } catch (e) {
     console.error(e);
     error = T.error[lang];
@@ -136,12 +150,11 @@ if (!reservaId) {
                 <p class="font-medium">Tour</p>
                 <p>{reserva.tour?.titulo}</p>
 
-                <p class="font-medium">Fecha</p>
-                <p>{new Date(reserva.fecha_hora_tour).toLocaleDateString(lang)}</p>
+                  <p class="font-medium">Fecha</p>
+                   <p>{fechaFormateada}</p>
 
-                <p class="font-medium">Horario</p>
-                <p>{new Date(reserva.fecha_hora_tour).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })}</p>
-
+                   <p class="font-medium">Horario</p>
+                    <p>{horaFormateada}</p>
                 <p class="font-medium">Participantes</p>
                 <p>{reserva.adultos} adultos, {reserva.ninos} niños</p>
 
@@ -170,12 +183,20 @@ if (!reservaId) {
                    </a>
 
                   <a
-                  href={reserva.whatsapp_url || "#"}
-                  target="_blank"
-                  class="w-full block text-center px-6 py-4 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700"
-                 >
-                 {T.whatsapp[lang]}
-                 </a>
+  href={`https://wa.me/32489829468?text=${encodeURIComponent(
+    `Hola BelgoTours 👋
+
+Reserva #${reserva.id}
+Tour: ${reserva.tour?.titulo}
+Fecha: ${fechaFormateada}
+Hora: ${horaFormateada}
+Participantes: ${reserva.adultos} adultos, ${reserva.ninos} niños`
+  )}`}
+  target="_blank"
+  class="w-full block text-center px-6 py-4 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700"
+>
+  {T.whatsapp[lang]}
+</a>
 
                 <a
     href={`/${lang}/`}

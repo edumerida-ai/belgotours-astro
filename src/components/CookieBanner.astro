@@ -16,7 +16,17 @@ const t = {
     accept: "Aceptar todo",
     reject: "Rechazar",
     settings: "Configurar",
+    panelTitle: "Preferencias de cookies",
+    essential: "Cookies esenciales",
+    essentialDesc: "Necesarias para el funcionamiento del sitio",
+    analytics: "Cookies analíticas",
+    analyticsDesc: "Nos ayudan a mejorar la web",
+    marketing: "Cookies de marketing",
+    marketingDesc: "Contenido personalizado y publicidad",
+    save: "Guardar preferencias",
+    close: "Cerrar"
   },
+
   en: {
     text:
       "We use our own and third-party cookies to improve your experience, analyze traffic and personalize content.",
@@ -24,7 +34,17 @@ const t = {
     accept: "Accept all",
     reject: "Reject",
     settings: "Customize",
+    panelTitle: "Cookie preferences",
+    essential: "Essential cookies",
+    essentialDesc: "Required for site functionality",
+    analytics: "Analytics cookies",
+    analyticsDesc: "Help us improve the website",
+    marketing: "Marketing cookies",
+    marketingDesc: "Personalized content and ads",
+    save: "Save preferences",
+    close: "Close"
   },
+
   it: {
     text:
       "Utilizziamo cookie propri e di terze parti per migliorare l’esperienza, analizzare il traffico e personalizzare i contenuti.",
@@ -32,7 +52,17 @@ const t = {
     accept: "Accetta tutto",
     reject: "Rifiuta",
     settings: "Configura",
+    panelTitle: "Preferenze cookie",
+    essential: "Cookie essenziali",
+    essentialDesc: "Necessari per il funzionamento del sito",
+    analytics: "Cookie analitici",
+    analyticsDesc: "Ci aiutano a migliorare il sito",
+    marketing: "Cookie di marketing",
+    marketingDesc: "Contenuti personalizzati e pubblicità",
+    save: "Salva preferenze",
+    close: "Chiudi"
   },
+
   fr: {
     text:
       "Nous utilisons des cookies propres et tiers pour améliorer l’expérience, analyser le trafic et personnaliser le contenu.",
@@ -40,9 +70,17 @@ const t = {
     accept: "Tout accepter",
     reject: "Refuser",
     settings: "Configurer",
+    panelTitle: "Préférences des cookies",
+    essential: "Cookies essentiels",
+    essentialDesc: "Nécessaires au fonctionnement du site",
+    analytics: "Cookies analytiques",
+    analyticsDesc: "Nous aident à améliorer le site",
+    marketing: "Cookies marketing",
+    marketingDesc: "Contenu personnalisé et publicité",
+    save: "Enregistrer",
+    close: "Fermer"
   },
 };
-
 const copy = t[lang] || t.es;
 ---
 
@@ -97,6 +135,66 @@ const copy = t[lang] || t.es;
   </div>
 </div>
 
+<div
+  id="cookie-settings-panel"
+  class="fixed inset-0 bg-black/40 z-[10000] hidden items-center justify-center p-4"
+>
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 space-y-5">
+
+    <h3 class="text-lg font-semibold text-gray-900">
+      {copy.panelTitle}
+    </h3>
+
+    <div class="space-y-4 text-sm text-gray-700">
+
+      <!-- Essential -->
+      <div class="flex justify-between items-center">
+        <div>
+          <p class="font-medium">{copy.essential}</p>
+          <p class="text-xs text-gray-500">{copy.essentialDesc}</p>
+        </div>
+        <input type="checkbox" checked disabled class="accent-black w-5 h-5" />
+      </div>
+
+      <!-- Analytics -->
+      <div class="flex justify-between items-center">
+        <div>
+          <p class="font-medium">{copy.analytics}</p>
+          <p class="text-xs text-gray-500">{copy.analyticsDesc}</p>
+        </div>
+        <input id="analytics-toggle" type="checkbox" class="accent-black w-5 h-5" />
+      </div>
+
+      <!-- Marketing -->
+      <div class="flex justify-between items-center">
+        <div>
+          <p class="font-medium">{copy.marketing}</p>
+          <p class="text-xs text-gray-500">{copy.marketingDesc}</p>
+        </div>
+        <input id="marketing-toggle" type="checkbox" class="accent-black w-5 h-5" />
+      </div>
+
+    </div>
+
+    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+      <button
+        id="close-cookie-settings"
+        class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100"
+      >
+        {copy.close}
+      </button>
+
+      <button
+        id="save-cookie-settings"
+        class="px-5 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-900"
+      >
+        {copy.save}
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <script is:inline>
   const COOKIE_KEY = "belgotours_cookie_consent";
   const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
@@ -115,29 +213,85 @@ const copy = t[lang] || t.es;
       return null;
     }
   }
+function setConsent(type, customOptions = null) {
+  const expires = Date.now() + ONE_YEAR_MS;
 
-  function setConsent(type) {
-    const expires = Date.now() + ONE_YEAR_MS;
-    localStorage.setItem(
-      COOKIE_KEY,
-      JSON.stringify({ type, expires })
-    );
-    banner.classList.add("hidden");
+  let data = {
+    type,
+    analytics: false,
+    marketing: false,
+    expires,
+  };
+
+  if (type === "all") {
+    data.analytics = true;
+    data.marketing = true;
   }
 
-  function isValidConsent(data) {
-    return data?.expires && Date.now() < data.expires;
+  if (type === "essential") {
+    data.analytics = false;
+    data.marketing = false;
   }
 
-  const consent = getConsent();
-
-  if (!isValidConsent(consent)) {
-    banner.classList.remove("hidden");
+  if (type === "custom" && customOptions) {
+    data.analytics = !!customOptions.analytics;
+    data.marketing = !!customOptions.marketing;
   }
 
-  acceptBtn?.addEventListener("click", () => setConsent("all"));
-  rejectBtn?.addEventListener("click", () => setConsent("essential"));
-  settingsBtn?.addEventListener("click", () => {
-    alert("Cookie settings panel coming soon.");
+  localStorage.setItem(COOKIE_KEY, JSON.stringify(data));
+
+  banner?.classList.add("hidden");
+
+  // Notificar al sistema que cambió consentimiento
+  window.dispatchEvent(new Event("cookieConsentUpdated"));
+}
+
+function isValidConsent(data) {
+  return data?.expires && Date.now() < data.expires;
+}
+
+const consent = getConsent();
+
+if (!isValidConsent(consent)) {
+  banner?.classList.remove("hidden");
+}
+
+// =============================
+// BOTONES PRINCIPALES
+// =============================
+
+acceptBtn?.addEventListener("click", () => {
+  setConsent("all");
+});
+
+rejectBtn?.addEventListener("click", () => {
+  setConsent("essential");
+});
+
+// =============================
+// PANEL PERSONALIZADO
+// =============================
+
+const panel = document.getElementById("cookie-settings-panel");
+const closePanelBtn = document.getElementById("close-cookie-settings");
+const savePanelBtn = document.getElementById("save-cookie-settings");
+const analyticsToggle = document.getElementById("analytics-toggle");
+const marketingToggle = document.getElementById("marketing-toggle");
+
+settingsBtn?.addEventListener("click", () => {
+  panel?.classList.remove("hidden");
+});
+
+closePanelBtn?.addEventListener("click", () => {
+  panel?.classList.add("hidden");
+});
+
+savePanelBtn?.addEventListener("click", () => {
+  setConsent("custom", {
+    analytics: analyticsToggle?.checked || false,
+    marketing: marketingToggle?.checked || false,
   });
+
+  panel?.classList.add("hidden");
+});
 </script>

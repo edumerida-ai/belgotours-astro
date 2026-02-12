@@ -57,9 +57,12 @@ const languages = [
   { code: "fr", name: "Français", flag: "🇫🇷" },
   { code: "pt", name: "Português", flag: "🇵🇹" },
 ];
+
+const ENABLE_BLOG = false;
+
 ---
 
-<header class="w-full bg-brand-black text-white border-b border-white/10 backdrop-blur-lg">
+<header class="relative z-50 w-full bg-brand-black text-white border-b border-white/10 backdrop-blur-lg">
   <div class="container flex items-center justify-between py-4">
 
     <!-- LOGO -->
@@ -81,11 +84,13 @@ const languages = [
       <a href={`/${lang}#guides`} class="hover:text-brand-yellow transition">
         {t.guides}
       </a>
-      <a href={`/${lang}/blog`} class="hover:text-brand-yellow transition">
-        {t.blog}
-      </a>
+      {ENABLE_BLOG && (
+       <a href={`/${lang}/blog`} class="hover:text-brand-yellow transition">
+         {t.blog}
+          </a>
+           )}
       <a
-        href="https://wa.me/XXXXXXXXXXX"
+        href="https://wa.me/32489829468"
         target="_blank"
         rel="noopener"
         class="hover:text-brand-yellow transition"
@@ -148,10 +153,14 @@ const languages = [
       <a href={`/${lang}#guides`} class="hover:text-brand-yellow transition">
         {t.guides}
       </a>
-      <a href={`/${lang}/blog`} class="hover:text-brand-yellow transition">
+      {ENABLE_BLOG && (
+       <a href={`/${lang}/blog`} class="hover:text-brand-yellow transition">
         {t.blog}
-      </a>
-      <a href={`/${lang}/contacto`} class="hover:text-brand-yellow transition">
+        </a>
+           )}
+      <a href="https://wa.me/32489829468"
+           target="_blank"
+           rel="noopener" class="hover:text-brand-yellow transition">
         {t.contact}
       </a>
 
