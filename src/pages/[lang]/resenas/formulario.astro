@@ -2,567 +2,447 @@
 export const prerender = false;
 import Layout from "../../../layouts/Layout.astro";
 
+const { lang } = Astro.params;
 const token = Astro.url.searchParams.get("token");
+
 if (!token) {
   throw new Error("Token is required");
 }
+
+const texts = {
+  es: {
+    title: "Tu opinión nos ayuda a mejorar",
+    subtitle: "Gracias por confiar en BelgoTours. Tu reseña ayudará a otros viajeros a elegir con confianza.",
+    general: "Valoración general",
+    tap: "Selecciona una valoración",
+    details: "Detalles de la experiencia",
+
+    professionalism: "Profesionalidad del guía",
+    fun: "Diversión",
+    communication: "Comunicación",
+    quality: "Calidad de la información",
+    route: "Ruta e itinerario",
+
+    publicCommentTitle: "Cuéntanos tu experiencia",
+    publicCommentDescription: "Comparte qué fue lo que más disfrutaste del tour.",
+    publicCommentPlaceholder: "Describe tu experiencia (mínimo 20 caracteres)...",
+    minCharacters: "Mínimo 20 caracteres.",
+    submitReview: "Enviar reseña",
+    reviewVisibility: "Tu reseña podrá aparecer públicamente tras ser revisada."
+  },
+
+  en: {
+    title: "Your opinion helps us improve",
+    subtitle: "Thank you for choosing BelgoTours. Your review helps other travelers decide with confidence.",
+    general: "Overall rating",
+    tap: "Select your rating",
+    details: "Experience details",
+
+    professionalism: "Guide professionalism",
+    fun: "Fun factor",
+    communication: "Communication",
+    quality: "Quality of information",
+    route: "Route & itinerary",
+
+    publicCommentTitle: "Tell us about your experience",
+    publicCommentDescription: "Share what you enjoyed most about the tour.",
+    publicCommentPlaceholder: "Describe your experience (minimum 20 characters)...",
+    minCharacters: "Minimum 20 characters.",
+    submitReview: "Submit review",
+    reviewVisibility: "Your review may appear publicly after moderation."
+  },
+
+  it: {
+    title: "La tua opinione ci aiuta a migliorare",
+    subtitle: "Grazie per aver scelto BelgoTours.",
+    general: "Valutazione generale",
+    tap: "Seleziona una valutazione",
+    details: "Dettagli dell’esperienza",
+
+    professionalism: "Professionalità della guida",
+    fun: "Divertimento",
+    communication: "Comunicazione",
+    quality: "Qualità delle informazioni",
+    route: "Percorso e itinerario",
+
+    publicCommentTitle: "Raccontaci la tua esperienza",
+    publicCommentDescription: "Condividi ciò che ti è piaciuto di più.",
+    publicCommentPlaceholder: "Descrivi la tua esperienza (minimo 20 caratteri)...",
+    minCharacters: "Minimo 20 caratteri.",
+    submitReview: "Invia recensione",
+    reviewVisibility: "La tua recensione potrà essere pubblicata dopo moderazione."
+  },
+
+  fr: {
+    title: "Votre avis nous aide à nous améliorer",
+    subtitle: "Merci d’avoir choisi BelgoTours.",
+    general: "Évaluation générale",
+    tap: "Sélectionnez une note",
+    details: "Détails de l’expérience",
+
+    professionalism: "Professionnalisme du guide",
+    fun: "Aspect divertissant",
+    communication: "Communication",
+    quality: "Qualité des informations",
+    route: "Parcours et itinéraire",
+
+    publicCommentTitle: "Partagez votre expérience",
+    publicCommentDescription: "Partagez ce que vous avez le plus apprécié.",
+    publicCommentPlaceholder: "Décrivez votre expérience (minimum 20 caractères)...",
+    minCharacters: "Minimum 20 caractères.",
+    submitReview: "Envoyer l’avis",
+    reviewVisibility: "Votre avis pourra être publié après validation."
+  }
+};
+
+const t = texts[lang] || texts.es;
 ---
 
-<html lang="es">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
-    <title>Deja tu reseña | BelgoTours</title>
+    <title>{t.general} | BelgoTours</title>
   </head>
 
   <body class="bg-gray-100 text-gray-800">
     <Layout>
-      <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-3xl p-6 sm:p-10 mt-10 mb-24">
+      <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-3xl p-8 sm:p-12 mt-10 mb-24">
+
         <!-- TITULAR -->
-        <h1 class="text-3xl font-bold text-center mb-2">
-          Tu opinión nos ayuda a mejorar
+        <h1 class="text-3xl sm:text-4xl font-semibold text-center mb-3">
+          {t.title}
         </h1>
 
-        <p class="text-center text-gray-600 mb-8 text-sm sm:text-base">
-          Gracias por confiar en BelgoTours. Tu reseña ayudará a otros viajeros a elegir el tour ideal
-          y nos permitirá seguir ofreciendo experiencias únicas en Bruselas y Brujas.
+        <p class="text-center text-gray-500 mb-10 text-sm sm:text-base max-w-xl mx-auto">
+          {t.subtitle}
         </p>
 
         <!-- FORMULARIO -->
         <form
           method="POST"
           action="/api/submit-review"
-          class="space-y-8"
+          class="space-y-10"
         >
           <input type="hidden" name="token" value={token} />
 
           <!-- ⭐ VALORACIÓN GENERAL -->
           <section>
-            <div class="flex items-center justify-between mb-2">
-              <h2 class="font-semibold text-lg">
-                Valoración general del tour
-              </h2>
-              <span class="text-xs text-blue-600 font-medium">
-                Obligatorio
-              </span>
-            </div>
 
-            <p class="text-xs text-gray-500 mb-3">
-              Toca las estrellas para valorar tu experiencia de 1 a 5.
-            </p>
-
-            <div class="flex items-center gap-2">
-              <!-- 5 → 1 para que visualmente se vea de izquierda a derecha -->
-              <div class="flex flex-row-reverse justify-end gap-1">
-                <input
-                  id="rating_general_5"
-                  type="radio"
-                  name="rating_general"
-                  value="5"
-                  class="peer sr-only"
-                  required
-                />
-                <label
-                  for="rating_general_5"
-                  class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                >
-                 ★
-                </label>
-
-                <input
-                  id="rating_general_4"
-                  type="radio"
-                  name="rating_general"
-                  value="4"
-                  class="peer sr-only"
-                />
-                <label
-                  for="rating_general_4"
-                  class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                >
-                 ★
-                </label>
-
-                <input
-                  id="rating_general_3"
-                  type="radio"
-                  name="rating_general"
-                  value="3"
-                  class="peer sr-only"
-                />
-                <label
-                  for="rating_general_3"
-                  class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                >
-                 ★
-                </label>
-
-                <input
-                  id="rating_general_2"
-                  type="radio"
-                  name="rating_general"
-                  value="2"
-                  class="peer sr-only"
-                />
-                <label
-                  for="rating_general_2"
-                  class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                >
-                 ★
-                </label>
-
-                <input
-                  id="rating_general_1"
-                  type="radio"
-                  name="rating_general"
-                  value="1"
-                  class="peer sr-only"
-                />
-                <label
-                  for="rating_general_1"
-                  class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                >
-                 ★
-                </label>
-              </div>
-
-              <span class="ml-3 text-sm text-gray-600">
-                1 = Muy malo &nbsp;·&nbsp; 5 = Excelente
-              </span>
-            </div>
-          </section>
-
-          <!-- ⭐ SUBVALORACIONES -->
-          <section>
-            <h2 class="font-semibold text-lg mb-3">
-              Detalles de la experiencia
+            <h2 class="text-lg font-semibold mb-4">
+              {t.general}
             </h2>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-              <!-- Profesionalidad -->
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold text-sm sm:text-base">
-                    Profesionalidad del guía
-                  </span>
-                  <span class="text-[11px] text-gray-400">Opcional</span>
-                </div>
-                <div class="flex flex-row-reverse justify-end gap-1">
-                  <input
-                    id="profesionalidad_5"
-                    type="radio"
-                    name="profesionalidad"
-                    value="5"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="profesionalidad_5"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="profesionalidad_4"
-                    type="radio"
-                    name="profesionalidad"
-                    value="4"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="profesionalidad_4"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="profesionalidad_3"
-                    type="radio"
-                    name="profesionalidad"
-                    value="3"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="profesionalidad_3"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="profesionalidad_2"
-                    type="radio"
-                    name="profesionalidad"
-                    value="2"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="profesionalidad_2"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="profesionalidad_1"
-                    type="radio"
-                    name="profesionalidad"
-                    value="1"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="profesionalidad_1"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                </div>
-              </div>
+            <div class="flex justify-center gap-3">
 
-              <!-- Diversión -->
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold text-sm sm:text-base">
-                    Diversión
-                  </span>
-                  <span class="text-[11px] text-gray-400">Opcional</span>
-                </div>
-                <div class="flex flex-row-reverse justify-end gap-1">
+              {[1,2,3,4,5].map((value) => (
+                <label class="cursor-pointer">
                   <input
-                    id="diversion_5"
                     type="radio"
-                    name="diversion"
-                    value="5"
-                    class="peer sr-only"
+                    name="rating_general"
+                    value={value}
+                    class="hidden peer"
+                    required
                   />
-                  <label
-                    for="diversion_5"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="diversion_4"
-                    type="radio"
-                    name="diversion"
-                    value="4"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="diversion_4"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="diversion_3"
-                    type="radio"
-                    name="diversion"
-                    value="3"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="diversion_3"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="diversion_2"
-                    type="radio"
-                    name="diversion"
-                    value="2"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="diversion_2"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="diversion_1"
-                    type="radio"
-                    name="diversion"
-                    value="1"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="diversion_1"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                    ★
-                  </label>
-                </div>
-              </div>
 
-              <!-- Comunicación -->
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold text-sm sm:text-base">
-                    Comunicación del guía
-                  </span>
-                  <span class="text-[11px] text-gray-400">Opcional</span>
-                </div>
-                <div class="flex flex-row-reverse justify-end gap-1">
-                  <input
-                    id="comunicacion_5"
-                    type="radio"
-                    name="comunicacion"
-                    value="5"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="comunicacion_5"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
+                  <svg
+                    viewBox="0 0 24 24"
+                    class="w-12 h-12 transition-all duration-200
+                           text-gray-300
+                           hover:text-yellow-400
+                           peer-checked:text-yellow-400
+                           hover:scale-110"
+                    fill="currentColor"
                   >
-                   ★
-                  </label>
-                  <input
-                    id="comunicacion_4"
-                    type="radio"
-                    name="comunicacion"
-                    value="4"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="comunicacion_4"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="comunicacion_3"
-                    type="radio"
-                    name="comunicacion"
-                    value="3"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="comunicacion_3"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="comunicacion_2"
-                    type="radio"
-                    name="comunicacion"
-                    value="2"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="comunicacion_2"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="comunicacion_1"
-                    type="radio"
-                    name="comunicacion"
-                    value="1"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="comunicacion_1"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                </div>
-              </div>
+                    <path d="M12 17.27L18.18 21l-1.64-7.03
+                             L22 9.24l-7.19-.61L12 2
+                             9.19 8.63 2 9.24l5.46 4.73
+                             L5.82 21z"/>
+                  </svg>
+                </label>
+              ))}
 
-              <!-- Calidad de la información -->
-              <div>
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold text-sm sm:text-base">
-                    Calidad de la información
-                  </span>
-                  <span class="text-[11px] text-gray-400">Opcional</span>
-                </div>
-                <div class="flex flex-row-reverse justify-end gap-1">
-                  <input
-                    id="calidad_5"
-                    type="radio"
-                    name="calidad"
-                    value="5"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="calidad_5"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="calidad_4"
-                    type="radio"
-                    name="calidad"
-                    value="4"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="calidad_4"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="calidad_3"
-                    type="radio"
-                    name="calidad"
-                    value="3"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="calidad_3"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="calidad_2"
-                    type="radio"
-                    name="calidad"
-                    value="2"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="calidad_2"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="calidad_1"
-                    type="radio"
-                    name="calidad"
-                    value="1"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="calidad_1"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                </div>
-              </div>
-
-              <!-- Ruta / Itinerario -->
-              <div class="sm:col-span-2">
-                <div class="flex items-center justify-between mb-1">
-                  <span class="font-semibold text-sm sm:text-base">
-                    Ruta / Itinerario del tour
-                  </span>
-                  <span class="text-[11px] text-gray-400">Opcional</span>
-                </div>
-                <p class="text-[11px] text-gray-500 mb-1">
-                  Piensa en los lugares visitados, el ritmo del recorrido y el equilibrio entre historia y entretenimiento.
-                </p>
-                <div class="flex flex-row-reverse justify-end gap-1">
-                  <input
-                    id="ruta_5"
-                    type="radio"
-                    name="ruta"
-                    value="5"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="ruta_5"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="ruta_4"
-                    type="radio"
-                    name="ruta"
-                    value="4"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="ruta_4"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="ruta_3"
-                    type="radio"
-                    name="ruta"
-                    value="3"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="ruta_3"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="ruta_2"
-                    type="radio"
-                    name="ruta"
-                    value="2"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="ruta_2"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                  <input
-                    id="ruta_1"
-                    type="radio"
-                    name="ruta"
-                    value="1"
-                    class="peer sr-only"
-                  />
-                  <label
-                    for="ruta_1"
-                    class="cursor-pointer text-3xl sm:text-4xl text-[#FACC15] hover:scale-110 transition-transform"
-                  >
-                   ★
-                  </label>
-                </div>
-              </div>
             </div>
+
+            <!-- Feedback dinámico -->
+            <p id="ratingText" class="text-center text-sm text-gray-500 mt-4"></p>
+
           </section>
+          <!-- ⭐ SUBVALORACIONES -->
+<section class="pt-6 border-t border-gray-200">
 
-          <!-- 💬 COMENTARIO PÚBLICO -->
-          <section>
-            <label class="font-semibold block mb-1">
-              Comentario para otros viajeros
-            </label>
-            <p class="text-sm text-gray-500 mb-2">
-              Cuéntales qué te gustó del tour, del guía o de la ciudad. Tu experiencia ayudará a otros a decidirse.
-            </p>
-            <textarea
-              name="comentario_publico"
-              rows="4"
-              class="w-full border rounded-lg px-3 py-2 text-sm"
-              placeholder="Por ejemplo: “Nos encantó la energía del guía y las historias de la Grand Place…”"
-            ></textarea>
-          </section>
+  <h2 class="text-lg font-semibold mb-6 text-center">
+    {t.details}
+  </h2>
 
-          <!-- 🔒 COMENTARIO PRIVADO -->
-          
+  <div class="grid gap-8 sm:grid-cols-2">
 
-          <!-- BOTÓN ENVIAR -->
-          <button
-           type="submit"
-           class="w-full bg-[#FACC15] hover:bg-[#FBBF24]
-           text-gray-900 font-extrabold
-           py-4 rounded-2xl text-lg
-           shadow-lg transition-all"
-          >
-           ⭐ Enviar reseña
-           </button>
-           <p class="text-center text-xs text-gray-500 mt-3">
-            Tu reseña puede aparecer públicamente y ayudar a otros viajeros.
-           </p>
+    {/* ---------- Profesionalidad ---------- */}
+    <div>
+      <p class="font-medium mb-3">
+        {t.professionalism}
+      </p>
 
-        </form>
+      <div class="flex justify-start gap-2">
+        {[1,2,3,4,5].map((value) => (
+          <label class="cursor-pointer">
+            <input
+              type="radio"
+              name="profesionalidad"
+              value={value}
+              class="hidden peer"
+            />
+            <svg
+              viewBox="0 0 24 24"
+              class="w-8 h-8 sm:w-9 sm:h-9
+                     text-gray-300
+                     hover:text-yellow-400
+                     peer-checked:text-yellow-400
+                     transition-all duration-200
+                     hover:scale-110"
+              fill="currentColor"
+            >
+              <path d="M12 17.27L18.18 21l-1.64-7.03
+                       L22 9.24l-7.19-.61L12 2
+                       9.19 8.63 2 9.24l5.46 4.73
+                       L5.82 21z"/>
+            </svg>
+          </label>
+        ))}
       </div>
+    </div>
+
+    {/* ---------- Diversión ---------- */}
+    <div>
+      <p class="font-medium mb-3">
+        {t.fun}
+      </p>
+
+      <div class="flex justify-start gap-2">
+        {[1,2,3,4,5].map((value) => (
+          <label class="cursor-pointer">
+            <input
+              type="radio"
+              name="diversion"
+              value={value}
+              class="hidden peer"
+            />
+            <svg
+              viewBox="0 0 24 24"
+              class="w-8 h-8 sm:w-9 sm:h-9
+                     text-gray-300
+                     hover:text-yellow-400
+                     peer-checked:text-yellow-400
+                     transition-all duration-200
+                     hover:scale-110"
+              fill="currentColor"
+            >
+              <path d="M12 17.27L18.18 21l-1.64-7.03
+                       L22 9.24l-7.19-.61L12 2
+                       9.19 8.63 2 9.24l5.46 4.73
+                       L5.82 21z"/>
+            </svg>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* ---------- Comunicación ---------- */}
+    <div>
+      <p class="font-medium mb-3">
+        {t.communication}
+      </p>
+
+      <div class="flex justify-start gap-2">
+        {[1,2,3,4,5].map((value) => (
+          <label class="cursor-pointer">
+            <input
+              type="radio"
+              name="comunicacion"
+              value={value}
+              class="hidden peer"
+            />
+            <svg
+              viewBox="0 0 24 24"
+              class="w-8 h-8 sm:w-9 sm:h-9
+                     text-gray-300
+                     hover:text-yellow-400
+                     peer-checked:text-yellow-400
+                     transition-all duration-200
+                     hover:scale-110"
+              fill="currentColor"
+            >
+              <path d="M12 17.27L18.18 21l-1.64-7.03
+                       L22 9.24l-7.19-.61L12 2
+                       9.19 8.63 2 9.24l5.46 4.73
+                       L5.82 21z"/>
+            </svg>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* ---------- Calidad ---------- */}
+    <div>
+      <p class="font-medium mb-3">
+        {t.quality}
+      </p>
+
+      <div class="flex justify-start gap-2">
+        {[1,2,3,4,5].map((value) => (
+          <label class="cursor-pointer">
+            <input
+              type="radio"
+              name="calidad"
+              value={value}
+              class="hidden peer"
+            />
+            <svg
+              viewBox="0 0 24 24"
+              class="w-8 h-8 sm:w-9 sm:h-9
+                     text-gray-300
+                     hover:text-yellow-400
+                     peer-checked:text-yellow-400
+                     transition-all duration-200
+                     hover:scale-110"
+              fill="currentColor"
+            >
+              <path d="M12 17.27L18.18 21l-1.64-7.03
+                       L22 9.24l-7.19-.61L12 2
+                       9.19 8.63 2 9.24l5.46 4.73
+                       L5.82 21z"/>
+            </svg>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* ---------- Ruta ---------- */}
+    <div class="sm:col-span-2">
+      <p class="font-medium mb-3">
+        {t.route}
+      </p>
+
+      <div class="flex justify-start gap-2">
+        {[1,2,3,4,5].map((value) => (
+          <label class="cursor-pointer">
+            <input
+              type="radio"
+              name="ruta"
+              value={value}
+              class="hidden peer"
+            />
+            <svg
+              viewBox="0 0 24 24"
+              class="w-8 h-8 sm:w-9 sm:h-9
+                     text-gray-300
+                     hover:text-yellow-400
+                     peer-checked:text-yellow-400
+                     transition-all duration-200
+                     hover:scale-110"
+              fill="currentColor"
+            >
+              <path d="M12 17.27L18.18 21l-1.64-7.03
+                       L22 9.24l-7.19-.61L12 2
+                       9.19 8.63 2 9.24l5.46 4.73
+                       L5.82 21z"/>
+            </svg>
+          </label>
+        ))}
+      </div>
+    </div>
+
+  </div>
+</section>
+         <!-- 💬 COMENTARIO PÚBLICO -->
+<section class="pt-6 border-t border-gray-200">
+
+  <label class="block font-semibold mb-2 text-lg">
+    {t.publicCommentTitle}
+  </label>
+
+  <p class="text-sm text-gray-500 mb-4 max-w-xl">
+    {t.publicCommentDescription}
+  </p>
+
+  <textarea
+    name="comentario_publico"
+    rows="5"
+    required
+    minlength="20"
+    class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm
+           focus:ring-2 focus:ring-black focus:border-black
+           transition-all resize-none"
+    placeholder={t.publicCommentPlaceholder}
+  ></textarea>
+
+  <p class="text-xs text-gray-400 mt-2">
+    {t.minCharacters}
+  </p>
+
+</section>
+
+<!-- BOTÓN ENVIAR -->
+<div class="pt-8">
+
+  <button
+    type="submit"
+    class="w-full bg-black hover:bg-gray-900
+           text-white font-semibold
+           py-4 rounded-2xl text-lg
+           shadow-md transition-all duration-200
+           hover:scale-[1.01]"
+  >
+    {t.submitReview}
+  </button>
+
+  <p class="text-center text-xs text-gray-400 mt-4">
+    {t.reviewVisibility}
+  </p>
+
+</div>
+      <script>
+  const radios = document.querySelectorAll('input[name="rating_general"]');
+  const text = document.getElementById('ratingText');
+
+  const labels = {
+    es: {
+      1: "Podemos mejorar",
+      2: "Buena experiencia",
+      3: "Muy buena experiencia",
+      4: "Excelente experiencia",
+      5: "Experiencia inolvidable ⭐"
+    },
+    en: {
+      1: "We can improve",
+      2: "Good experience",
+      3: "Very good experience",
+      4: "Excellent experience",
+      5: "Unforgettable experience ⭐"
+    },
+    it: {
+      1: "Possiamo migliorare",
+      2: "Buona esperienza",
+      3: "Ottima esperienza",
+      4: "Esperienza eccellente",
+      5: "Esperienza indimenticabile ⭐"
+    },
+    fr: {
+      1: "Nous pouvons nous améliorer",
+      2: "Bonne expérience",
+      3: "Très bonne expérience",
+      4: "Excellente expérience",
+      5: "Expérience inoubliable ⭐"
+    }
+  };
+
+  const currentLang = document.documentElement.lang || "es";
+
+  radios.forEach(r => {
+    r.addEventListener("change", () => {
+      text.textContent = labels[currentLang][r.value];
+    });
+  });
+</script>
     </Layout>
   </body>
 </html>

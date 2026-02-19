@@ -1,5 +1,6 @@
 ---
-const STRAPI_URL = import.meta.env.PUBLIC_STRAPI_URL || "https://api.belgotours.com/api";
+const STRAPI_URL =
+  import.meta.env.PUBLIC_STRAPI_URL || "https://api.belgotours.com/api";
 
 interface Props {
   tourId: number | string;
@@ -8,36 +9,81 @@ interface Props {
 
 const { tourId, idioma } = Astro.props;
 
-// Construimos la query de forma segura
+/* ----------------------------------------
+   🌍 Idiomas válidos
+----------------------------------------- */
+type Lang = "es" | "en" | "it" | "fr" | "pt";
+
+const VALID_LANGS: Lang[] = ["es", "en", "it", "fr", "pt"];
+
+const safeLang: Lang = VALID_LANGS.includes(idioma as Lang)
+  ? (idioma as Lang)
+  : "es";
+
+/* ----------------------------------------
+   Textos multilenguaje
+----------------------------------------- */
+const TEXTS = {
+  es: {
+    title: "Opiniones de viajeros",
+    verified: "Viajero verificado",
+    emptyComment: "El viajero dejó una valoración sin comentario público.",
+    noReviews: "Aún no hay reseñas disponibles para este tour en este idioma.",
+  },
+  en: {
+    title: "Traveler reviews",
+    verified: "Verified traveler",
+    emptyComment: "The traveler left a rating without a public comment.",
+    noReviews: "No reviews available for this tour in this language yet.",
+  },
+  it: {
+    title: "Recensioni dei viaggiatori",
+    verified: "Viaggiatore verificato",
+    emptyComment: "Il viaggiatore ha lasciato una valutazione senza commento pubblico.",
+    noReviews: "Non ci sono recensioni disponibili per questo tour in questa lingua.",
+  },
+  fr: {
+    title: "Avis des voyageurs",
+    verified: "Voyageur vérifié",
+    emptyComment: "Le voyageur a laissé une note sans commentaire public.",
+    noReviews: "Aucun avis disponible pour ce tour dans cette langue.",
+  },
+  pt: {
+    title: "Avaliações de viajantes",
+    verified: "Viajante verificado",
+    emptyComment: "O viajante deixou apenas uma avaliação sem comentário público.",
+    noReviews: "Ainda não há avaliações para este tour neste idioma.",
+  },
+};
+
+const t = TEXTS[safeLang] || TEXTS.es;
+
+/* ----------------------------------------
+   Construcción query Strapi
+----------------------------------------- */
 const params = new URLSearchParams();
 
 if (tourId) {
   params.set("filters[tour][id][$eq]", String(tourId));
 }
-if (idioma) {
-  params.set("filters[idioma][$eq]", idioma);
-}
 
-// Solo reseñas aprobadas y visibles en web
+params.set("filters[idioma][$eq]", safeLang);
 params.set("filters[estado][$eq]", "aprobada");
 params.set("filters[visible_web][$eq]", "true");
-
-// Orden: más recientes primero
 params.append("sort[0]", "createdAt:desc");
-
-// Máximo 5 reseñas para el bloque principal
 params.set("pagination[limit]", "5");
 
 const url = `${STRAPI_URL}/reviews?${params.toString()}`;
 
 let reseñas: any[] = [];
+
 try {
   const response = await fetch(url);
   if (response.ok) {
     const json = await response.json();
     reseñas = json?.data ?? [];
   } else {
-    console.error("❌ Error al obtener reseñas:", response.status, await response.text());
+    console.error("❌ Error al obtener reseñas:", response.status);
   }
 } catch (err) {
   console.error("❌ Error de red al obtener reseñas:", err);
@@ -45,52 +91,65 @@ try {
 ---
 
 <div class="reviews-section py-8">
-  <h2 class="text-2xl font-bold mb-4">Opiniones de viajeros</h2>
+  <h2 class="text-2xl font-bold mb-6">
+    {t.title}
+  </h2>
 
   {reseñas.length > 0 ? (
-    <ul class="space-y-4">
+    <ul class="space-y-6">
       {reseñas.map((r) => {
         const attrs = r.attributes || {};
-        const rating = attrs.rating_general ?? 0;
+        const rating = Number(attrs.rating_general ?? 0);
         const comentario = attrs.comentario_publico ?? "";
-        const nombre = attrs.cliente_nombre ?? "Viajero verificado";
+        const nombre = attrs.cliente_nombre ?? t.verified;
         const fecha = attrs.fecha_tour || attrs.createdAt;
 
         return (
-          <li class="border rounded-xl p-4 bg-white shadow-sm">
-            <div class="flex items-center justify-between mb-2">
+          <li class="border border-gray-200 rounded-2xl p-5 bg-white shadow-sm">
+
+            <div class="flex items-center justify-between mb-3">
+
               <div class="flex items-center gap-2">
-                <span class="text-yellow-500">
-                  {"⭐".repeat(rating || 0)}
+                <span class="text-yellow-500 text-base">
+                  {"★".repeat(rating)}
                 </span>
-                <span class="text-sm text-gray-700">
+                <span class="text-sm text-gray-600">
                   ({rating}/5)
                 </span>
               </div>
+
               {fecha && (
                 <span class="text-sm text-gray-500">
-                  {new Date(fecha).toLocaleDateString(idioma === "en" ? "en-US" :
-                                                      idioma === "it" ? "it-IT" :
-                                                      idioma === "fr" ? "fr-FR" :
-                                                      "es-ES")}
+                  {new Date(fecha).toLocaleDateString(
+                    safeLang === "en"
+                      ? "en-US"
+                      : safeLang === "it"
+                      ? "it-IT"
+                      : safeLang === "fr"
+                      ? "fr-FR"
+                      : safeLang === "pt"
+                      ? "pt-PT"
+                      : "es-ES"
+                  )}
                 </span>
               )}
             </div>
 
-            <p class="text-sm text-gray-700 font-semibold mb-1">
+            <p class="text-sm font-semibold text-gray-900 mb-1">
               {nombre}
             </p>
 
-            <p class="text-gray-800">
-              {comentario || "El viajero dejó una valoración sin comentario público."}
+            <p class="text-gray-800 leading-relaxed">
+              {comentario || t.emptyComment}
             </p>
+
           </li>
         );
       })}
     </ul>
   ) : (
     <p class="text-gray-600 italic">
-      Aún no hay reseñas disponibles para este tour en este idioma.
+      {t.noReviews}
     </p>
   )}
 </div>

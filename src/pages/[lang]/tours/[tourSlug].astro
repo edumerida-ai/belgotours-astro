@@ -33,16 +33,58 @@ STATIC PATHS
 /* =========================================================
 FETCH TOUR
 ========================================================= */
-const { tourSlug, lang } = Astro.params;
+const { tourSlug, lang: rawLang } = Astro.params;
+
+type Lang = "es" | "en" | "it" | "fr";
+
+const lang: Lang =
+  rawLang && ["es", "en", "it", "fr"].includes(rawLang)
+    ? (rawLang as Lang)
+    : "es";
+
 const tourData = await getTourBySlug(tourSlug, lang);
 
 if (!tourData) {
-return new Response(null, {
-status: 302,
-headers: { Location: `/${lang}/404/` },
-});
+  return new Response(null, {
+    status: 302,
+    headers: { Location: `/${lang}/404/` },
+  });
 }
 
+/* =========================================================
+FETCH REVIEWS (para JSON-LD dinámico real)
+========================================================= */
+const STRAPI_API = import.meta.env.PUBLIC_STRAPI_URL;
+
+let reviewsData = null;
+
+try {
+  const res = await fetch(
+    `${STRAPI_API}/public/reviews-pro?tour=${tourSlug}&lang=${lang}`
+  );
+
+  if (res.ok) {
+    reviewsData = await res.json();
+  } else {
+    console.error("❌ Error HTTP reviews schema:", res.status);
+  }
+} catch (e) {
+  console.error("❌ Error loading reviews schema", e);
+}
+
+/* =========================================================
+NORMALIZE REVIEWS DATA
+========================================================= */
+const rating =
+  Number(reviewsData?.summary?.rating) || 0;
+
+const reviewCount =
+  Number(reviewsData?.summary?.total) || 0;
+
+const topReviews =
+  Array.isArray(reviewsData?.reviews)
+    ? reviewsData.reviews.slice(0, 3)
+    : [];
 
 
 // Compat Strapi v4/v5
@@ -52,7 +94,10 @@ const tourId = tourData.id ?? attrs?.id ?? null;
 /* =========================================================
 MEDIA HELPER (SAFE · STAGING & PROD)
 ========================================================= */
-function mediaUrl(media, preferredSize = "large") {
+function mediaUrl(
+  media: any,
+  preferredSize: "large" | "medium" | "small" = "large"
+): string {
   if (!media) return "";
 
   // Usamos SIEMPRE la base real que ya conoce Astro
@@ -129,8 +174,6 @@ lat: attrs.coordenadas_lat ?? null,
 lng: attrs.coordenadas_lng ?? null,
 
 // ratings
-rating: typeof attrs.rating === "number" ? attrs.rating : null,
-totalReviews: typeof attrs.totalReviews === "number" ? attrs.totalReviews : null,
 
 // hero
 heroMedia: {
@@ -147,7 +190,7 @@ badges: String(heroConfig?.badges || "")
 
 elementosUnicos,
 
-itinerario: (attrs.itinerarios || []).map((p) => ({
+itinerario: (attrs.itinerarios || []).map((p: any) => ({
 titulo: p.titulo || "",
 duracion: p.duracion || "",
 descripcion: p.descripcion || "",
@@ -255,7 +298,7 @@ microPrivate: "Te contactamos por WhatsApp para definir fecha y precio",
 /* =========================================================
 HERO COPY + FORMATTING
 ========================================================= */
-function formatDuration(value) {
+function formatDuration(value: number | null | undefined): string {
 if (value === null || value === undefined) return "";
 const n = Number(value);
 if (Number.isNaN(n)) return "";
@@ -271,27 +314,40 @@ const langLabel = tour.idioma ? String(tour.idioma).toUpperCase() : "";
 const cityLabel = tour.ciudad ? String(tour.ciudad).toUpperCase() : "";
 
 // Subtitle fallback (NO es heading)
-const heroSubtitleFallback = {
-es: {
-free: "Historia, arquitectura y rincones ocultos con guías locales.",
-fixed: "Una experiencia cuidada con guías locales.",
-private: "Tour privado a tu ritmo con guía local.",
-special: "Una experiencia única y deliciosa en Bélgica.",
-},
-en: {
-free: "History, architecture and hidden corners with local guides.",
-fixed: "A curated experience with local guides.",
-private: "Private tour at your pace with a local guide.",
-special: "A unique and delicious Belgian experience.",
-},
-it: {
-free: "Storia, architettura e angoli nascosti con guide locali.",
-fixed: "Un’esperienza curata con guide locali.",
-private: "Tour privato al tuo ritmo con guida locale.",
-special: "Un’esperienza belga unica e gustosa.",
-},
+const heroSubtitleFallback: Record<
+  Lang,
+  {
+    free: string;
+    fixed: string;
+    private: string;
+    special: string;
+  }
+> = {
+  es: {
+    free: "Historia, arquitectura y rincones ocultos con guías locales.",
+    fixed: "Una experiencia cuidada con guías locales.",
+    private: "Tour privado a tu ritmo con guía local.",
+    special: "Una experiencia única y deliciosa en Bélgica.",
+  },
+  en: {
+    free: "History, architecture and hidden corners with local guides.",
+    fixed: "A curated experience with local guides.",
+    private: "Private tour at your pace with a local guide.",
+    special: "A unique and delicious Belgian experience.",
+  },
+  it: {
+    free: "Storia, architettura e angoli nascosti con guide locali.",
+    fixed: "Un’esperienza curata con guide locali.",
+    private: "Tour privato al tuo ritmo con guida locale.",
+    special: "Un’esperienza belga unica e gustosa.",
+  },
+  fr: {
+    free: "Histoire, architecture et coins cachés avec des guides locaux.",
+    fixed: "Une expérience soignée avec des guides locaux.",
+    private: "Visite privée à votre rythme avec un guide local.",
+    special: "Une expérience belge unique et savoureuse.",
+  }
 };
-
 const subtitleKey = isPrivate ? "private" : isSpecial ? "special" : isFree ? "free" : "fixed";
 
 const heroSubtitle =
@@ -337,14 +393,7 @@ return "";
 /* =========================================================
 REVIEWS (schema gating)
 ========================================================= */
-const hasRealRating =
-tour.rating !== null &&
-tour.totalReviews !== null &&
-tour.totalReviews > 0 &&
-tour.rating > 0;
 
-const hasReviewsForSchema =
-tour.mostrarRatingHero && hasRealRating;
 
 /* =========================================================
 SEO (title/description/canonical)
@@ -362,33 +411,74 @@ const canonicalUrl =
 `https://belgotours.com/${lang}/tours/${tour.slug}/`;
 
 // Minimal JSON-LD (luego lo refinamos con @type correcto y reviews)
-const tourSchema = hasReviewsForSchema ? {
-"@context": "https://schema.org",
-"@type": "TouristAttraction",
-"@id": `${canonicalUrl}#tour`,
-name: tour.titulo,
-description: metaDescription,
-url: canonicalUrl,
-image: tour.heroMedia?.imagen ? [tour.heroMedia.imagen] : [],
-inLanguage: lang,
-aggregateRating: {
-"@type": "AggregateRating",
-ratingValue: Number(tour.rating).toFixed(1),
-reviewCount: tour.totalReviews,
-bestRating: "5",
-worstRating: "1",
-},
-provider: {
-"@type": "Organization",
-name: "BelgoTours",
-url: "https://belgotours.com",
-logo: {
-"@type": "ImageObject",
-url: "https://belgotours.com/Logo-belgotours.webp",
-},
-},
-} : null;
----
+const tourSchema =
+reviewCount > 0
+  ? {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "@id": `${canonicalUrl}#product`,
+      url: canonicalUrl,
+      name: tour.titulo,
+      description: metaDescription,
+      image: tour.heroMedia?.imagen
+        ? [tour.heroMedia.imagen]
+        : undefined,
+
+      brand: {
+        "@type": "Organization",
+        name: "BelgoTours",
+        url: "https://belgotours.com"
+      },
+
+      provider: {
+        "@type": "Organization",
+        name: "BelgoTours",
+        url: "https://belgotours.com"
+      },
+
+      areaServed: {
+        "@type": "City",
+        name: tour.ciudad === "bruselas" ? "Brussels" : "Bruges"
+      },
+
+      inLanguage: lang,
+
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "EUR",
+        price: tour.precioBase && tour.precioBase > 0
+          ? String(tour.precioBase)
+          : "0",
+        availability: "https://schema.org/InStock",
+        url: canonicalUrl
+      },
+
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: rating.toFixed(1),
+        reviewCount: reviewCount,
+        bestRating: "5",
+        worstRating: "1"
+      },
+
+      review: topReviews.map((r: any) => ({
+        "@type": "Review",
+        author: {
+          "@type": "Person",
+          name: r.nombre || "Traveler"
+        },
+        datePublished: r.fecha,
+        reviewBody: r.comentario || "",
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: String(r.rating),
+          bestRating: "5",
+          worstRating: "1"
+        }
+      }))
+    }
+  : null;
+  ---
 
 <Layout
 title={metaTitle}
@@ -407,7 +497,7 @@ canonical={canonicalUrl}
 </div>
 
 <!-- 2) HERO (dinámico desde Strapi) -->
-<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+<section class="relative min-h-[80vh] md:min-h-screen flex items-center justify-center overflow-hidden">
 <div class="absolute inset-0 z-0">
 {tour.heroMedia?.video ? (
 <video
@@ -432,7 +522,7 @@ decoding="async"
 <div class="absolute inset-0 bg-black/45 md:bg-black/50"></div>
 </div>
 
-<div class="container relative z-10 mx-auto px-4 py-20">
+<div class="container relative z-10 mx-auto px-4 py-14 md:py-20">
 <div class="max-w-4xl mx-auto text-center text-white">
 <!-- Badges -->
 <div class="flex flex-wrap justify-center gap-3 mb-6">
@@ -450,17 +540,17 @@ decoding="async"
 </div>
 
 <!-- H1 -->
-<h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+<h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight mb-5 md:mb-6">
 {tour.seoH1 || tour.titulo}
 </h1>
 
 <!-- Claim (NO heading) -->
-<p class="text-xl md:text-2xl mb-8 opacity-90">
+<p class="text-lg md:text-xl lg:text-2xl mb-6 md:mb-8 text-white/85 max-w-2xl mx-auto">
 {heroClaim}
 </p>
 
 <!-- Chips -->
-<div class="flex flex-wrap justify-center items-center gap-4 text-lg text-white/90 mb-10">
+<div class="flex flex-wrap justify-center items-center gap-3 text-sm md:text-base text-white/80 mb-8">
 {heroConfig?.mostrar_duracion !== false && durationLabel && (
 <span>⏱️ {durationLabel}</span>
 )}
@@ -475,7 +565,7 @@ decoding="async"
 </div>
 
 <!-- CTA Card -->
-<div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-2xl mx-auto">
+<div class="bg-white/10 backdrop-blur-md rounded-2xl p-5 md:p-8 max-w-xl mx-auto border border-white/20 shadow-xl">
 <div class="flex flex-col md:flex-row items-center justify-between gap-6">
 <div class="text-center md:text-left">
 <div class="text-3xl font-bold text-yellow-400 mb-1">
@@ -492,7 +582,17 @@ decoding="async"
 <div class="flex flex-col gap-3 w-full md:w-auto">
 <button
 type="button"
-class={`${heroCtaMode === "booking" ? "openBookingBtn" : "openPrivateRequestBtn"} bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold text-lg px-8 py-4 rounded-xl transition duration-300 transform hover:scale-105 shadow-2xl inline-flex items-center justify-center gap-2 w-full md:w-auto`}
+class={`${heroCtaMode === "booking" ? "openBookingBtn" : "openPrivateRequestBtn"}
+bg-yellow-400 hover:bg-yellow-300
+text-gray-900 font-extrabold
+text-base md:text-lg
+px-6 py-3 md:px-8 md:py-4
+rounded-xl
+transition-all duration-300
+hover:scale-[1.02]
+shadow-xl
+inline-flex items-center justify-center gap-2
+w-full md:w-auto`}
 aria-expanded="false"
 >
 <span>🗓️ {heroCtaText}</span>
@@ -530,12 +630,12 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 <!-- 3) DESCRIPCIÓN / OVERVIEW -->
 <section
   id="overview"
-  class="py-16 md:py-20 bg-gray-50 md:bg-white"
+  class="py-12 md:py-20 bg-gray-50 md:bg-white"
 >
   <div class="container mx-auto px-4">
 
     <!-- Título + subtítulo (editorial, centrado) -->
-    <div class="max-w-3xl mx-auto text-center mb-10 md:mb-14">
+    <div class="max-w-3xl mx-auto text-center mb-8 md:mb-14">
       <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
         {ui.overview}
       </h2>
@@ -571,8 +671,6 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 </section>
 
 <!-- Separador suave hacia Itinerario -->
-<div class="h-12 md:h-20 bg-white"></div>
-
 
 <!-- 4) ITINERARIO -->
 <section id="itinerario" class="py-16 md:py-20 bg-gray-50">
@@ -590,8 +688,8 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
     </div>
 
     <!-- Lista de paradas -->
-    <div class="max-w-4xl mx-auto space-y-12">
-      {tour.itinerario?.map((punto, index) => (
+    <div class="max-w-4xl mx-auto space-y-8 md:space-y-12">
+      {tour.itinerario?.map((punto: any, index: number) => (
         <article class="bg-white rounded-3xl shadow-card overflow-hidden">
           <div class="grid grid-cols-1 md:grid-cols-2">
 
@@ -709,28 +807,32 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 <!-- 8) CTA PERSISTENTE (UX PREMIUM · TOUR PAGES) -->
 <div
   id="bookingWidget"
-  class="fixed bottom-4 left-4 right-4
+  class="fixed bottom-3 left-3 right-3
          md:left-auto md:right-10 md:bottom-8
-         z-40 transition-all duration-300"
+         z-40 transition-all duration-300
+         max-w-xl mx-auto md:max-w-none"
 >
   <div
-    class="bg-white shadow-2xl rounded-2xl
-           flex items-center justify-center md:justify-end
-           px-4 py-4"
-  >
+  class="bg-white/95 backdrop-blur-md
+         border border-gray-200
+         shadow-xl
+         rounded-2xl
+         flex items-center justify-center md:justify-end
+         px-3 py-2"
+>
     <button
       type="button"
       class={`${heroCtaMode === "booking"
-        ? "openBookingBtn"
-        : "openPrivateRequestBtn"}
-        bg-yellow-400 hover:bg-yellow-300
-        text-gray-900 font-extrabold
-        text-base
-        px-8 py-4
-        rounded-2xl
-        w-full md:w-auto md:min-w-[320px]
-        inline-flex items-center justify-center gap-2
-        transition`}
+  ? "openBookingBtn"
+  : "openPrivateRequestBtn"}
+  bg-yellow-400 hover:bg-yellow-300
+  text-gray-900 font-extrabold
+  text-sm md:text-base
+  px-5 py-3 md:px-8 md:py-4
+  rounded-xl
+  w-full md:w-auto md:min-w-[300px]
+  inline-flex items-center justify-center gap-2
+  transition-all duration-300`}
       aria-expanded="false"
     >
       🗓️ {ui.verDisponibilidad}
@@ -942,8 +1044,8 @@ onScroll();
 
 // Booking panel open/close
 document.addEventListener("DOMContentLoaded", () => {
-const overlay = document.getElementById("bookingOverlay");
-const panel = document.getElementById("bookingPanel");
+const overlay = document.getElementById("bookingOverlay") as HTMLElement | null;
+const panel = document.getElementById("bookingPanel") as HTMLElement | null;
 const openBtns = document.querySelectorAll(".openBookingBtn, .openPrivateRequestBtn");
 const closeBtns = document.querySelectorAll(".closeBookingBtn");
 
@@ -955,28 +1057,28 @@ function openPanel() {
 if (isOpen) return;
 isOpen = true;
 
-overlay.classList.remove("hidden");
-requestAnimationFrame(() => overlay.classList.add("open"));
+overlay!.classList.remove("hidden");
+requestAnimationFrame(() => overlay!.classList.add("open"));
 
-panel.classList.add("open", "bounce");
+panel!.classList.add("open", "bounce");
 document.body.classList.add("no-scroll");
 
 openBtns.forEach((b) => b.setAttribute("aria-expanded", "true"));
-setTimeout(() => panel.classList.remove("bounce"), 320);
+setTimeout(() => panel!.classList.remove("bounce"), 320);
 }
 
 function closePanel() {
 if (!isOpen) return;
 isOpen = false;
 
-overlay.classList.remove("open");
-panel.classList.remove("open");
+overlay!.classList.remove("open");
+panel!.classList.remove("open");
 document.body.classList.remove("no-scroll");
 
 openBtns.forEach((b) => b.setAttribute("aria-expanded", "false"));
 
 setTimeout(() => {
-if (!isOpen) overlay.classList.add("hidden");
+if (!isOpen) overlay!.classList.add("hidden");
 }, 300);
 }
 
@@ -999,14 +1101,14 @@ const grabber = panel.querySelector(".panel-grabber");
 const content = panel.querySelector(".panel-content");
 if (!grabber || !content) return;
 
-const startDrag = (clientY) => {
+const startDrag = (clientY: number) => {
 dragging = true;
 startY = clientY;
 currentY = 0;
 panel.style.transition = "none";
 };
 
-const moveDrag = (clientY) => {
+const moveDrag = (clientY: number) => {
 if (!dragging) return;
 const delta = clientY - startY;
 if (delta < 0) return;
@@ -1031,12 +1133,23 @@ overlay.style.opacity = "";
 }
 };
 
-grabber.addEventListener("touchstart", (e) => startDrag(e.touches[0].clientY), { passive: true });
-grabber.addEventListener("touchmove", (e) => { moveDrag(e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+grabber.addEventListener("touchstart", (e) => {
+  const touch = (e as TouchEvent).touches[0];
+  startDrag(touch.clientY);
+}, { passive: true });
+grabber.addEventListener("touchmove", (e) => {
+  const touch = (e as TouchEvent).touches[0];
+  moveDrag(touch.clientY);
+  e.preventDefault();
+}, { passive: false });
 grabber.addEventListener("touchend", endDrag);
 
-grabber.addEventListener("mousedown", (e) => startDrag(e.clientY));
-window.addEventListener("mousemove", (e) => moveDrag(e.clientY));
+grabber.addEventListener("mousedown", (e) => {
+  startDrag((e as MouseEvent).clientY);
+});
+window.addEventListener("mousemove", (e) => {
+  moveDrag((e as MouseEvent).clientY);
+});
 window.addEventListener("mouseup", endDrag);
 });
 </script>

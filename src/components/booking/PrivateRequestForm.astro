@@ -1,49 +1,151 @@
 ---
-const { tour, lang } = Astro.props;
+type Lang = "es" | "en" | "it" | "fr";
+
+interface Props {
+  tour: any;
+  lang: Lang;
+}
+
+const { tour, lang } = Astro.props as Props;
+
+const safeLang: Lang = ["es", "en", "it", "fr"].includes(lang)
+  ? lang
+  : "es";
+
+const titleByLang: Record<Lang, string> = {
+  es: "Solicita tu tour privado a medida",
+  en: "Request your custom private tour",
+  it: "Richiedi il tuo tour privato su misura",
+  fr: "Demandez votre visite privée sur mesure",
+};
+
+const subtitleByLang: Record<Lang, string> = {
+  es: "Te enviaremos una propuesta personalizada en menos de 24h.",
+  en: "We’ll send you a tailored proposal within 24 hours.",
+  it: "Ti invieremo una proposta personalizzata entro 24 ore.",
+  fr: "Nous vous enverrons une proposition personnalisée sous 24h.",
+};
+
+const buttonByLang: Record<Lang, string> = {
+  es: "📩 Recibir propuesta personalizada",
+  en: "📩 Get custom proposal",
+  it: "📩 Ricevi proposta personalizzata",
+  fr: "📩 Recevoir une proposition",
+};
 ---
 
-<form
-  class="space-y-4"
-  method="POST"
-  action="/api/private-request"
->
-  <input type="hidden" name="tour_slug" value={tour.slug} />
-  <input type="hidden" name="idioma" value={lang} />
-  <input type="hidden" name="tipo_experiencia" value="privado" />
+<div class="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
 
-  <div>
-    <label class="block text-sm font-medium">Nombre</label>
-    <input required name="nombre" class="w-full border rounded-lg p-3" />
+  <!-- Encabezado -->
+  <div class="space-y-2">
+    <h3 class="text-2xl md:text-3xl font-extrabold text-gray-900">
+      {titleByLang[safeLang]}
+    </h3>
+    <p class="text-sm text-gray-600">
+      {subtitleByLang[safeLang]}
+    </p>
   </div>
 
-  <div>
-    <label class="block text-sm font-medium">Email</label>
-    <input required type="email" name="email" class="w-full border rounded-lg p-3" />
-  </div>
-
-  <div>
-    <label class="block text-sm font-medium">WhatsApp</label>
-    <input required name="telefono" class="w-full border rounded-lg p-3" />
-  </div>
-
-  <div>
-    <label class="block text-sm font-medium">Personas</label>
-    <input type="number" min="1" name="personas" class="w-full border rounded-lg p-3" />
-  </div>
-
-  <div>
-    <label class="block text-sm font-medium">Mensaje (opcional)</label>
-    <textarea name="mensaje" rows="3" class="w-full border rounded-lg p-3"></textarea>
-  </div>
-
-  <button
-    class="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-xl"
+  <form
+    class="space-y-5"
+    method="POST"
+    action="/api/private-request"
   >
-    Enviar solicitud
-  </button>
+    <input type="hidden" name="tour_slug" value={tour.slug} />
+    <input type="hidden" name="idioma" value={lang} />
+    <input type="hidden" name="tipo_experiencia" value="privado" />
 
-  <p class="text-sm text-gray-500 text-center">
-    Te contactaremos por WhatsApp para definir fecha y precio.  
-    Cancelación gratuita.
-  </p>
-</form>
+    <!-- Nombre + Email -->
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          {lang === "es" && "Nombre"}
+          {lang === "en" && "First name"}
+          {lang === "it" && "Nome"}
+          {lang === "fr" && "Prénom"} *
+        </label>
+        <input
+          required
+          name="nombre"
+          class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-yellow-300 focus:border-gray-900 outline-none transition"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Email *
+        </label>
+        <input
+          required
+          type="email"
+          name="email"
+          class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-yellow-300 focus:border-gray-900 outline-none transition"
+        />
+      </div>
+    </div>
+
+    <!-- WhatsApp + Personas -->
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          📱 WhatsApp *
+        </label>
+        <input
+          required
+          name="telefono"
+          class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-yellow-300 focus:border-gray-900 outline-none transition"
+          placeholder="+34 612 345 678"
+        />
+      </div>
+
+      <div>
+  <label class="block text-sm font-medium text-gray-700 mb-1">
+    {safeLang === "es" && "Fecha aproximada"}
+    {safeLang === "en" && "Preferred date"}
+    {safeLang === "it" && "Data preferita"}
+    {safeLang === "fr" && "Date souhaitée"}
+  </label>
+  <input
+    type="date"
+    name="fecha_preferida"
+    class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-yellow-300 focus:border-gray-900 outline-none transition"
+  />
+</div>
+    </div>
+
+    <!-- Mensaje -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        {lang === "es" && "Detalles del tour (opcional)"}
+        {lang === "en" && "Tour details (optional)"}
+        {lang === "it" && "Dettagli del tour (opzionale)"}
+        {lang === "fr" && "Détails du tour (optionnel)"}
+      </label>
+      <textarea
+        name="mensaje"
+        rows="3"
+        class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-yellow-300 focus:border-gray-900 outline-none transition"
+        placeholder={
+          lang === "es"
+            ? "Ej: fecha aproximada, intereses, niños, movilidad reducida..."
+            : "Preferred date, interests, group details..."
+        }
+      ></textarea>
+    </div>
+
+    <!-- Botón -->
+    <button
+      class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-extrabold py-4 rounded-xl transition transform hover:scale-105 shadow-md"
+    >
+      {buttonByLang[safeLang]}
+    </button>
+
+    <!-- Micro confianza -->
+    <p class="text-xs text-gray-500 text-center">
+      {lang === "es" && "Sin pago ahora · Respuesta rápida · Sin compromiso"}
+      {lang === "en" && "No payment now · Fast response · No obligation"}
+      {lang === "it" && "Nessun pagamento ora · Risposta rapida · Nessun impegno"}
+      {lang === "fr" && "Aucun paiement maintenant · Réponse rapide · Sans engagement"}
+    </p>
+  </form>
+</div>

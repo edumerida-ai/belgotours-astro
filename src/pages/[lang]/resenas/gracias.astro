@@ -1,38 +1,82 @@
 ---
 export const prerender = false;
 import Layout from "../../../layouts/Layout.astro";
+
+const { lang } = Astro.params;
+
+const texts = {
+  es: {
+    title: "¡Gracias por tu reseña!",
+    message: "Tu opinión ayuda a otros viajeros a elegir con confianza y nos motiva a seguir creando experiencias auténticas en Bélgica.",
+    secondary: "Hemos recibido tu valoración correctamente.",
+    back: "Volver a BelgoTours"
+  },
+  en: {
+    title: "Thank you for your review!",
+    message: "Your feedback helps other travelers choose with confidence and encourages us to keep creating authentic experiences in Belgium.",
+    secondary: "We have successfully received your review.",
+    back: "Back to BelgoTours"
+  },
+  it: {
+    title: "Grazie per la tua recensione!",
+    message: "Il tuo feedback aiuta altri viaggiatori a scegliere con fiducia e ci motiva a creare esperienze autentiche in Belgio.",
+    secondary: "Abbiamo ricevuto correttamente la tua recensione.",
+    back: "Torna a BelgoTours"
+  },
+  fr: {
+    title: "Merci pour votre avis !",
+    message: "Votre retour aide d'autres voyageurs à choisir en toute confiance et nous motive à créer des expériences authentiques en Belgique.",
+    secondary: "Nous avons bien reçu votre avis.",
+    back: "Retour à BelgoTours"
+  }
+};
+
+const t = texts[lang] || texts.es;
 ---
 
-<html lang="es">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
-    <title>Gracias por tu reseña | BelgoTours</title>
+    <title>{t.title} | BelgoTours</title>
   </head>
 
-  <body class="bg-gray-100">
+  <body class="bg-gray-100 text-gray-800">
     <Layout>
-      <div class="max-w-xl mx-auto mt-20 bg-white rounded-2xl shadow-md p-10 text-center">
+      <div class="max-w-xl mx-auto mt-20 bg-white rounded-3xl shadow-lg p-10 text-center">
 
-        <div class="text-5xl mb-4">⭐</div>
+        <!-- Icono elegante -->
+        <div class="flex justify-center mb-6">
+          <div class="w-16 h-16 rounded-full bg-black flex items-center justify-center">
+            <svg viewBox="0 0 24 24" class="w-8 h-8 text-white" fill="currentColor">
+              <path d="M12 17.27L18.18 21l-1.64-7.03
+                       L22 9.24l-7.19-.61L12 2
+                       9.19 8.63 2 9.24l5.46 4.73
+                       L5.82 21z"/>
+            </svg>
+          </div>
+        </div>
 
-        <h1 class="text-3xl font-bold mb-3">
-          ¡Gracias por tu reseña!
+        <h1 class="text-3xl font-semibold mb-4">
+          {t.title}
         </h1>
 
-        <p class="text-gray-600 mb-6 leading-relaxed">
-          Tu opinión ayuda a otros viajeros a elegir con confianza
-          y nos motiva a seguir creando experiencias auténticas en Bélgica.
+        <p class="text-gray-600 mb-4 leading-relaxed">
+          {t.message}
         </p>
 
-        <p class="text-sm text-gray-500 mb-8">
-          Nos alegra haberte acompañado en tu experiencia con BelgoTours 💛
+        <p class="text-sm text-gray-400 mb-10">
+          {t.secondary}
         </p>
 
         <a
-          class="inline-block bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold px-10 py-3 rounded-xl shadow transition"
-          href="/"
+          class="inline-block bg-black hover:bg-gray-900
+                 text-white font-medium
+                 px-10 py-3 rounded-2xl
+                 transition-all duration-200
+                 hover:scale-[1.02]"
+          href={`/${lang}/`}
         >
-          Volver a BelgoTours
+          {t.back}
         </a>
 
       </div>

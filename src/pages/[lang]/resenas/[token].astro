@@ -1,10 +1,8 @@
 ---
 export const prerender = false;
 
-import Layout from "../../../layouts/Layout.astro";
-
 const token = Astro.params.token;
-const lang = Astro.params.lang;
+const langParam = Astro.params.lang;
 
 if (!token) {
   throw new Error("Missing token");
@@ -12,25 +10,40 @@ if (!token) {
 
 const API = import.meta.env.PUBLIC_STRAPI_URL;
 if (!API) {
-  throw new Error("❌ PUBLIC_STRAPI_URL no está definido en .env");
+  throw new Error("PUBLIC_STRAPI_URL is not defined");
 }
 
-// Validar token en Strapi
-const res = await fetch(`${API}/review-tokens/validate?token=${token}`);
+let data = null;
 
-let data;
 try {
+  const res = await fetch(`${API}/reviews/start`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ token })
+  });
+
+  if (!res.ok) {
+    return Astro.redirect(`/${langParam}/resenas/error?reason=invalid`);
+  }
+
   data = await res.json();
-} catch (e) {
-  data = { valid: false };
+
+} catch (err) {
+  return Astro.redirect(`/${langParam}/resenas/error?reason=invalid`);
 }
 
 if (!data?.valid) {
-  return Astro.redirect(`/${lang}/resenas/error?reason=invalid`);
+  return Astro.redirect(`/${langParam}/resenas/error?reason=invalid`);
 }
 
-// Token válido → enviar al formulario correcto según idioma
-return Astro.redirect(`/${lang}/resenas/formulario?token=${token}`);
----
+/*
+  IMPORTANTE:
+  usamos el locale real del token,
+  no el que venga manipulado en la URL
+*/
+const safeLang = data.locale || langParam || "es";
 
-<!-- No HTML -->
+return Astro.redirect(`/${safeLang}/resenas/formulario?token=${token}`);
+---

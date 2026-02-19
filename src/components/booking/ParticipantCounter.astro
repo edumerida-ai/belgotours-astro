@@ -2,48 +2,69 @@
 // src/components/booking/ParticipantCounter.astro
 interface Props {
   lang?: string;
+  showMaxHint?: boolean; // solo Free Tours
 }
 
-const { lang = 'es' } = Astro.props;
+const { lang = "es", showMaxHint = false } = Astro.props as Props;
 ---
 
-<div class="participant-counter space-y-6">
-  <!-- Adultos -->
-  <div>
-    <label class="block text-gray-800 font-semibold mb-2">
-      {lang === 'es' ? '👤 Adultos' :
-       lang === 'en' ? '👤 Adults' :
-       lang === 'it' ? '👤 Adulti' :
-       lang === 'fr' ? '👤 Adultes' :
-       '👤 Adultos'}
-    </label>
+<div class="participant-counter bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-5">
 
-    <div class="flex items-center gap-4">
+  <!-- Título -->
+  <div class="flex items-center justify-between">
+    <h3 class="font-semibold text-gray-900 text-base">
+      {lang === 'es' ? '👥 Participantes' :
+       lang === 'en' ? '👥 Participants' :
+       lang === 'it' ? '👥 Partecipanti' :
+       lang === 'fr' ? '👥 Participants' :
+       '👥 Participantes'}
+    </h3>
+
+    {showMaxHint && (
+  <span class="text-xs text-gray-500">
+    {lang === "es"
+      ? "Máx. 7 personas por reserva"
+      : lang === "en"
+      ? "Max. 7 people per booking"
+      : lang === "it"
+      ? "Max. 7 persone per prenotazione"
+      : lang === "fr"
+      ? "Max. 7 personnes par réservation"
+      : "Max. 7"}
+  </span>
+)}
+  </div>
+
+  <!-- Adultos -->
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="font-medium text-gray-800">
+        {lang === 'es' ? 'Adultos' :
+         lang === 'en' ? 'Adults' :
+         lang === 'it' ? 'Adulti' :
+         lang === 'fr' ? 'Adultes' :
+         'Adultos'}
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
       <button
         type="button"
         id="decreaseAdults"
-        class="w-10 h-10 rounded-full flex items-center justify-center
-               bg-gray-200 text-gray-700
-               hover:bg-gray-300 transition
-               disabled:opacity-40 disabled:cursor-not-allowed"
+        class="w-9 h-9 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition disabled:opacity-40"
         disabled
       >
         −
       </button>
 
-      <span
-        id="adultsCount"
-        class="text-xl font-bold text-gray-900 min-w-[2rem] text-center"
-      >
+      <span id="adultsCount" class="w-6 text-center font-semibold text-gray-900">
         1
       </span>
 
       <button
         type="button"
         id="increaseAdults"
-        class="w-10 h-10 rounded-full flex items-center justify-center
-               bg-yellow-400 text-gray-900
-               hover:bg-yellow-500 transition"
+        class="w-9 h-9 rounded-full bg-yellow-400 text-gray-900 hover:bg-yellow-500 transition"
       >
         +
       </button>
@@ -51,94 +72,113 @@ const { lang = 'es' } = Astro.props;
   </div>
 
   <!-- Niños -->
-  <div>
-    <label class="block text-gray-800 font-semibold mb-2">
-      {lang === 'es' ? '🧒 Niños (0–12 años)' :
-       lang === 'en' ? '🧒 Children (0–12)' :
-       lang === 'it' ? '🧒 Bambini (0–12)' :
-       lang === 'fr' ? '🧒 Enfants (0–12)' :
-       '🧒 Crianças (0–12)'}
-    </label>
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="font-medium text-gray-800">
+        {lang === 'es' ? 'Niños (0–12)' :
+         lang === 'en' ? 'Children (0–12)' :
+         lang === 'it' ? 'Bambini (0–12)' :
+         lang === 'fr' ? 'Enfants (0–12)' :
+         'Niños'}
+      </div>
+    </div>
 
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-3">
       <button
         type="button"
         id="decreaseChildren"
-        class="w-10 h-10 rounded-full flex items-center justify-center
-               bg-gray-200 text-gray-700
-               hover:bg-gray-300 transition
-               disabled:opacity-40 disabled:cursor-not-allowed"
+        class="w-9 h-9 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition disabled:opacity-40"
         disabled
       >
         −
       </button>
 
-      <span
-        id="childrenCount"
-        class="text-xl font-bold text-gray-900 min-w-[2rem] text-center"
-      >
+      <span id="childrenCount" class="w-6 text-center font-semibold text-gray-900">
         0
       </span>
 
       <button
         type="button"
         id="increaseChildren"
-        class="w-10 h-10 rounded-full flex items-center justify-center
-               bg-yellow-400 text-gray-900
-               hover:bg-yellow-500 transition"
+        class="w-9 h-9 rounded-full bg-yellow-400 text-gray-900 hover:bg-yellow-500 transition"
       >
         +
       </button>
     </div>
   </div>
+
 </div>
-
 <script>
-// Estado de participantes
-window.bookingState = window.bookingState || {};
-window.bookingState.participants = {
-  adults: 1,
-  children: 0
-};
+// Estado de participantes seguro (sin pelearte con TS)
+const bookingState =
+  ((window as any).bookingState ??= {});
 
-document.addEventListener('DOMContentLoaded', () => {
-  const adultsCount = document.getElementById('adultsCount');
-  const childrenCount = document.getElementById('childrenCount');
-  const decreaseAdults = document.getElementById('decreaseAdults');
-  const increaseAdults = document.getElementById('increaseAdults');
-  const decreaseChildren = document.getElementById('decreaseChildren');
-  const increaseChildren = document.getElementById('increaseChildren');
+const participants =
+  (bookingState.participants ??= { adults: 1, children: 0 });
 
-  function updateCounts() {
-    adultsCount.textContent = window.bookingState.participants.adults;
-    childrenCount.textContent = window.bookingState.participants.children;
+document.addEventListener("DOMContentLoaded", () => {
+  const adultsCount = document.getElementById("adultsCount");
+  const childrenCount = document.getElementById("childrenCount");
 
-    decreaseAdults.disabled = window.bookingState.participants.adults <= 1;
-    decreaseChildren.disabled = window.bookingState.participants.children <= 0;
+  const decreaseAdults = document.getElementById("decreaseAdults");
+  const increaseAdults = document.getElementById("increaseAdults");
+  const decreaseChildren = document.getElementById("decreaseChildren");
+  const increaseChildren = document.getElementById("increaseChildren");
 
-    document.dispatchEvent(new CustomEvent('participantsUpdated'));
+  // Guard + aliases NO-null (esto es lo que TS sí respeta en closures)
+  if (
+    !(adultsCount instanceof HTMLElement) ||
+    !(childrenCount instanceof HTMLElement) ||
+    !(decreaseAdults instanceof HTMLButtonElement) ||
+    !(increaseAdults instanceof HTMLButtonElement) ||
+    !(decreaseChildren instanceof HTMLButtonElement) ||
+    !(increaseChildren instanceof HTMLButtonElement)
+  ) {
+    return;
   }
 
-  increaseAdults.addEventListener('click', () => {
-    window.bookingState.participants.adults++;
+  const adultsEl = adultsCount;
+  const childrenEl = childrenCount;
+  const decAdultsBtn = decreaseAdults;
+  const incAdultsBtn = increaseAdults;
+  const decChildrenBtn = decreaseChildren;
+  const incChildrenBtn = increaseChildren;
+
+  function updateCounts() {
+    const total = participants.adults + participants.children;
+
+    adultsEl.textContent = String(participants.adults);
+    childrenEl.textContent = String(participants.children);
+
+    decAdultsBtn.disabled = participants.adults <= 1;
+    decChildrenBtn.disabled = participants.children <= 0;
+
+    incAdultsBtn.disabled = total >= 7;
+    incChildrenBtn.disabled = total >= 7;
+
+    document.dispatchEvent(new CustomEvent("participantsUpdated"));
+  }
+
+  incAdultsBtn.addEventListener("click", () => {
+    participants.adults++;
     updateCounts();
   });
 
-  decreaseAdults.addEventListener('click', () => {
-    if (window.bookingState.participants.adults > 1) {
-      window.bookingState.participants.adults--;
+  decAdultsBtn.addEventListener("click", () => {
+    if (participants.adults > 1) {
+      participants.adults--;
       updateCounts();
     }
   });
 
-  increaseChildren.addEventListener('click', () => {
-    window.bookingState.participants.children++;
+  incChildrenBtn.addEventListener("click", () => {
+    participants.children++;
     updateCounts();
   });
 
-  decreaseChildren.addEventListener('click', () => {
-    if (window.bookingState.participants.children > 0) {
-      window.bookingState.participants.children--;
+  decChildrenBtn.addEventListener("click", () => {
+    if (participants.children > 0) {
+      participants.children--;
       updateCounts();
     }
   });

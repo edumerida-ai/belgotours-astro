@@ -6,7 +6,8 @@ interface Props {
 const { lang } = Astro.props;
 
 // Base URL de Strapi (desde .env)
-const STRAPI_API = import.meta.env.PUBLIC_STRAPI_URL;
+const STRAPI_API =
+  import.meta.env.PUBLIC_STRAPI_URL || "https://api.belgotours.com/api";
 
 // ---------------------------------------------
 // Textos por idioma

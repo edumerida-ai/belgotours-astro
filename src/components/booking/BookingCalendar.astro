@@ -12,7 +12,29 @@ interface Props {
   lang?: string;
 }
 
-const { tour = {}, lang = "es" } = Astro.props;
+/* -------------------------
+   Tipos internos seguros
+-------------------------- */
+
+type Lang = "es" | "en" | "it" | "fr";
+
+type Horario = {
+  id: number;
+  fecha: string;
+  hora: string;
+  cupoDisponible: number;
+  cupoMaximo: number;
+  cupoOcupado: number;
+};
+
+const { tour = {}, lang = "es" } = Astro.props as Props;
+
+/* Fallback seguro idioma */
+const safeLang: Lang = (["es", "en", "it", "fr"] as const).includes(
+  lang as Lang
+)
+  ? (lang as Lang)
+  : "es";
 
 const tourId =
   tour?.id ||
@@ -21,35 +43,52 @@ const tourId =
   tour?.attributes?.id ||
   3;
 
-// Textos UI
-const texts =
-  {
-    es: {
-      selectDate: "Selecciona una fecha",
-      selectTime: "Selecciona un horario",
-      noTimes: "No hay horarios para esta fecha",
-      maxPeople: "Plazas disponibles",
-    },
-    en: {
-      selectDate: "Select a date",
-      selectTime: "Select a time",
-      noTimes: "No times available for this date",
-      maxPeople: "Available spots",
-    },
-    it: {
-      selectDate: "Seleziona una data",
-      selectTime: "Seleziona un orario",
-      noTimes: "Nessun orario disponibile per questa data",
-      maxPeople: "Posti disponibili",
-    },
-  }[lang];
+/* -------------------------
+   Textos UI tipados
+-------------------------- */
 
+const TEXTS: Record<
+  Lang,
+  {
+    selectDate: string;
+    selectTime: string;
+    noTimes: string;
+    maxPeople: string;
+  }
+> = {
+  es: {
+    selectDate: "Selecciona una fecha",
+    selectTime: "Selecciona un horario",
+    noTimes: "No hay horarios para esta fecha",
+    maxPeople: "Plazas disponibles",
+  },
+  en: {
+    selectDate: "Select a date",
+    selectTime: "Select a time",
+    noTimes: "No times available for this date",
+    maxPeople: "Available spots",
+  },
+  it: {
+    selectDate: "Seleziona una data",
+    selectTime: "Seleziona un orario",
+    noTimes: "Nessun orario disponibile per questa data",
+    maxPeople: "Posti disponibili",
+  },
+  fr: {
+    selectDate: "Choisissez une date",
+    selectTime: "Choisissez un horaire",
+    noTimes: "Aucun horaire disponible pour cette date",
+    maxPeople: "Places disponibles",
+  },
+};
+
+const texts = TEXTS[safeLang];
 function todayISO() {
   const d = new Date();
   return d.toISOString().split("T")[0];
 }
 
-async function getHorariosByTourId(id) {
+async function getHorariosByTourId(id: number | string): Promise<Horario[]> {
   const params = new URLSearchParams();
   params.set("populate", "*");
   params.set("filters[tour][id][$eq]", String(id));
@@ -61,7 +100,7 @@ async function getHorariosByTourId(id) {
   const res = await fetch(`${API}/horarios?${params.toString()}`);
   const json = await res.json();
 
-  return (json?.data ?? []).map((h) => {
+  return (json?.data ?? []).map((h: any) => {
     const a = h.attributes ?? h;
     const max = Number(a.cupoMaximo ?? 25);
     const ocup = Number(a.cupoOcupado ?? 0);
@@ -77,25 +116,55 @@ async function getHorariosByTourId(id) {
 }
 
 const horariosRaw = await getHorariosByTourId(tourId);
-const horarios = horariosRaw.filter((h) => h.cupoDisponible > 0);
-const fechasDisponibles = [...new Set(horarios.map((h) => h.fecha))];
+const horarios = horariosRaw.filter(
+  (h: Horario) => h.cupoDisponible > 0
+);
+const fechasDisponibles = [
+  ...new Set(horarios.map((h: Horario) => h.fecha)),
+] as string[];
+
+const firstDate = fechasDisponibles[0] ?? todayISO();
+const lastDate = fechasDisponibles[fechasDisponibles.length - 1] ?? firstDate;
 ---
 
 <div class="calendar-2026 space-y-8" data-lang={lang}>
-  <!-- Fecha -->
-  <div>
-    <label class="block font-semibold mb-2 text-gray-800">
-      {texts.selectDate}
-    </label>
-    <input
-      id="fechaPicker"
-      type="date"
-      class="w-full md:w-auto border border-gray-300 rounded-xl px-4 py-3 text-gray-800 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
-      value={fechasDisponibles[0] || todayISO()}
-      min={fechasDisponibles[0] || todayISO()}
-      max={fechasDisponibles[fechasDisponibles.length - 1] || todayISO()}
-    />
-  </div>
+  <!-- Fecha inteligente -->
+<div class="space-y-3">
+
+  <label class="block font-semibold text-gray-800">
+    {texts.selectDate}
+  </label>
+
+  <!-- Pills rápidas -->
+  <div
+  id="quickDates"
+  class="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible no-scrollbar scroll-smooth"
+  style="scroll-snap-type: x mandatory;"
+></div>
+
+  <!-- Toggle ver más -->
+  <button
+    type="button"
+    id="toggleCalendar"
+    class="text-sm text-gray-600 hover:text-gray-900 underline"
+  >
+    {lang === "es" && "Ver más fechas"}
+    {lang === "en" && "See more dates"}
+    {lang === "it" && "Vedi più date"}
+    {lang === "fr" && "Voir plus de dates"}
+  </button>
+
+  <!-- Date picker oculto -->
+  <input
+    id="fechaPicker"
+    type="date"
+    class="hidden w-full md:w-auto border border-gray-300 rounded-xl px-4 py-3 text-gray-800 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+    value={firstDate}
+    min={firstDate}
+    max={lastDate}
+  />
+
+</div>
 
   <!-- Horarios -->
   <div>
@@ -105,12 +174,13 @@ const fechasDisponibles = [...new Set(horarios.map((h) => h.fecha))];
 
     <div
       id="horariosContainer"
-      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+      class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3"
     ></div>
   </div>
 </div>
 
 <script type="application/json" id="horarios-data" set:html={JSON.stringify(horarios)}></script>
+<script type="application/json" id="fechas-data" set:html={JSON.stringify(fechasDisponibles)}></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -118,75 +188,362 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("horarios-data")?.textContent || "[]"
   );
 
-  const fechaPicker = document.getElementById("fechaPicker");
-  const contenedor = document.getElementById("horariosContainer");
+  const fechasDisponibles = JSON.parse(
+  document.getElementById("fechas-data")?.textContent || "[]"
+);
 
-  function renderHorarios(fecha) {
-    contenedor.innerHTML = "";
+  const fechaPickerEl = document.getElementById("fechaPicker");
+const contenedorEl = document.getElementById("horariosContainer");
+const wrapper = document.querySelector(".calendar-2026");
 
-    const delDia = horarios.filter((h) => h.fecha === fecha);
+if (!(fechaPickerEl instanceof HTMLInputElement)) return;
+if (!(contenedorEl instanceof HTMLElement)) return;
 
-    if (!delDia.length) {
-      contenedor.innerHTML =
-        "<p class='text-sm text-gray-500'>No hay horarios para esta fecha</p>";
-      return;
+/* Variables tipadas finales */
+const fechaPicker: HTMLInputElement = fechaPickerEl;
+const contenedor: HTMLElement = contenedorEl;
+
+const quickDatesContainer = document.getElementById("quickDates");
+const toggleBtn = document.getElementById("toggleCalendar");
+const currentLang =
+  wrapper instanceof HTMLElement && wrapper.dataset?.lang
+    ? wrapper.dataset.lang
+    : "es";
+
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString(currentLang, {
+    day: "2-digit",
+    month: "short",
+  });
+}
+
+function renderQuickDates() {
+  if (!quickDatesContainer) return;
+
+  quickDatesContainer.innerHTML = "";
+
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+
+  const limitedDates = fechasDisponibles.slice(0, 10);
+
+  limitedDates.forEach((fecha: string, index: number) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+
+    let label = formatShortDate(fecha);
+
+    if (index === 0) {
+      label =
+        currentLang === "en"
+          ? "Today"
+          : currentLang === "it"
+          ? "Oggi"
+          : currentLang === "fr"
+          ? "Aujourd’hui"
+          : "Hoy";
     }
 
-    delDia.forEach((h) => {
-      const btn = document.createElement("button");
+    if (index === 1) {
+      label =
+        currentLang === "en"
+          ? "Tomorrow"
+          : currentLang === "it"
+          ? "Domani"
+          : currentLang === "fr"
+          ? "Demain"
+          : "Mañana";
+    }
 
-      btn.className = `
-        time-slot
-        border border-gray-300
-        rounded-2xl p-4 text-center
-        bg-white
-        hover:border-yellow-400 hover:bg-yellow-50
-        transition
-      `;
+    btn.className =
+  "px-4 py-2 rounded-full border border-gray-300 text-sm bg-white hover:border-yellow-400 transition whitespace-nowrap flex-shrink-0";
+btn.style.scrollSnapAlign = "start";
 
-       btn.innerHTML = `
-       <div class="text-lg font-semibold text-gray-900">
-       ${h.hora}
-       </div>
-       `;
+    btn.textContent = label;
 
+    btn.onclick = () => {
+  fechaPicker.value = fecha;
 
-      btn.onclick = () => {
-        document.querySelectorAll(".time-slot").forEach((el) => {
-          el.classList.remove("border-yellow-400", "bg-yellow-100");
-        });
+  document
+    .querySelectorAll("#quickDates button")
+    .forEach((el) =>
+      el.classList.remove("border-yellow-400", "bg-yellow-100")
+    );
 
-        btn.classList.add("border-yellow-400", "bg-yellow-100");
+  btn.classList.add("border-yellow-400", "bg-yellow-100");
 
-        window.bookingState = window.bookingState || {};
-        window.bookingState.selectedDate = h.fecha;
-        window.bookingState.selectedTime = h.hora;
-        window.bookingState.horarioId = h.id;
+  btn.scrollIntoView({
+    behavior: "smooth",
+    inline: "start",
+    block: "nearest"
+  });
 
-        window.dispatchEvent(new CustomEvent("dateSelected"));
-        window.dispatchEvent(new CustomEvent("timeSelected"));
-      };
+  renderHorarios(fecha);
+};
 
-      contenedor.appendChild(btn);
+    quickDatesContainer.appendChild(btn);
+
+    if (index === 0) {
+      btn.click();
+    }
+  });
+}
+
+renderQuickDates();
+
+if (toggleBtn) {
+  toggleBtn.addEventListener("click", () => {
+    fechaPicker.classList.toggle("hidden");
+  });
+}
+
+  const noTimesText =
+  currentLang === "en"
+    ? "No times available"
+    : currentLang === "it"
+    ? "Nessun orario disponibile"
+    : currentLang === "fr"
+    ? "Aucun horaire disponible"
+    : "No hay horarios disponibles";
+
+const spotsText =
+  currentLang === "en"
+    ? "spots available"
+    : currentLang === "it"
+    ? "posti disponibili"
+    : currentLang === "fr"
+    ? "places disponibles"
+    : "plazas disponibles";
+
+function getUrgencyText(spots: number): string | null {
+  if (spots === 1) {
+    return currentLang === "en"
+      ? "Last spot available"
+      : currentLang === "it"
+      ? "Ultimo posto disponibile"
+      : currentLang === "fr"
+      ? "Dernière place disponible"
+      : "Última plaza disponible";
+  }
+
+  if (spots <= 3) {
+    return currentLang === "en"
+      ? "Few spots left"
+      : currentLang === "it"
+      ? "Pochi posti rimasti"
+      : currentLang === "fr"
+      ? "Peu de places restantes"
+      : "Quedan pocas plazas";
+  }
+
+  return null;
+}  
+
+  function renderHorarios(fecha: string) {
+  contenedor.style.opacity = "0";
+contenedor.style.transition = "opacity 0.18s ease";
+
+setTimeout(() => {
+  contenedor.innerHTML = "";
+  contenedor.style.opacity = "1";
+}, 120);
+  // 🔥 Scroll suave hacia horarios (solo móvil o si no está visible)
+setTimeout(() => {
+  const rect = contenedor.getBoundingClientRect();
+  const isVisible =
+    rect.top >= 0 &&
+    rect.bottom <= window.innerHeight;
+
+  if (!isVisible) {
+    contenedor.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+}, 150);
+
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0];
+
+  // 1️⃣ Filtrar por fecha
+  let delDia = horarios.filter((h: any) => h.fecha === fecha);
+
+  // 2️⃣ Si es hoy, filtrar horarios pasados
+  if (fecha === todayStr) {
+    delDia = delDia.filter((h: any) => {
+      const [hh, mm] = h.hora.split(":").map(Number);
+      const horarioDate = new Date();
+      horarioDate.setHours(hh, mm, 0, 0);
+      return horarioDate > now;
     });
   }
 
+  // 3️⃣ Si no hay horarios válidos → auto avanzar
+  if (!delDia.length) {
+  const currentIndex = fechasDisponibles.indexOf(fecha);
+
+  if (
+    currentIndex !== -1 &&
+    currentIndex < fechasDisponibles.length - 1
+  ) {
+    const siguienteFecha = fechasDisponibles[currentIndex + 1];
+    fechaPicker.value = siguienteFecha;
+    renderHorarios(siguienteFecha);
+    return;
+  }
+
+  contenedor.innerHTML =
+    `<p class='text-sm text-gray-500'>${noTimesText}</p>`;
+  return;
+ }
+
+ // 4️⃣ Render horarios válidos (máx 2 visibles + expandible)
+
+const maxVisible = 2;
+let expanded = false;
+
+function createHorarioButton(h: any) {
+  const btn = document.createElement("button");
+
+  const urgencyMessage = getUrgencyText(h.cupoDisponible);
+
+  const urgencia = urgencyMessage
+    ? `<div class='text-xs text-yellow-600 mt-1'>${urgencyMessage}</div>`
+    : "";
+
+  btn.className = `
+    time-slot
+    border border-gray-300
+    rounded-2xl p-4 text-center
+    bg-white
+    hover:border-yellow-400 hover:bg-yellow-50
+    transition
+  `;
+
+  btn.innerHTML = `
+    <div class="text-lg font-semibold text-gray-900">
+      ${h.hora}
+    </div>
+    <div class="text-xs text-gray-500 mt-1">
+      ${h.cupoDisponible} ${spotsText}
+    </div>
+    ${urgencia}
+  `;
+
+  btn.onclick = () => {
+    document.querySelectorAll(".time-slot").forEach((el) => {
+      el.classList.remove("border-yellow-400", "bg-yellow-100");
+    });
+
+    btn.classList.add("border-yellow-400", "bg-yellow-100");
+
+    window.bookingState = window.bookingState || {};
+    window.bookingState.selectedDate = h.fecha;
+    window.bookingState.selectedTime = h.hora;
+    window.bookingState.horarioId = h.id;
+
+    window.dispatchEvent(new CustomEvent("dateSelected"));
+    window.dispatchEvent(new CustomEvent("timeSelected"));
+  };
+
+  return btn;
+}
+
+// 🔹 Render primeros visibles
+delDia.slice(0, maxVisible).forEach((h: any, index: number) => {
+  const btn = createHorarioButton(h);
+  contenedor.appendChild(btn);
+
+  if (index === 0) {
+    btn.click();
+  }
+});
+
+// 🔹 Si hay más → crear toggle
+if (delDia.length > maxVisible) {
+  const hiddenContainer = document.createElement("div");
+  hiddenContainer.className =
+    "col-span-full hidden grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3";
+
+  delDia.slice(maxVisible).forEach((h: any) => {
+    const btn = createHorarioButton(h);
+    hiddenContainer.appendChild(btn);
+  });
+
+  const toggleBtn = document.createElement("button");
+  toggleBtn.type = "button";
+  toggleBtn.className =
+    "col-span-full mt-4 text-sm text-gray-600 hover:text-gray-900 underline";
+
+  toggleBtn.textContent =
+    currentLang === "en"
+      ? "See more times"
+      : currentLang === "it"
+      ? "Vedi più orari"
+      : currentLang === "fr"
+      ? "Voir plus d'horaires"
+      : "Ver más horarios";
+
+  toggleBtn.onclick = () => {
+    expanded = !expanded;
+    hiddenContainer.classList.toggle("hidden");
+
+    toggleBtn.textContent = expanded
+      ? currentLang === "en"
+        ? "Hide times"
+        : currentLang === "it"
+        ? "Nascondi orari"
+        : currentLang === "fr"
+        ? "Masquer les horaires"
+        : "Ocultar horarios"
+      : currentLang === "en"
+      ? "See more times"
+      : currentLang === "it"
+      ? "Vedi più orari"
+      : currentLang === "fr"
+      ? "Voir plus d'horaires"
+      : "Ver más horarios";
+  };
+
+  contenedor.appendChild(toggleBtn);
+  contenedor.appendChild(hiddenContainer);
+  }
+ }
+
   renderHorarios(fechaPicker.value);
-  fechaPicker.addEventListener("change", (e) =>
-    renderHorarios(e.target.value)
-  );
+  fechaPicker.addEventListener("change", (e) => {
+  const target = e.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  renderHorarios(target.value);
+
+  window.bookingState = window.bookingState || {};
+  window.bookingState.selectedTime = null;
+});
+
 });
 </script>
 
 
 <style>
 .time-slot {
-  transition: transform .2s ease;
+  transition: transform .18s ease, box-shadow .18s ease;
 }
+
 .time-slot:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.08);
 }
+
 .time-slot:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>

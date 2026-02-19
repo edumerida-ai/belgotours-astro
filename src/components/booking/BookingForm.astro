@@ -159,45 +159,49 @@ const STRAPI_API_BASE =
 
   <BookingSteps currentStep={1} lang={lang} />
 
-  <div class="p-6 md:p-8 space-y-10">
+  <div class="p-5 md:p-7 space-y-8">
     <!-- PASO 1: FECHA / HORARIO / PARTICIPANTES -->
     <div id="step1" class="booking-step active space-y-6">
         <h3 class="text-xl md:text-2xl font-bold text-gray-900">
-          {lang === "es" && "Elige fecha, horario y personas"}
-          {lang === "en" && "Choose date, time and participants"}
-          {lang === "it" && "Scegli data, orario e partecipanti"}
-          {lang === "fr" && "Choisissez date, horaire et participants"}
-        </h3>
+  {lang === "es" && "Selecciona fecha y hora"}
+  {lang === "en" && "Select date and time"}
+  {lang === "it" && "Seleziona data e orario"}
+  {lang === "fr" && "Choisissez date et horaire"}
+</h3>
+         <!-- 🔥 Urgencia inteligente -->
+         <div id="urgencyBox" class="hidden rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+         <span id="urgencyText"></span>
+         </div>
 
-    <p class="text-sm text-gray-600">
+    <p class="text-xs text-gray-500">
   {isFreeTour && (
     lang === "es"
-      ? "Usaremos estos datos únicamente para enviarte la confirmación, el punto de encuentro y avisos importantes del tour."
+      ? "Solo para enviarte la confirmación y detalles del tour."
       : lang === "en"
-      ? "We will use this information only to send your confirmation, meeting point and important tour updates."
+      ? "Only to send your booking confirmation and details."
       : lang === "it"
-      ? "Utilizzeremo questi dati esclusivamente per inviarti la conferma, il punto di incontro e comunicazioni importanti sul tour."
-      : "We will only use your data for tour confirmation."
+      ? "Solo per inviarti conferma e dettagli del tour."
+      : "Uniquement pour envoyer la confirmation du tour."
   )}
 
   {isPrivateTour && (
     lang === "es"
-      ? "Usaremos estos datos para diseñar tu tour privado a medida y ponernos en contacto contigo para definir los detalles."
+      ? "Te contactaremos para definir fecha y precio."
       : lang === "en"
-      ? "We’ll use this information to design your private tour and contact you to define the details."
+      ? "We’ll contact you to define date and price."
       : lang === "it"
-      ? "Utilizzeremo questi dati per progettare il tuo tour privato su misura e contattarti per definire i dettagli."
-      : "Nous utiliserons ces informations pour concevoir votre tour privé et vous contacter."
+      ? "Ti contatteremo per definire data e prezzo."
+      : "Nous vous contacterons pour définir la date et le prix."
   )}
 
   {isSpecialTour && (
     lang === "es"
-      ? "Usaremos estos datos para enviarte la confirmación de la reserva y los detalles del tour."
+      ? "Recibirás confirmación inmediata por email."
       : lang === "en"
-      ? "We’ll use this information to send your booking confirmation and tour details."
+      ? "You’ll receive instant email confirmation."
       : lang === "it"
-      ? "Utilizzeremo questi dati per inviarti la conferma della prenotazione e i dettagli del tour."
-      : "We will use this information to send your booking details."
+      ? "Riceverai conferma immediata via email."
+      : "Confirmation immédiate par email."
   )}
 </p>
 
@@ -210,41 +214,60 @@ const STRAPI_API_BASE =
         <div class="bg-gray-50 rounded-2xl border border-gray-200 p-4 md:p-5 space-y-6">
           <ParticipantCounter lang={lang} />
 
-          {isFreeTour && (
-  <p class="text-xs text-gray-500 leading-snug">
-    {lang === "es" && "Máx. 7 personas por reserva. Para grupos más grandes, realiza varias reservas."}
-    {lang === "en" && "Max. 7 people per booking. For larger groups, please make multiple bookings."}
-    {lang === "it" && "Massimo 7 persone per prenotazione. Per gruppi più grandi, effettua più prenotazioni."}
-    {lang === "fr" && "Maximum 7 personnes par réservation. Pour les groupes plus nombreux, effectuez plusieurs réservations."}
-  </p>
-)}
+{isFreeTour && (
+  <div class="space-y-2">
+    <p class="text-xs text-gray-500">
+  {lang === "es" && "Máx. 7 personas por reserva. Si sois más, podéis hacer otra reserva con un segundo email."}
+  {lang === "en" && "Max. 7 people per booking. If you’re more, please make a second booking with another email."}
+  {lang === "it" && "Massimo 7 persone per prenotazione. Se siete di più, effettuate una seconda prenotazione con un'altra email."}
+  {lang === "fr" && "Maximum 7 personnes par réservation. Si vous êtes plus nombreux, effectuez une seconde réservation avec un autre email."}
+</p>
 
+    <p class="text-sm font-medium text-gray-700">
+  {lang === "es" && "La mayoría de viajeros contribuye alrededor de 15 € por persona."}
+  {lang === "en" && "Most travelers contribute around €15 per person."}
+  {lang === "it" && "La maggior parte dei viaggiatori contribuisce circa 15 € a persona."}
+  {lang === "fr" && "La plupart des voyageurs contribuent environ 15 € par personne."}
+</p>
+  </div>
+)}
 
         </div>
       </div>
     </div>
 
 <!-- PASO 2: DATOS DEL CLIENTE -->
-<div id="step2" class="booking-step hidden space-y-6">
+<div id="step2" class="booking-step hidden space-y-4">
   <h3 class="text-2xl font-bold text-gray-900">
     {contactTitleByLang[lang] || contactTitleByLang.es}
   </h3>
 
-  <p class="text-sm text-gray-600">
-    {lang === "es" &&
-      "Usaremos estos datos únicamente para enviarte la confirmación, el punto de encuentro y avisos importantes del tour."}
-    {lang === "en" &&
-      "We will use this information only to send your confirmation, meeting point and important tour updates."}
-    {lang === "it" &&
-      "Utilizzeremo questi dati solo per inviarti la conferma, il punto d’incontro e aggiornamenti importanti sul tour."}
-    {lang === "fr" &&
-      "Nous utiliserons ces informations uniquement pour vous envoyer la confirmation, le point de rendez-vous et les informations importantes du tour."}
-  </p>
+  <div class="bg-white border border-gray-200 rounded-xl p-3 text-sm text-gray-700 space-y-1">
+  <div class="flex justify-between">
+    <span>{lang === "es" ? "Fecha" : "Date"}</span>
+    <span class="font-semibold" id="step2SummaryDate">--</span>
+  </div>
+  <div class="flex justify-between">
+    <span>{lang === "es" ? "Hora" : "Time"}</span>
+    <span class="font-semibold" id="step2SummaryTime">--</span>
+  </div>
+  <div class="flex justify-between">
+    <span>{lang === "es" ? "Personas" : "People"}</span>
+    <span class="font-semibold" id="step2SummaryParticipants">--</span>
+  </div>
+</div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <p class="text-xs text-gray-500">
+    {lang === "es" && "Solo usaremos tus datos para enviarte la confirmación del tour."}
+    {lang === "en" && "We’ll only use your data to send your tour confirmation."}
+    {lang === "it" && "Useremo i tuoi dati solo per inviarti la conferma del tour."}
+    {lang === "fr" && "Nous utiliserons vos données uniquement pour vous envoyer la confirmation."}
+   </p>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <!-- Nombre -->
     <div>
-      <label for="firstName" class="block text-gray-700 font-semibold mb-2">
+      <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">
         {lang === "es" && "Nombre"}
         {lang === "en" && "First name"}
         {lang === "it" && "Nome"}
@@ -255,14 +278,14 @@ const STRAPI_API_BASE =
         name="firstName"
         type="text"
         required
-        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        class="w-full p-2.5 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
         placeholder={lang === "es" ? "Ej: María" : "John"}
       />
     </div>
 
     <!-- Apellidos -->
     <div>
-      <label for="lastName" class="block text-gray-700 font-semibold mb-2">
+      <label for="lastName" class="block text-gray-700 font-medium mb-1 text-sm">
         {lang === "es" && "Apellidos"}
         {lang === "en" && "Last name"}
         {lang === "it" && "Cognome"}
@@ -273,92 +296,101 @@ const STRAPI_API_BASE =
         name="lastName"
         type="text"
         required
-        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        class="w-full p-2.5 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
         placeholder={lang === "es" ? "Ej: González López" : "Doe"}
       />
     </div>
 
-    <!-- Ciudad -->
-    <div>
-      <label for="customerCity" class="block text-gray-700 font-semibold mb-2">
-        🏙️
-        {lang === "es" && "Ciudad de residencia"}
-        {lang === "en" && "City of residence"}
-        {lang === "it" && "Città di residenza"}
-        {lang === "fr" && "Ville de résidence"} *
-      </label>
-      <input
-        id="customerCity"
-        name="customerCity"
-        type="text"
-        required
-        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
-        placeholder="Madrid, Brussels, Mexico City..."
-      />
-    </div>
+    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+  <!-- Ciudad -->
+  <div>
+    <label for="customerCity" class="block text-gray-700 font-medium mb-1 text-sm">
+      🏙️
+      {lang === "es" && "Ciudad"}
+      {lang === "en" && "City"}
+      {lang === "it" && "Città"}
+      {lang === "fr" && "Ville"} *
+    </label>
+    <div class="relative">
+  <input
+    id="customerCity"
+    name="customerCity"
+    type="text"
+    required
+    autocomplete="off"
+    class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition"
+    placeholder="Madrid, Brussels, Rome..."
+  />
+  <div id="citySuggestions"
+       class="absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-full mt-1 hidden max-h-48 overflow-y-auto text-sm">
+  </div>
+</div>
+  </div>
 
-    <!-- País -->
-    <div>
-      <label for="customerCountry" class="block text-gray-700 font-semibold mb-2">
-        🌍
-        {lang === "es" && "País"}
-        {lang === "en" && "Country"}
-        {lang === "it" && "Paese"}
-        {lang === "fr" && "Pays"} *
-      </label>
-      <input
-        id="customerCountry"
-        name="customerCountry"
-        type="text"
-        required
-        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
-        placeholder="España, México, Italia..."
-      />
-    </div>
+  <!-- País -->
+  <div>
+    <label for="customerCountry" class="block text-gray-700 font-medium mb-1 text-sm">
+      🌍
+      {lang === "es" && "País"}
+      {lang === "en" && "Country"}
+      {lang === "it" && "Paese"}
+      {lang === "fr" && "Pays"} *
+    </label>
+    <div class="relative">
+  <input
+    id="customerCountry"
+    name="customerCountry"
+    type="text"
+    required
+    autocomplete="off"
+    class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition"
+    placeholder="España, México, Italia..."
+  />
+  <div id="countrySuggestions"
+       class="absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-full mt-1 hidden max-h-48 overflow-y-auto text-sm">
+  </div>
+</div>
+  </div>
+</div>
 
-    <!-- Teléfono -->
-    <div class="md:col-span-2">
-      <label class="block text-gray-700 font-semibold mb-2">
-        📱
-        {lang === "es" && "Móvil (WhatsApp recomendado)"}
-        {lang === "en" && "Mobile phone (WhatsApp recommended)"}
-        {lang === "it" && "Cellulare (WhatsApp consigliato)"}
-        {lang === "fr" && "Téléphone portable (WhatsApp recommandé)"} *
-      </label>
+    <!-- Teléfono (Intl Tel Input profesional) -->
+<div class="md:col-span-2">
+  <label class="block text-sm font-medium text-gray-700 mb-1">
+    📱
+    {lang === "es" && "Móvil (WhatsApp recomendado)"}
+    {lang === "en" && "Mobile phone (WhatsApp recommended)"}
+    {lang === "it" && "Cellulare (WhatsApp consigliato)"}
+    {lang === "fr" && "Téléphone portable (WhatsApp recommandé)"} *
+  </label>
 
-      <div class="flex gap-3">
-        <select
-          id="countryCode"
-          name="countryCode"
-          required
-          class="w-32 p-3 border border-gray-300 rounded-xl bg-white focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none text-sm"
-        >
-          <option value="">{lang === "es" ? "País" : "Code"}</option>
-          <option value="+34">🇪🇸 +34</option>
-          <option value="+32">🇧🇪 +32</option>
-          <option value="+33">🇫🇷 +33</option>
-          <option value="+39">🇮🇹 +39</option>
-          <option value="+44">🇬🇧 +44</option>
-          <option value="+49">🇩🇪 +49</option>
-          <option value="+351">🇵🇹 +351</option>
-          <option value="+52">🇲🇽 +52</option>
-          <option value="+1">🇺🇸/🇨🇦 +1</option>
-        </select>
+  <div class="relative">
+    <input
+      id="customerPhone"
+      name="customerPhone"
+      type="tel"
+      required
+      inputmode="tel"
+      autocomplete="tel"
+      class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition"
+      placeholder="+34 612 345 678"
+    />
 
-        <input
-          id="customerPhone"
-          name="customerPhone"
-          type="tel"
-          required
-          class="flex-1 p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
-          placeholder="612 345 678"
-        />
-      </div>
-    </div>
+    <!-- Mensaje error teléfono -->
+    <p
+      id="phoneError"
+      class="text-xs text-red-500 mt-1 hidden"
+    >
+      {lang === "es" && "Introduce un número válido"}
+      {lang === "en" && "Please enter a valid phone number"}
+      {lang === "it" && "Inserisci un numero valido"}
+      {lang === "fr" && "Veuillez entrer un numéro valide"}
+    </p>
+  </div>
+</div>
 
     <!-- Email -->
     <div>
-      <label for="customerEmail" class="block text-gray-700 font-semibold mb-2">
+      <label for="customerEmail" class="block text-sm font-medium text-gray-700 mb-1">
         📧
         {lang === "es" && "Correo electrónico"}
         {lang === "en" && "Email address"}
@@ -370,14 +402,14 @@ const STRAPI_API_BASE =
         name="customerEmail"
         type="email"
         required
-        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        class="w-full p-2.5 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
         placeholder="email@ejemplo.com"
       />
     </div>
 
     <!-- Confirmar Email -->
     <div>
-      <label for="customerEmailConfirm" class="block text-gray-700 font-semibold mb-2">
+      <label for="customerEmailConfirm" class="block text-sm font-medium text-gray-700 mb-1">
         ✅
         {lang === "es" && "Confirma tu correo"}
         {lang === "en" && "Confirm your email"}
@@ -389,7 +421,7 @@ const STRAPI_API_BASE =
         name="customerEmailConfirm"
         type="email"
         required
-        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        class="w-full p-2.5 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
         placeholder={lang === "es" ? "Repite tu correo" : "Repeat your email"}
       />
       <p id="emailMismatch" class="text-xs text-red-500 mt-1 hidden">
@@ -400,7 +432,7 @@ const STRAPI_API_BASE =
 
     <!-- Comentarios -->
     <div class="md:col-span-2">
-      <label for="customerComments" class="block text-gray-700 font-semibold mb-2">
+      <label for="customerComments" class="block text-sm font-medium text-gray-700 mb-1">
         💬
         {lang === "es" && "Comentarios (opcional)"}
         {lang === "en" && "Comments (optional)"}
@@ -411,7 +443,7 @@ const STRAPI_API_BASE =
         id="customerComments"
         name="customerComments"
         rows="3"
-        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
+        class="w-full p-2.5 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
         placeholder={
           lang === "es"
             ? "Ej: viajamos con niños pequeños, silla de ruedas, etc."
@@ -422,13 +454,13 @@ const STRAPI_API_BASE =
 
     <!-- Como nos conociste -->
     <div>
-      <label for="howHeard" class="block text-gray-700 font-semibold mb-2">
+      <label for="howHeard" class="block text-sm font-medium text-gray-700 mb-1">
         {howHeardLabelByLang[lang] || howHeardLabelByLang.es}
       </label>
       <select
         id="howHeard"
         name="howHeard"
-        class="w-full p-3 border border-gray-300 rounded-xl bg-white focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none text-sm"
+        class="w-full p-2.5 border border-gray-300 rounded-xl bg-white focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none text-sm"
       >
         <option value="">{lang === "es" ? "Selecciona una opción" : "Select an option"}</option>
         <option value="google">Web / Google</option>
@@ -527,7 +559,7 @@ const STRAPI_API_BASE =
 <button
   id="confirmBooking"
   type="button"
-  class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-xl transition duration-300 transform hover:scale-105 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none"
+  class="w-full bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-extrabold py-4 px-8 rounded-xl transition duration-300 transform hover:scale-105 shadow-lg disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none"
   disabled
 >
   {isPrivateTour && (
@@ -550,6 +582,34 @@ const STRAPI_API_BASE =
     </>
   )}
 </button>
+<p class="text-xs text-gray-500 text-center mt-3">
+  {isFreeTour && (
+    <>
+      {lang === "es" && "Reserva gratuita. Cancelación sin coste. Confirmación inmediata por email."}
+      {lang === "en" && "Free booking. Free cancellation. Instant email confirmation."}
+      {lang === "it" && "Prenotazione gratuita. Cancellazione gratuita. Conferma immediata via email."}
+      {lang === "fr" && "Réservation gratuite. Annulation gratuite. Confirmation immédiate par email."}
+    </>
+  )}
+
+  {isPrivateTour && (
+    <>
+      {lang === "es" && "Sin pago ahora. Te contactaremos para definir fecha y precio final."}
+      {lang === "en" && "No payment now. We will contact you to define final date and price."}
+      {lang === "it" && "Nessun pagamento ora. Ti contatteremo per definire data e prezzo finale."}
+      {lang === "fr" && "Aucun paiement maintenant. Nous vous contacterons pour définir la date et le prix final."}
+    </>
+  )}
+
+  {isSpecialTour && (
+    <>
+      {lang === "es" && "Pago directo al guía el día del tour."}
+      {lang === "en" && "Pay the guide directly on the day of the tour."}
+      {lang === "it" && "Pagamento diretto alla guida il giorno del tour."}
+      {lang === "fr" && "Paiement directement au guide le jour du tour."}
+    </>
+  )}
+</p>
 
 </div>
 
@@ -681,508 +741,17 @@ const STRAPI_API_BASE =
   .booking-step.hidden {
     display: none;
   }
+
+  @media (max-width: 768px) {
+  #bookingNav {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding-bottom: 10px;
+  }
+}
+
+
 </style>
 
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("🚀 Inicializando BookingForm 2030...");
-
-    const root = document.getElementById("bookingForm");
-    if (!root) return;
-
-    const lang =
-      root.dataset.lang ||
-      document.documentElement.getAttribute("lang") ||
-      "es";
-
-    const apiBase =
-      root.dataset.api || "http://localhost:1337/api";
-
-    const steps = [
-      document.getElementById("step1"),
-      document.getElementById("step2"),
-      document.getElementById("step3"),
-    ];
-
-    const successView = document.getElementById("bookingSuccess");
-    const navBar = document.getElementById("bookingNav");
-    const prevBtn = document.getElementById("prevStep");
-    const nextBtn = document.getElementById("nextStep");
-    const confirmBtn = document.getElementById("confirmBooking");
-    const newBookingBtn = document.getElementById("newBooking");
-    const terms = document.getElementById("agreeToTerms");
-
-    const emailInput = document.getElementById("customerEmail");
-    const emailConfirmInput =
-      document.getElementById("customerEmailConfirm");
-    const emailMismatch = document.getElementById("emailMismatch");
-
-    const summaryDate = document.getElementById("summaryDate");
-    const summaryTime = document.getElementById("summaryTime");
-    const summaryParticipants =
-      document.getElementById("summaryParticipants");
-
-    let currentStep = 1;
-    let isSubmitting = false;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const tracking = {
-      utm_source: urlParams.get("utm_source") || undefined,
-      utm_medium: urlParams.get("utm_medium") || undefined,
-      utm_campaign: urlParams.get("utm_campaign") || undefined,
-      utm_content: urlParams.get("utm_content") || undefined,
-      gclid: urlParams.get("gclid") || undefined,
-      referrer: document.referrer || undefined,
-    };
-
-    window.bookingState = window.bookingState || {};
-    window.bookingState.participants =
-      window.bookingState.participants || { adults: 1, children: 0 };
-    window.bookingState.tracking = tracking;
-
-    function showStep(stepNumber) {
-      steps.forEach((s, i) => {
-        if (!s) return;
-        const idx = i + 1;
-        if (idx === stepNumber) {
-          s.classList.remove("hidden");
-          s.classList.add("active");
-        } else {
-          s.classList.remove("active");
-          s.classList.add("hidden");
-        }
-      });
-
-      if (successView) successView.classList.add("hidden");
-
-      currentStep = stepNumber;
-      updateNavigation();
-
-      if (stepNumber === 3) {
-        updateSummary();
-      }
-    }
-
-    function showSuccess() {
-      steps.forEach((s) => {
-        if (!s) return;
-        s.classList.remove("active");
-        s.classList.add("hidden");
-      });
-      if (navBar) navBar.classList.add("hidden");
-      if (successView) successView.classList.remove("hidden");
-    }
-
-    function validateStep1(showUI = false) {
-      const state = window.bookingState || {};
-      const hasDate = !!state.selectedDate;
-      const hasTime = !!state.selectedTime;
-      const adults = Number(state.participants?.adults || 0);
-      const hasParticipants = adults > 0;
-
-      const ok =
-        hasDate && hasTime && hasParticipants && state.horarioId;
-
-      if (!ok && showUI) {
-        const faltantes = [];
-        if (!hasDate) faltantes.push("fecha");
-        if (!hasTime) faltantes.push("horario");
-        if (!hasParticipants) faltantes.push("personas");
-        alert("Por favor selecciona " + faltantes.join(", ") + ".");
-      }
-      return ok;
-    }
-
-    function validateStep2(showUI = false) {
-      const firstName =
-        document.getElementById("firstName")?.value?.trim();
-      const lastName =
-        document.getElementById("lastName")?.value?.trim();
-      const city =
-        document.getElementById("customerCity")?.value?.trim();
-      const country =
-        document.getElementById("customerCountry")?.value?.trim();
-      const code =
-        document.getElementById("countryCode")?.value?.trim();
-      const phone =
-        document.getElementById("customerPhone")?.value?.trim();
-      const email = emailInput?.value?.trim();
-      const emailConfirm = emailConfirmInput?.value?.trim();
-
-      const emailMatch =
-        !!email && !!emailConfirm && email === emailConfirm;
-
-      if (emailMismatch) {
-        if (email && emailConfirm && !emailMatch) {
-          emailMismatch.classList.remove("hidden");
-        } else {
-          emailMismatch.classList.add("hidden");
-        }
-      }
-
-      const ok =
-        !!firstName &&
-        !!lastName &&
-        !!city &&
-        !!country &&
-        !!code &&
-        !!phone &&
-        !!email &&
-        !!emailConfirm &&
-        emailMatch;
-
-      if (!ok && showUI) {
-        alert(
-          "Por favor completa todos los datos obligatorios y asegúrate de que el email coincida."
-        );
-      }
-
-      return ok;
-    }
-
-    function validateStep3(showUI = false) {
-      const checked = !!terms?.checked;
-      if (!checked && showUI) {
-        alert(
-          "Debes aceptar los términos y condiciones para continuar."
-        );
-      }
-      return checked;
-    }
-
-    function updateNavigation() {
-      if (!prevBtn || !nextBtn) return;
-
-      prevBtn.disabled = currentStep === 1;
-      nextBtn.disabled = false;
-
-      if (currentStep === 1) {
-        nextBtn.disabled = !validateStep1(false);
-      } else if (currentStep === 2) {
-        nextBtn.disabled = !validateStep2(false);
-      }
-
-      if (currentStep === 3) {
-        nextBtn.classList.add("hidden");
-        if (confirmBtn) {
-          confirmBtn.disabled = !validateStep3(false) || isSubmitting;
-        }
-      } else {
-        nextBtn.classList.remove("hidden");
-        if (confirmBtn) {
-          confirmBtn.disabled = true;
-        }
-      }
-    }
-
-    function updateSummary() {
-      const localeMap = {
-        es: "es-ES",
-        en: "en-GB",
-        it: "it-IT",
-        fr: "fr-FR",
-      };
-      const locale = localeMap[lang] || "es-ES";
-
-      const state = window.bookingState || {};
-      if (summaryDate && state.selectedDate) {
-        const date = new Date(state.selectedDate);
-        summaryDate.textContent = date.toLocaleDateString(locale, {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        });
-      }
-      if (summaryTime && state.selectedTime) {
-        summaryTime.textContent = state.selectedTime;
-      }
-      if (summaryParticipants && state.participants) {
-        summaryParticipants.textContent = `${state.participants.adults} adultos, ${state.participants.children} niños`;
-      }
-    }
-
-    window.addEventListener("dateSelected", () => {
-      updateNavigation();
-      setTimeout(updateNavigation, 150);
-    });
-
-    window.addEventListener("timeSelected", () => {
-      updateNavigation();
-    });
-
-    document.addEventListener("participantsUpdated", () => {
-      updateNavigation();
-    });
-
-    emailInput?.addEventListener("input", () => validateStep2(false));
-    emailConfirmInput?.addEventListener("input", () => {
-      validateStep2(false);
-      updateNavigation();
-    });
-
-    terms?.addEventListener("change", () => {
-      if (currentStep === 3 && confirmBtn) {
-        confirmBtn.disabled = !validateStep3(false) || isSubmitting;
-      }
-    });
-
-    prevBtn?.addEventListener("click", () => {
-      if (currentStep > 1) {
-        showStep(currentStep - 1);
-      }
-    });
-
-    nextBtn?.addEventListener("click", async () => {
-      if (currentStep === 1) {
-        if (!validateStep1(true)) return;
-        showStep(2);
-        return;
-      }
-      if (currentStep === 2) {
-        if (!validateStep2(true)) return;
-        showStep(3);
-        return;
-      }
-    });
-
-    newBookingBtn?.addEventListener("click", () => {
-      window.location.reload();
-    });
-
-    confirmBtn?.addEventListener("click", submitBooking);
-
-    function setConfirmButtonTextDefault() {
-      if (!confirmBtn) return;
-      if (lang === "es")
-        confirmBtn.textContent = "✅ Confirmar reserva gratis";
-      else if (lang === "en")
-        confirmBtn.textContent = "✅ Confirm free booking";
-      else if (lang === "it")
-        confirmBtn.textContent =
-          "✅ Conferma la prenotazione gratuita";
-      else if (lang === "fr")
-        confirmBtn.textContent =
-          "✅ Confirmer la réservation gratuite";
-      else confirmBtn.textContent = "✅ Confirm booking";
-    }
-
-    async function submitBooking() {
-      if (isSubmitting) return;
-      if (!validateStep3(true)) return;
-
-      const state = window.bookingState || {};
-      const horarioId = state.horarioId;
-      if (!horarioId) {
-        alert(
-          "Ha ocurrido un problema con el horario seleccionado. Vuelve al paso 1 y elige de nuevo."
-        );
-        showStep(1);
-        return;
-      }
-
-      const firstName =
-        document.getElementById("firstName")?.value?.trim();
-      const lastName =
-        document.getElementById("lastName")?.value?.trim();
-      const city =
-        document.getElementById("customerCity")?.value?.trim();
-      const country =
-        document.getElementById("customerCountry")?.value?.trim();
-      const code =
-        document.getElementById("countryCode")?.value?.trim();
-      const phone =
-        document.getElementById("customerPhone")?.value?.trim();
-      const email = emailInput?.value?.trim();
-      const emailConfirm = emailConfirmInput?.value?.trim();
-      const comments =
-        document.getElementById("customerComments")?.value?.trim() ||
-        "";
-      const howHeard =
-        document.getElementById("howHeard")?.value || "";
-      const marketingConsent =
-        document.getElementById("marketingConsent")?.checked ||
-        false;
-
-      const adultos = Number(state.participants?.adults || 1);
-      const ninos = Number(state.participants?.children || 0);
-
-      if (
-        !firstName ||
-        !lastName ||
-        !city ||
-        !country ||
-        !code ||
-        !phone ||
-        !email ||
-        !emailConfirm
-      ) {
-        alert(
-          "Faltan datos obligatorios. Vuelve al paso anterior."
-        );
-        showStep(2);
-        return;
-      }
-
-      if (email !== emailConfirm) {
-        alert("Los correos no coinciden.");
-        showStep(2);
-        return;
-      }
-
-      isSubmitting = true;
-      if (confirmBtn) {
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = "⏳ Procesando...";
-      }
-
-      try {
-        // 1️⃣ PAYLOAD para /reservas/confirmar (Strapi v5)
-        const confirmarPayload = {
-          horarioId,
-          nombre: firstName,
-          apellidos: lastName,
-          email,
-          telefono: `${code} ${phone}`,
-          ciudad: city,
-          pais: country,
-          adultos,
-          ninos,
-          idioma_cliente: lang,
-          comentarios_cliente: comments || undefined,
-          como_nos_conociste: howHeard || undefined,
-          marketing_consent: marketingConsent,
-          ...tracking,
-        };
-
-        // 2️⃣ Llamar a /reservas/confirmar
-        const resConfirm = await fetch(
-          `${apiBase}/reservas/confirmar`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(confirmarPayload),
-          }
-        );
-
-        if (!resConfirm.ok) {
-          const errJson = await resConfirm
-            .json()
-            .catch(() => ({}));
-          console.error("❌ Error en /reservas/confirmar:", errJson);
-
-          const msg =
-            errJson?.error?.message ||
-            errJson?.message ||
-            `Error ${resConfirm.status}`;
-
-          alert(
-            lang === "es"
-              ? `No se pudo confirmar la reserva: ${msg}`
-              : `Could not confirm booking: ${msg}`
-          );
-
-          isSubmitting = false;
-          if (confirmBtn) {
-            confirmBtn.disabled = !validateStep3(false);
-            setConfirmButtonTextDefault();
-          }
-          return;
-        }
-
-        const dataConfirm = await resConfirm.json().catch(() => ({}));
-        console.log("✅ Respuesta confirmar:", dataConfirm);
-
-        const confirmarToken =
-          dataConfirm?.confirmarToken ||
-          dataConfirm?.token ||
-          dataConfirm?.checkoutToken;
-
-        if (!confirmarToken) {
-          console.error(
-            "❌ No se obtuvo confirmarToken en la respuesta:",
-            dataConfirm
-          );
-          alert(
-            lang === "es"
-              ? "Error interno: no se pudo generar el token de confirmación."
-              : "Internal error: could not generate confirmation token."
-          );
-          isSubmitting = false;
-          if (confirmBtn) {
-            confirmBtn.disabled = !validateStep3(false);
-            setConfirmButtonTextDefault();
-          }
-          return;
-        }
-
-        // 3️⃣ Llamar a /reservas/finalizar con el token
-        const resFinal = await fetch(`${apiBase}/reservas/finalizar`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: confirmarToken }),
-        });
-
-        if (!resFinal.ok) {
-          const errJson = await resFinal.json().catch(() => ({}));
-          console.error("❌ Error en /reservas/finalizar:", errJson);
-
-          const msg =
-            errJson?.error?.message ||
-            errJson?.message ||
-            `Error ${resFinal.status}`;
-
-          alert(
-            lang === "es"
-              ? `No se pudo finalizar la reserva: ${msg}`
-              : `Could not complete booking: ${msg}`
-          );
-
-          isSubmitting = false;
-          if (confirmBtn) {
-            confirmBtn.disabled = !validateStep3(false);
-            setConfirmButtonTextDefault();
-          }
-          return;
-        }
-
-        const dataFinal = await resFinal.json().catch(() => ({}));
-        console.log("🎉 Reserva finalizada:", dataFinal);
-
-        const reservaId =
-          dataFinal?.reservaId ||
-          dataFinal?.id ||
-          dataFinal?.data?.id ||
-          null;
-
-        const safeLang = ["es", "en", "it", "fr"].includes(lang)
-          ? lang
-          : "es";
-
-        if (reservaId) {
-          // Redireccionamos a la página de éxito con el ID real
-          window.location.href = `/${safeLang}/booking-success?id=${encodeURIComponent(
-            reservaId
-          )}`;
-          return;
-        }
-
-        // Fallback: mostrar pantalla de éxito sin ID
-        showSuccess();
-        isSubmitting = false;
-      } catch (e) {
-        console.error("❌ Excepción en submitBooking:", e);
-        alert(
-          "❌ No se pudo completar la reserva. Revisa la API de Strapi (/reservas/confirmar y /reservas/finalizar) y los permisos de CORS/public."
-        );
-        isSubmitting = false;
-        if (confirmBtn) {
-          confirmBtn.disabled = !validateStep3(false);
-          setConfirmButtonTextDefault();
-        }
-      }
-    }
-
-    showStep(1);
-    updateNavigation();
-  });
-</script>
+<script type="module" src="/src/scripts/bookingForm.ts"></script>
