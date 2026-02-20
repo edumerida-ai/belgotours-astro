@@ -284,8 +284,10 @@ btn.style.scrollSnapAlign = "start";
     quickDatesContainer.appendChild(btn);
 
     if (index === 0) {
-      btn.click();
-    }
+  setTimeout(() => {
+    btn.click();
+  }, 0);
+}
   });
 }
 

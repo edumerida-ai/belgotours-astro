@@ -156,10 +156,10 @@ bookingRoot.querySelectorAll("input, select, textarea").forEach((input) => {
 
   // ✅ Solo hacer scroll cuando NO es el paso inicial
   if (stepNumber !== 1) {
-    window.scrollTo({
-      top: bookingRoot.offsetTop - 20,
-      behavior: "smooth",
-    });
+    bookingRoot.scrollIntoView({
+  behavior: "smooth",
+  block: "start",
+});
   }
 }
 
