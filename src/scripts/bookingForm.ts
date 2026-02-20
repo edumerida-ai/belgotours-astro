@@ -215,7 +215,11 @@ function validateStep1(showUI = false) {
   const adults = Number(state.participants?.adults ?? 1);
   const hasParticipants = adults >= 1;
 
-  const ok = hasDate && hasTime && hasParticipants && state.horarioId;
+  const ok =
+  hasDate &&
+  hasTime &&
+  hasParticipants &&
+  typeof state.horarioId === "number";
 
   if (!ok && showUI) {
     if (!hasDate) {
@@ -351,7 +355,7 @@ function updateUrgency() {
     }
 
     // 👇 AGREGA ESTO
-(window as any).updateBookingNavigation = updateNavigation;
+      (window as any).updateBookingNavigation = updateNavigation;
 
     function updateSummary() {
       const localeMap = {
