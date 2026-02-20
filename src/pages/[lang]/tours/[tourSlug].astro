@@ -878,6 +878,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 
 <!-- CTA BEHAVIOUR: OCULTAR AL LLEGAR AL FOOTER -->
 <script>
+  if (typeof window !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
     const cta = document.getElementById("bookingWidget");
     const footer = document.querySelector("footer");
@@ -896,7 +897,9 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
     );
 
     observer.observe(footer);
+    
   });
+  }
 </script>
 
 
@@ -1037,7 +1040,8 @@ body.no-scroll {
 
 <script>
 // Sticky widget show/hide
-document.addEventListener("DOMContentLoaded", () => {
+if (typeof window !== "undefined") {
+  document.addEventListener("DOMContentLoaded", () => {
 const widget = document.getElementById("bookingWidget");
 if (!widget) return;
 
@@ -1160,5 +1164,6 @@ window.addEventListener("mousemove", (e) => {
 });
 window.addEventListener("mouseup", endDrag);
 });
+}
 </script>
 </Layout>
