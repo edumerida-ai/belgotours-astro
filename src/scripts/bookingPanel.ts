@@ -10,8 +10,12 @@ function initBookingPanel() {
   );
   const closeBtns = document.querySelectorAll<HTMLButtonElement>(".closeBookingBtn");
 
-  // Si no estamos en una página con booking panel, no hacemos nada.
+    // Si no estamos en una página con booking panel, no hacemos nada.
   if (!overlay || !panel || openBtns.length === 0) return;
+
+  // Aliases NO-null para TS (y para evitar dudas)
+  const overlayEl = overlay as HTMLElement;
+  const panelEl = panel as HTMLElement;
 
   let isOpen = false;
 
@@ -19,28 +23,28 @@ function initBookingPanel() {
     if (isOpen) return;
     isOpen = true;
 
-    overlay.classList.remove("hidden");
-    requestAnimationFrame(() => overlay.classList.add("open"));
+    overlayEl.classList.remove("hidden");
+    requestAnimationFrame(() => overlayEl.classList.add("open"));
 
-    panel.classList.add("open", "bounce");
+    panelEl.classList.add("open", "bounce");
     document.body.classList.add("no-scroll");
 
     openBtns.forEach((b) => b.setAttribute("aria-expanded", "true"));
-    setTimeout(() => panel.classList.remove("bounce"), 320);
+    setTimeout(() => panelEl.classList.remove("bounce"), 320);
   }
 
   function closePanel() {
     if (!isOpen) return;
     isOpen = false;
 
-    overlay.classList.remove("open");
-    panel.classList.remove("open");
+    overlayEl.classList.remove("open");
+    panelEl.classList.remove("open");
     document.body.classList.remove("no-scroll");
 
     openBtns.forEach((b) => b.setAttribute("aria-expanded", "false"));
 
     setTimeout(() => {
-      if (!isOpen) overlay.classList.add("hidden");
+      if (!isOpen) overlayEl.classList.add("hidden");
     }, 300);
   }
 
@@ -54,11 +58,11 @@ function initBookingPanel() {
 
   // Click close
   closeBtns.forEach((btn) => btn.addEventListener("click", closePanel));
-  overlay.addEventListener("click", closePanel);
+  overlayEl.addEventListener("click", closePanel);
 
   // Swipe-down close (mobile)
-  const grabber = panel.querySelector<HTMLElement>(".panel-grabber");
-  const content = panel.querySelector<HTMLElement>(".panel-content");
+  const grabber = panelEl.querySelector<HTMLElement>(".panel-grabber");
+  const content = panelEl.querySelector<HTMLElement>(".panel-content");
 
   if (!grabber || !content) return;
 
@@ -70,7 +74,7 @@ function initBookingPanel() {
     dragging = true;
     startY = clientY;
     currentY = 0;
-    panel.style.transition = "none";
+    panelEl.style.transition = "none";
   };
 
   const moveDrag = (clientY: number) => {
@@ -79,29 +83,29 @@ function initBookingPanel() {
     if (delta < 0) return;
 
     currentY = Math.min(delta, window.innerHeight);
-    panel.style.transform = `translateY(${currentY}px)`;
+    panelEl.style.transform = `translateY(${currentY}px)`;
 
     // efecto overlay suave
     const opacity = Math.max(0, 1 - currentY / 300) * 0.35;
-    overlay.style.opacity = String(opacity);
+    overlayEl.style.opacity = String(opacity);
   };
 
   const endDrag = () => {
     if (!dragging) return;
     dragging = false;
 
-    panel.style.transition = "transform 300ms cubic-bezier(.2,.8,.2,1)";
+    panelEl.style.transition = "transform 300ms cubic-bezier(.2,.8,.2,1)";
 
     if (currentY > 80) {
       closePanel();
       setTimeout(() => {
-        panel.style.transform = "";
+        panelEl.style.transform = "";
       }, 310);
     } else {
-      panel.classList.add("bounce");
-      panel.style.transform = "translateY(0)";
-      setTimeout(() => panel.classList.remove("bounce"), 320);
-      overlay.style.opacity = "";
+      panelEl.classList.add("bounce");
+      panelEl.style.transform = "translateY(0)";
+      setTimeout(() => panelEl.classList.remove("bounce"), 320);
+      overlayEl.style.opacity = "";
     }
   };
 

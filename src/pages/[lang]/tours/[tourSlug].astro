@@ -20,7 +20,7 @@ import AIAssistant from "../../../components/tours/AIAssistant.astro";
 import GamificationSystem from "../../../components/tours/GamificationSystem.astro";
 
 import BookingForm from "../../../components/booking/BookingForm.astro";
-
+import bookingPanelScript from "@/scripts/bookingPanel.ts?url";
 
 /* =========================================================
 IMPORTANT: enable SSG prerender for getStaticPaths()
@@ -1167,8 +1167,6 @@ window.addEventListener("mouseup", endDrag);
 });
 }
 </script>*/}
-<script type="module">
-  import "@/scripts/bookingPanel";
-</script>
+<script type="module" src={bookingPanelScript}></script>
 
 </Layout>
