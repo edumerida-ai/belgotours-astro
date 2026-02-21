@@ -877,6 +877,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 </aside>
 
 <!-- CTA BEHAVIOUR: OCULTAR AL LLEGAR AL FOOTER -->
+{/*
 <script>
   if (typeof window !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
@@ -900,7 +901,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
     
   });
   }
-</script>
+</script> */}
 
 
 <!-- 9) FOOTER (global) -->
@@ -1037,53 +1038,53 @@ body.no-scroll {
   will-change: transform;
 }
 </style>
+  {/*
+    <script>
+   // Sticky widget show/hide
+   if (typeof window !== "undefined") {
+   document.addEventListener("DOMContentLoaded", () => {
+   const widget = document.getElementById("bookingWidget");
+   if (!widget) return;
 
-<script>
-// Sticky widget show/hide
-if (typeof window !== "undefined") {
-  document.addEventListener("DOMContentLoaded", () => {
-const widget = document.getElementById("bookingWidget");
-if (!widget) return;
+   const showAt = 500;
+   const onScroll = () => {
+   if (window.scrollY > showAt) widget.classList.remove("translate-y-full");
+   else widget.classList.add("translate-y-full");
+   };
+   window.addEventListener("scroll", onScroll, { passive: true });
+   onScroll();
+    });
 
-const showAt = 500;
-const onScroll = () => {
-if (window.scrollY > showAt) widget.classList.remove("translate-y-full");
-else widget.classList.add("translate-y-full");
-};
-window.addEventListener("scroll", onScroll, { passive: true });
-onScroll();
-});
+   // Booking panel open/close
+   document.addEventListener("DOMContentLoaded", () => {
+   const overlay = document.getElementById("bookingOverlay") as HTMLElement | null;
+   const panel = document.getElementById("bookingPanel") as HTMLElement | null;
+   const openBtns = document.querySelectorAll(".openBookingBtn, .openPrivateRequestBtn");
+   const closeBtns = document.querySelectorAll(".closeBookingBtn");
 
-// Booking panel open/close
-document.addEventListener("DOMContentLoaded", () => {
-const overlay = document.getElementById("bookingOverlay") as HTMLElement | null;
-const panel = document.getElementById("bookingPanel") as HTMLElement | null;
-const openBtns = document.querySelectorAll(".openBookingBtn, .openPrivateRequestBtn");
-const closeBtns = document.querySelectorAll(".closeBookingBtn");
+   if (!overlay || !panel || !openBtns.length) return; 
 
-if (!overlay || !panel || !openBtns.length) return;
+   let isOpen = false;
 
-let isOpen = false;
+     function openPanel() {
+    if (isOpen) return;
+    isOpen = true;
 
-function openPanel() {
-if (isOpen) return;
-isOpen = true;
+    overlay!.classList.remove("hidden");
+    requestAnimationFrame(() => overlay!.classList.add("open"));
 
-overlay!.classList.remove("hidden");
-requestAnimationFrame(() => overlay!.classList.add("open"));
+    panel!.classList.add("open", "bounce");
+     document.body.classList.add("no-scroll");
 
-panel!.classList.add("open", "bounce");
-document.body.classList.add("no-scroll");
+    openBtns.forEach((b) => b.setAttribute("aria-expanded", "true"));
+     setTimeout(() => panel!.classList.remove("bounce"), 320);
+     } 
 
-openBtns.forEach((b) => b.setAttribute("aria-expanded", "true"));
-setTimeout(() => panel!.classList.remove("bounce"), 320);
-}
+     function closePanel() {
+     if (!isOpen) return;
+     isOpen = false;
 
-function closePanel() {
-if (!isOpen) return;
-isOpen = false;
-
-overlay!.classList.remove("open");
+    overlay!.classList.remove("open");
 panel!.classList.remove("open");
 document.body.classList.remove("no-scroll");
 
@@ -1165,5 +1166,5 @@ window.addEventListener("mousemove", (e) => {
 window.addEventListener("mouseup", endDrag);
 });
 }
-</script>
+</script>*/}
 </Layout>
