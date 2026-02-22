@@ -2,7 +2,7 @@
  
 import intlTelInput from "intl-tel-input";
 import "intl-tel-input/build/css/intlTelInput.css";
-import utilsUrl from "intl-tel-input/build/js/utils.js?url";
+
 
 
  
@@ -20,13 +20,14 @@ import utilsUrl from "intl-tel-input/build/js/utils.js?url";
 const phoneInput = document.getElementById("customerPhone") as HTMLInputElement | null;
 
 let iti: ReturnType<typeof intlTelInput> | null = null;
+let utilsReady = false;
 
 if (phoneInput) {
   iti = intlTelInput(phoneInput, {
   initialCountry: "auto",
   separateDialCode: true,
   autoPlaceholder: "polite",
-  utilsScript: utilsUrl,
+  loadUtils: () => import("intl-tel-input/utils"),
   geoIpLookup: (callback: (countryCode: string) => void) => {
     fetch("https://ipapi.co/json")
       .then((res) => res.json())
@@ -34,18 +35,26 @@ if (phoneInput) {
       .catch(() => callback("es"));
   }
 } as any);
+(iti as any).promise?.then(() => { utilsReady = true; });
 
   phoneInput.addEventListener("blur", () => {
-    const errorEl = document.getElementById("phoneError");
+  const errorEl = document.getElementById("phoneError");
 
-    if (iti && !iti.isValidNumber()) {
-      errorEl?.classList.remove("hidden");
-      phoneInput.classList.add("border-red-500", "ring-2", "ring-red-200");
-    } else {
-      errorEl?.classList.add("hidden");
-      phoneInput.classList.remove("border-red-500", "ring-2", "ring-red-200");
-    }
-  });
+  // si utils aún no está listo, no castigues (evita falsos inválidos)
+  if (!utilsReady) {
+    errorEl?.classList.add("hidden");
+    phoneInput.classList.remove("border-red-500", "ring-2", "ring-red-200");
+    return;
+  }
+
+  if (iti && !iti.isValidNumber()) {
+    errorEl?.classList.remove("hidden");
+    phoneInput.classList.add("border-red-500", "ring-2", "ring-red-200");
+  } else {
+    errorEl?.classList.add("hidden");
+    phoneInput.classList.remove("border-red-500", "ring-2", "ring-red-200");
+  }
+});
 
 const refreshNav = () => (window as any).updateBookingNavigation?.();
 
@@ -316,7 +325,7 @@ function updateUrgency() {
 }
 
   const email = emailInput?.value.trim();
- if (iti && phoneInput?.value?.trim() && !iti.isValidNumber()) {
+ if (utilsReady && iti && phoneInput?.value?.trim() && !iti.isValidNumber()) {
   if (showUI) markFieldError(phoneInput);
   return false;
 }
@@ -567,7 +576,7 @@ const marketingConsent = getInput("marketingConsent")?.checked || false;
           nombre: firstName,
           apellidos: lastName,
           email,
-          telefono: iti ? iti.getNumber() : phone,
+          telefono: iti && utilsReady ? iti.getNumber() : phone,
           ciudad: city,
           pais: country,
           adultos,
@@ -743,7 +752,7 @@ function setupAutocomplete(
         data.forEach((item) => {
           const option = document.createElement("div");
           option.className = "px-3 py-2 cursor-pointer hover:bg-gray-100 transition";
-          option.textContent = item.label;
+          option.textContent = (item.display_name || "").split(",")[0];
 
           option.addEventListener("click", () => {
             input.value = option.textContent || "";
