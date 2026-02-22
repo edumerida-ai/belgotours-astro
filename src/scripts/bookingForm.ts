@@ -355,8 +355,11 @@ function updateUrgency() {
       }
     }
 
+    // 🔥 Exponer función global correctamente
+(window as any).updateBookingNavigation = updateNavigation;
+
     // 👇 AGREGA ESTO
-      (window as any).updateBookingNavigation = updateNavigation;
+      
 
     function updateSummary() {
       const localeMap = {
@@ -767,3 +770,4 @@ setupAutocomplete("customerCity", "citySuggestions", "city");
   updateNavigation();
   });
 }
+// 🔥 Exponer función global inmediatamente
