@@ -2,7 +2,8 @@
 import BookingSteps from "./BookingSteps.astro";
 import BookingCalendar from "./BookingCalendar.astro";
 import ParticipantCounter from "./ParticipantCounter.astro";
-import BookingClient from "./BookingClient";
+// 🔥 esto genera una URL real en el build (no /src/...)
+import bookingFormUrl from "../../scripts/bookingForm.ts?url";
 
 
 interface Props {
@@ -756,4 +757,4 @@ const STRAPI_API_BASE =
 
 
 </style>
-<BookingClient client:load />
+<script type="module" src={bookingFormUrl}></script>
