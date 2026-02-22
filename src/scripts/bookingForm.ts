@@ -2,33 +2,38 @@
  
 import intlTelInput from "intl-tel-input";
 import "intl-tel-input/build/css/intlTelInput.css";
-
+import utilsUrl from "intl-tel-input/build/js/utils.js?url";
 
 
  
  if (typeof window !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
     
-    console.log("🚀 Inicializando BookingForm 2030...");
+    console.log(" Inicializando BookingForm ");
+
+    
 
     const root = document.getElementById("bookingForm");
 // 📱 Inicializar teléfono internacional
+
+
 const phoneInput = document.getElementById("customerPhone") as HTMLInputElement | null;
 
 let iti: ReturnType<typeof intlTelInput> | null = null;
 
 if (phoneInput) {
   iti = intlTelInput(phoneInput, {
-    initialCountry: "auto",
-    separateDialCode: true,
-    autoPlaceholder: "polite",
-    geoIpLookup: (callback: (countryCode: string) => void) => {
-      fetch("https://ipapi.co/json")
-        .then((res) => res.json())
-        .then((data) => callback(data.country_code))
-        .catch(() => callback("es"));
-    }
-  } as any);
+  initialCountry: "auto",
+  separateDialCode: true,
+  autoPlaceholder: "polite",
+  utilsScript: utilsUrl,
+  geoIpLookup: (callback: (countryCode: string) => void) => {
+    fetch("https://ipapi.co/json")
+      .then((res) => res.json())
+      .then((data) => callback(data.country_code))
+      .catch(() => callback("es"));
+  }
+} as any);
 
   phoneInput.addEventListener("blur", () => {
     const errorEl = document.getElementById("phoneError");
@@ -41,6 +46,14 @@ if (phoneInput) {
       phoneInput.classList.remove("border-red-500", "ring-2", "ring-red-200");
     }
   });
+
+const refreshNav = () => (window as any).updateBookingNavigation?.();
+
+phoneInput.addEventListener("input", refreshNav);
+phoneInput.addEventListener("keyup", refreshNav);
+
+// intl-tel-input dispara esto cuando cambias país/bandera
+phoneInput.addEventListener("countrychange", refreshNav);
 }
 
 if (!root) return;
@@ -151,9 +164,9 @@ bookingRoot.querySelectorAll("input, select, textarea").forEach((input) => {
   currentStep = stepNumber;
   updateNavigation();
 
-  if (stepNumber === 3) {
-    updateSummary();
-  }
+  if (stepNumber === 2 || stepNumber === 3) {
+  updateSummary();
+}
 
   // ✅ Solo hacer scroll cuando NO es el paso inicial
   if (stepNumber !== 1) {
@@ -303,7 +316,7 @@ function updateUrgency() {
 }
 
   const email = emailInput?.value.trim();
-  if (iti && !iti.isValidNumber()) {
+ if (iti && phoneInput?.value?.trim() && !iti.isValidNumber()) {
   if (showUI) markFieldError(phoneInput);
   return false;
 }
@@ -404,16 +417,17 @@ function updateUrgency() {
         `${state.participants.adults + state.participants.children}`;
        }
        }
+window.addEventListener("dateSelected", () => {
+  updateSummary();
+  updateNavigation();
+  setTimeout(updateNavigation, 150);
+});
 
-    window.addEventListener("dateSelected", () => {
-      updateNavigation();
-      setTimeout(updateNavigation, 150);
-    });
-
-    window.addEventListener("timeSelected", () => {
-      updateNavigation();
-      updateUrgency();   // 🔥 activar urgencia cuando se selecciona horario
-    });
+window.addEventListener("timeSelected", () => {
+  updateSummary();
+  updateNavigation();
+  updateUrgency();
+});
 
     document.addEventListener("participantsUpdated", () => {
       updateNavigation();
@@ -717,14 +731,9 @@ function setupAutocomplete(
 
     debounceTimeout = setTimeout(async () => {
       try {
-        const url =
-          type === "country"
-            ? `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`
-            : `https://nominatim.openstreetmap.org/search?format=json&limit=5&city=${encodeURIComponent(query)}`;
+       const url = `/.netlify/functions/geocode?q=${encodeURIComponent(query)}&type=${encodeURIComponent(type)}&lang=${encodeURIComponent(lang)}`;
 
-        const res = await fetch(url, {
-          headers: { "Accept-Language": lang },
-        });
+       const res = await fetch(url);
 
         if (!res.ok) return;
 
@@ -734,7 +743,7 @@ function setupAutocomplete(
         data.forEach((item) => {
           const option = document.createElement("div");
           option.className = "px-3 py-2 cursor-pointer hover:bg-gray-100 transition";
-          option.textContent = item.display_name.split(",")[0];
+          option.textContent = item.label;
 
           option.addEventListener("click", () => {
             input.value = option.textContent || "";
@@ -769,6 +778,9 @@ setupAutocomplete("customerCity", "citySuggestions", "city");
   showStep(1);
   updateNavigation();
   });
-}
+  }
+
+
+
 // 🔥 Exponer función global inmediatamente
 export {};
