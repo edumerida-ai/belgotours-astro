@@ -42,65 +42,22 @@ const steps = [
 ];
 ---
 
-<div class="flex justify-center mb-8">
-  <div class="flex items-center space-x-4 md:space-x-6">
-    {steps.map((step, index) => (
-      <div class="flex items-center">
-        <!-- Paso -->
-        <div class="flex flex-col items-center">
-          <!-- Círculo -->
-          <div
-            class={`w-11 h-11 rounded-full flex items-center justify-center border-2 font-semibold text-sm transition-all duration-300
-              ${
-                currentStep === step.number
-                  ? 'bg-yellow-400 border-yellow-400 text-gray-900'
-                  : currentStep > step.number
-                  ? 'bg-gray-900 border-gray-900 text-white'
-                  : 'bg-white border-gray-300 text-gray-400'
-              }`}
-          >
-            {currentStep > step.number ? (
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            ) : (
-              step.number
-            )}
-          </div>
+<div class="flex justify-center mb-6">
+  <div class="flex items-center gap-4 md:gap-6 text-sm md:text-base font-medium">
 
-          <!-- Label (desktop) -->
-          <span
-            class={`text-xs mt-2 font-medium hidden md:block ${
-              currentStep >= step.number
-                ? 'text-gray-800'
-                : 'text-gray-400'
-            }`}
-          >
-            {step.label[lang] || step.label.es}
-          </span>
-        </div>
-
-        <!-- Conector -->
-        {index < steps.length - 1 && (
-          <div
-            class={`w-6 md:w-10 h-0.5 transition-colors duration-300 ${
-              currentStep > step.number
-                ? 'bg-gray-900'
-                : 'bg-gray-300'
-            }`}
-          ></div>
-        )}
-      </div>
+    {steps.map((step) => (
+      <span
+        class={`transition-colors duration-200 ${
+          currentStep === step.number
+            ? "text-gray-900 font-semibold"
+            : currentStep > step.number
+            ? "text-gray-700"
+            : "text-gray-400"
+        }`}
+      >
+        {step.label[lang as keyof typeof step.label] || step.label.es}
+      </span>
     ))}
+
   </div>
 </div>
