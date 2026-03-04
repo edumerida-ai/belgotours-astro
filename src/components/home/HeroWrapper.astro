@@ -44,61 +44,49 @@ const {
 ========================= */
 const textsByLang = {
   es: {
-    heroTitle: "Descubre Bélgica con guías locales",
-    heroSubtitle: "Free Tours y Tours Privados en Bruselas y Brujas",
-    heroDescription:
-      "Experiencias auténticas, grupos pequeños y cancelación gratuita.",
-    heroHighlighted: "Español, Inglés, Francés e Italiano",
-    searchTitle: "Encuentra tu tour ideal",
-    searchSubtitle: "Reserva en 2 minutos · Cancelación gratuita",
-    searchCta: "Ver tour",
+    heroTitle: "Free Tours en Bruselas y Bélgica",
+    heroSubtitle: "Descubre Bruselas, Brujas y otras ciudades de Bélgica con guías locales expertos",
+    searchTitle: "Elige tu tour",
+    searchSubtitle: "Reserva gratuita · Confirmación inmediata",
+    searchCta: "Ver disponibilidad",
   },
+
   en: {
-    heroTitle: "Discover Belgium with local guides",
-    heroSubtitle: "Free Tours and Private Tours in Brussels and Bruges",
-    heroDescription:
-      "Authentic experiences, small groups and free cancellation.",
-    heroHighlighted: "Spanish, English, French and Italian",
-    searchTitle: "Find your perfect tour",
-    searchSubtitle: "Book in 2 minutes · Free cancellation",
-    searchCta: "View tour",
+    heroTitle: "Free Tours in Brussels and Belgium",
+    heroSubtitle: "Discover Brussels, Bruges and other Belgian cities with expert local guides",
+    searchTitle: "Choose your tour",
+    searchSubtitle: "Free booking · Instant confirmation",
+    searchCta: "Check availability",
   },
+
   it: {
-    heroTitle: "Scopri il Belgio con guide locali",
-    heroSubtitle: "Free Tours e Tour Privati a Bruxelles e Bruges",
-    heroDescription:
-      "Esperienze autentiche, piccoli gruppi e cancellazione gratuita.",
-    heroHighlighted: "Spagnolo, Inglese, Francese e Italiano",
-    searchTitle: "Trova il tour ideale",
-    searchSubtitle: "Prenota in 2 minuti · Cancellazione gratuita",
-    searchCta: "Vedi tour",
+    heroTitle: "Free Tour a Bruxelles e in Belgio",
+    heroSubtitle: "Scopri Bruxelles, Bruges e altre città del Belgio con guide locali esperte",
+    searchTitle: "Scegli il tuo tour",
+    searchSubtitle: "Prenotazione gratuita · Conferma immediata",
+    searchCta: "Verifica disponibilità",
   },
+
   fr: {
-    heroTitle: "Découvrez la Belgique avec des guides locaux",
-    heroSubtitle: "Free Tours et Tours Privés à Bruxelles et Bruges",
-    heroDescription:
-      "Expériences authentiques, petits groupes et annulation gratuite.",
-    heroHighlighted: "Espagnol, Anglais, Français et Italien",
-    searchTitle: "Trouvez votre tour idéal",
-    searchSubtitle: "Réservation en 2 minutes · Annulation gratuite",
-    searchCta: "Voir le tour",
+    heroTitle: "Free Tours à Bruxelles et en Belgique",
+    heroSubtitle: "Découvrez Bruxelles, Bruges et d'autres villes de Belgique avec des guides locaux experts",
+    searchTitle: "Choisissez votre visite",
+    searchSubtitle: "Réservation gratuite · Confirmation immédiate",
+    searchCta: "Voir les disponibilités",
   },
+
   pt: {
-    heroTitle: "Descubra a Bélgica com guias locais",
-    heroSubtitle: "Free Tours e Tours Privados em Bruxelas e Bruges",
-    heroDescription:
-      "Experiências autênticas, pequenos grupos e cancelamento gratuito.",
-    heroHighlighted: "Espanhol, Inglês, Francês e Italiano",
-    searchTitle: "Encontre seu tour ideal",
-    searchSubtitle: "Reserve em 2 minutos · Cancelamento gratuito",
-    searchCta: "Ver tour",
+    heroTitle: "Free Tours em Bruxelas e na Bélgica",
+    heroSubtitle: "Descubra Bruxelas, Bruges e outras cidades da Bélgica com guias locais especialistas",
+    searchTitle: "Escolha seu tour",
+    searchSubtitle: "Reserva gratuita · Confirmação imediata",
+    searchCta: "Ver disponibilidade",
   },
 };
-
 const t = textsByLang[lang] || textsByLang.es;
 ---
 
-<section class="relative overflow-hidden bg-neutral-950 text-white pt-14 pb-16 lg:pt-20 lg:pb-20">
+<section class="relative overflow-visible bg-neutral-950 text-white pt-10 pb-32 lg:pt-16 lg:pb-40">
   <!-- DECORACIÓN -->
   <div class="pointer-events-none absolute inset-0 opacity-30">
     <div class="absolute -top-40 -left-40 w-96 h-96 bg-yellow-400/20 rounded-full blur-3xl"></div>
@@ -113,8 +101,6 @@ const t = textsByLang[lang] || textsByLang.es;
         <HeroLeft
           heroTitle={t.heroTitle}
           heroSubtitle={t.heroSubtitle}
-          heroDescription={t.heroDescription}
-          heroHighlighted={t.heroHighlighted}
           heroBadge={heroBadge}
           trustRating={trustRating}
           trustReviews={trustReviews}
@@ -126,8 +112,8 @@ const t = textsByLang[lang] || textsByLang.es;
       </div>
     </div>
 
-    <!-- SEARCHBOX -->
-    <div class="order-2 mt-8 lg:mt-12">
+        <!-- SEARCHBOX -->
+    <div class="order-2 mt-6 lg:mt-10">
       <SearchBox
         lang={lang}
         title={t.searchTitle}
@@ -137,6 +123,46 @@ const t = textsByLang[lang] || textsByLang.es;
       />
     </div>
 
+    <!-- SEO CONTEXT BLOCK (por idioma) -->
+    {lang === "es" && (
+      <p class="sr-only">
+        BelgoTours ofrece free tours en Bruselas y visitas guiadas en Bélgica con guías locales en español, inglés, italiano y francés.
+        Descubre el centro histórico de Bruselas, la Grand Place, el Manneken Pis y el barrio del Sablon con nuestros free walking tours.
+        También organizamos free tours en Brujas y tours privados en Bélgica para viajeros que buscan experiencias auténticas.
+      </p>
+    )}
+
+    {lang === "en" && (
+      <p class="sr-only">
+        BelgoTours offers free walking tours in Brussels and guided tours in Belgium with local guides in English, Spanish, Italian and French.
+        Explore Brussels historic center, the Grand Place, Manneken Pis and the Sablon district with our walking tours.
+        We also run tours in Bruges and private tours in Belgium for travelers looking for authentic experiences.
+      </p>
+    )}
+
+    {lang === "it" && (
+      <p class="sr-only">
+        BelgoTours offre free tour a Bruxelles e visite guidate in Belgio con guide locali in italiano, spagnolo, inglese e francese.
+        Scopri il centro storico di Bruxelles, la Grand Place, il Manneken Pis e il quartiere del Sablon con i nostri walking tour.
+        Organizziamo anche tour a Bruges e tour privati in Belgio per chi cerca esperienze autentiche.
+      </p>
+    )}
+
+        {lang === "fr" && (
+      <p class="sr-only">
+        BelgoTours propose des free tours à Bruxelles et des visites guidées en Belgique avec des guides locaux en français, anglais, espagnol et italien.
+        Découvrez le centre historique de Bruxelles, la Grand-Place, le Manneken Pis et le quartier du Sablon avec nos visites à pied.
+        Nous organisons aussi des visites à Bruges et des visites privées en Belgique pour des voyageurs en quête d’expériences authentiques.
+      </p>
+    )}
+
+    {lang === "pt" && (
+      <p class="sr-only">
+        A BelgoTours oferece free tours em Bruxelas e visitas guiadas na Bélgica com guias locais. Há tours disponíveis em espanhol, inglês, italiano e francês.
+        Explore o centro histórico de Bruxelas, a Grand Place, o Manneken Pis e a zona de Sablon com as nossas walking tours.
+        Também organizamos tours em Bruges e tours privados na Bélgica para viajantes que procuram experiências autênticas.
+      </p>
+    )}
     <!-- TRUST BAR (desactivado por ahora) -->
     {/*
     <div class="order-3 mt-6 lg:mt-8">

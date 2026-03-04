@@ -507,7 +507,7 @@ canonical={canonicalUrl}
 <!-- 2) HERO (dinámico desde Strapi) -->
 <section 
   id="tour-hero"
-  class="relative min-h-[75vh] md:min-h-screen flex items-center justify-center overflow-hidden">
+  class="relative min-h-[70vh] md:min-h-screen flex items-center justify-center overflow-hidden">
 <div class="absolute inset-0 z-0">
 {tour.heroMedia?.video ? (
 <video
@@ -648,7 +648,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 <!-- 3) DESCRIPCIÓN / OVERVIEW -->
 <section
   id="tour-description"
-  class="py-12 md:py-20 bg-gray-50 md:bg-white"
+  class="py-10 md:py-20 bg-white"
 >
   <div class="container mx-auto px-4">
 
@@ -665,7 +665,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
     <!-- Card de contenido (premium, lectura cómoda) -->
     <div class="max-w-3xl mx-auto">
       <div
-        class="bg-white rounded-2xl p-6 md:p-10 shadow-soft"
+        class="bg-gray-50 rounded-2xl p-6 md:p-10 shadow-md"
       >
         <div
           class="prose prose-lg md:prose-xl max-w-none text-gray-700
@@ -691,11 +691,11 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 <!-- Separador suave hacia Itinerario -->
 
 <!-- 4) ITINERARIO -->
-<section id="itinerario" class="py-16 md:py-20 bg-gray-50">
+<section id="itinerario" class="py-12 md:py-20 bg-gray-50">
   <div class="container mx-auto px-4">
 
     <!-- Título de sección (mejor jerarquía + centrado) -->
-    <div class="max-w-3xl mx-auto text-center mb-12">
+    <div class="class=max-w-3xl mx-auto text-center mb-8">
       <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
         {ui.itinerario}
       </h2>
@@ -758,7 +758,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 
 
 <!-- 5) MAPA / PUNTO DE ENCUENTRO -->
-<section id="mapa" class="py-16 md:py-20 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+<section id="mapa" class="py-14 md:py-20 bg-gradient-to-b from-gray-900 to-gray-800 text-white">
   <div class="container mx-auto px-4">
     <div class="max-w-4xl mx-auto">
 
@@ -798,7 +798,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 </section>
 
 <!-- 6) RESEÑAS -->
-<section id="reviews" class="py-16 md:py-20 bg-white">
+<section id="reviews" class="py-14 md:py-20 bg-gray-50">
   <div class="container mx-auto px-4">
     <div class="max-w-6xl mx-auto">
 
@@ -888,37 +888,8 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
 </aside>
 
 <!-- CTA BEHAVIOUR: OCULTAR AL LLEGAR AL FOOTER -->
-{/*
-<script>
-  if (typeof window !== "undefined") {
-  document.addEventListener("DOMContentLoaded", () => {
-    const cta = document.getElementById("bookingWidget");
-    const footer = document.querySelector("footer");
-
-    if (!cta || !footer) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          cta.classList.add("opacity-0", "pointer-events-none", "translate-y-6");
-        } else {
-          cta.classList.remove("opacity-0", "pointer-events-none", "translate-y-6");
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    observer.observe(footer);
-    
-  });
-  }
-</script> */}
-
-
 <!-- 9) FOOTER (global) -->
 <Footer lang={lang} />
-
-
 <!-- Integraciones (client) -->
 {tour.elementosUnicos?.aiAssistant && (
 <AIAssistant
@@ -1049,135 +1020,7 @@ body.no-scroll {
   will-change: transform;
 }
 </style>
-  {/*
-    <script>
-   // Sticky widget show/hide
-   if (typeof window !== "undefined") {
-   document.addEventListener("DOMContentLoaded", () => {
-   const widget = document.getElementById("bookingWidget");
-   if (!widget) return;
-
-   const showAt = 500;
-   const onScroll = () => {
-   if (window.scrollY > showAt) widget.classList.remove("translate-y-full");
-   else widget.classList.add("translate-y-full");
-   };
-   window.addEventListener("scroll", onScroll, { passive: true });
-   onScroll();
-    });
-
-   // Booking panel open/close
-   document.addEventListener("DOMContentLoaded", () => {
-   const overlay = document.getElementById("bookingOverlay") as HTMLElement | null;
-   const panel = document.getElementById("bookingPanel") as HTMLElement | null;
-   const openBtns = document.querySelectorAll(".openBookingBtn, .openPrivateRequestBtn");
-   const closeBtns = document.querySelectorAll(".closeBookingBtn");
-
-   if (!overlay || !panel || !openBtns.length) return; 
-
-   let isOpen = false;
-
-     function openPanel() {
-    if (isOpen) return;
-    isOpen = true;
-
-    overlay!.classList.remove("hidden");
-    requestAnimationFrame(() => overlay!.classList.add("open"));
-
-    panel!.classList.add("open", "bounce");
-     document.body.classList.add("no-scroll");
-
-    openBtns.forEach((b) => b.setAttribute("aria-expanded", "true"));
-     setTimeout(() => panel!.classList.remove("bounce"), 320);
-     } 
-
-     function closePanel() {
-     if (!isOpen) return;
-     isOpen = false;
-
-    overlay!.classList.remove("open");
-panel!.classList.remove("open");
-document.body.classList.remove("no-scroll");
-
-openBtns.forEach((b) => b.setAttribute("aria-expanded", "false"));
-
-setTimeout(() => {
-if (!isOpen) overlay!.classList.add("hidden");
-}, 300);
-}
-
-openBtns.forEach((btn) => {
-btn.addEventListener("click", (e) => {
-e.preventDefault();
-openPanel();
-});
-});
-
-closeBtns.forEach((btn) => btn.addEventListener("click", closePanel));
-overlay.addEventListener("click", closePanel);
-
-// Swipe-down close (mobile)
-let startY = 0;
-let currentY = 0;
-let dragging = false;
-
-const grabber = panel.querySelector(".panel-grabber");
-const content = panel.querySelector(".panel-content");
-if (!grabber || !content) return;
-
-const startDrag = (clientY: number) => {
-dragging = true;
-startY = clientY;
-currentY = 0;
-panel.style.transition = "none";
-};
-
-const moveDrag = (clientY: number) => {
-if (!dragging) return;
-const delta = clientY - startY;
-if (delta < 0) return;
-currentY = Math.min(delta, window.innerHeight);
-panel.style.transform = `translateY(${currentY}px)`;
-overlay.style.opacity = String(Math.max(0, 1 - currentY / 300) * 0.35);
-};
-
-const endDrag = () => {
-if (!dragging) return;
-dragging = false;
-panel.style.transition = "transform 300ms cubic-bezier(.2,.8,.2,1)";
-
-if (currentY > 80) {
-closePanel();
-setTimeout(() => { panel.style.transform = ""; }, 310);
-} else {
-panel.classList.add("bounce");
-panel.style.transform = "translateY(0)";
-setTimeout(() => panel.classList.remove("bounce"), 320);
-overlay.style.opacity = "";
-}
-};
-
-grabber.addEventListener("touchstart", (e) => {
-  const touch = (e as TouchEvent).touches[0];
-  startDrag(touch.clientY);
-}, { passive: true });
-grabber.addEventListener("touchmove", (e) => {
-  const touch = (e as TouchEvent).touches[0];
-  moveDrag(touch.clientY);
-  e.preventDefault();
-}, { passive: false });
-grabber.addEventListener("touchend", endDrag);
-
-grabber.addEventListener("mousedown", (e) => {
-  startDrag((e as MouseEvent).clientY);
-});
-window.addEventListener("mousemove", (e) => {
-  moveDrag((e as MouseEvent).clientY);
-});
-window.addEventListener("mouseup", endDrag);
-});
-}
-</script>*/}
+  
 <script is:inline src="/js/bookingPanel.js"></script>
 
 <script>

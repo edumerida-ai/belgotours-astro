@@ -4,24 +4,31 @@
 export type TourLang = "es" | "en" | "it" | "fr";
 export type SiteLang = "es" | "en" | "it" | "fr" | "pt";
 
+export type City = "brussels" | "bruges" | "antwerp" | "leuven";
+export type TourKind = "free" | "private" | "special";
+
 export interface SearchboxTour {
   name: string;
   duration: string;
   price: string;
-  tourLang: TourLang; // idioma real del tour
-  url: string;        // URL final
+  tourLang: TourLang;  // idioma real del tour
+  city: City;          // ciudad (escalable)
+  kind: TourKind;      // tipo (NO es paso, solo metadata)
+  url: string;         // URL final del funnel (no se rompe)
 }
 
 // ================================
 // Base de tours (FUENTE ÚNICA)
 // ================================
 const TOURS: SearchboxTour[] = [
-  // ✅ FREE TOUR BRUSELAS
+  // BRUSSELS - FREE
   {
     name: "Free Tour Bruselas en Español",
     duration: "2 h 15 min",
     price: "Pago libre",
     tourLang: "es",
+    city: "brussels",
+    kind: "free",
     url: "/es/tours/free-tour-bruselas",
   },
   {
@@ -29,6 +36,8 @@ const TOURS: SearchboxTour[] = [
     duration: "2 h 15 min",
     price: "Tip-based",
     tourLang: "en",
+    city: "brussels",
+    kind: "free",
     url: "/en/tours/free-tour-brussels",
   },
   {
@@ -36,63 +45,79 @@ const TOURS: SearchboxTour[] = [
     duration: "2 h 15 min",
     price: "Prezzo libero",
     tourLang: "it",
+    city: "brussels",
+    kind: "free",
     url: "/it/tours/free-tour-bruxelles",
   },
 
-  // ✅ FREE TOUR BRUJAS (solo ES)
+  // BRUGES - FREE (solo ES)
   {
     name: "Free Tour Brujas en Español",
     duration: "2 h 15 min",
     price: "Pago libre",
     tourLang: "es",
+    city: "bruges",
+    kind: "free",
     url: "/es/tours/free-tour-brujas",
   },
 
-  // ✅ TOUR ESPECIAL CHOCOLATE (solo ES)
+  // BRUSSELS - SPECIAL (solo ES)
   {
     name: "Tour de Chocolate y Cerveza en Bruselas",
     duration: "2 h 30 min",
     price: "39€ por persona",
     tourLang: "es",
+    city: "brussels",
+    kind: "special",
     url: "/es/tours/tour-chocolate-cerveza-bruselas",
   },
 
-  // ✅ PRIVADO BRUSELAS (ES / EN / IT / FR)
+  // BRUSSELS - PRIVATE (ES/EN/IT/FR)
   {
     name: "Tour Privado Bruselas en Español",
     duration: "2 h 15 min",
-    price: "120€ por grupo",
+    price: "Presupuesto",
     tourLang: "es",
+    city: "brussels",
+    kind: "private",
     url: "/es/tours/tour-privado-bruselas",
   },
   {
     name: "Private Tour Brussels in English",
     duration: "2 h 15 min",
-    price: "120€ per group",
+    price: "Quote",
     tourLang: "en",
+    city: "brussels",
+    kind: "private",
     url: "/en/tours/private-tour-brussels",
   },
   {
     name: "Tour Privato Bruxelles in Italiano",
     duration: "2 h 15 min",
-    price: "120€ per gruppo",
+    price: "Preventivo",
     tourLang: "it",
+    city: "brussels",
+    kind: "private",
     url: "/it/tours/tour-privato-bruxelles",
   },
   {
     name: "Tour Privé Bruxelles (Français)",
     duration: "2 h 15 min",
-    price: "120€ par groupe",
+    price: "Devis",
     tourLang: "fr",
+    city: "brussels",
+    kind: "private",
     url: "/fr/tours/tour-prive-bruxelles",
   },
 
-  // ✅ PRIVADO BRUJAS (solo ES)
+  // BRUGES - PRIVATE (solo ES)
   {
     name: "Tour Privado Brujas en Español",
     duration: "2 h 15 min",
-    price: "120€ por grupo",
+    price: "Presupuesto",
     tourLang: "es",
+    city: "bruges",
+    kind: "private",
     url: "/es/tours/tour-privado-brujas",
   },
 ];
@@ -100,15 +125,12 @@ const TOURS: SearchboxTour[] = [
 // ================================
 // EXPORTS PÚBLICOS
 // ================================
-
-// 👉 USAR ESTE EN EL SearchBox DEL HOME
 export const SEARCHBOX_TOURS: SearchboxTour[] = TOURS;
 
-// 👉 Helper opcional para listados por idioma / futuro
 export function getSearchboxTours(siteLang: SiteLang): SearchboxTour[] {
-  // /pt/ muestra TODO
+  // /pt/ muestra TODO (pero la UI filtra por lo que el usuario elija)
   if (siteLang === "pt") return TOURS;
 
-  // otros idiomas: solo tours del mismo idioma
+  // otros idiomas: por defecto solo tours del idioma del site
   return TOURS.filter((t) => t.tourLang === siteLang);
 }

@@ -234,27 +234,32 @@ function renderQuickDates() {
 
     let label = formatShortDate(fecha);
 
-    if (index === 0) {
-      label =
-        currentLang === "en"
-          ? "Today"
-          : currentLang === "it"
-          ? "Oggi"
-          : currentLang === "fr"
-          ? "Aujourd’hui"
-          : "Hoy";
-    }
+const today = new Date();
+const todayISO = today.toISOString().split("T")[0];
 
-    if (index === 1) {
-      label =
-        currentLang === "en"
-          ? "Tomorrow"
-          : currentLang === "it"
-          ? "Domani"
-          : currentLang === "fr"
-          ? "Demain"
-          : "Mañana";
-    }
+const tomorrow = new Date();
+tomorrow.setDate(today.getDate() + 1);
+const tomorrowISO = tomorrow.toISOString().split("T")[0];
+
+if (fecha === todayISO) {
+  label =
+    currentLang === "en"
+      ? "Today"
+      : currentLang === "it"
+      ? "Oggi"
+      : currentLang === "fr"
+      ? "Aujourd’hui"
+      : "Hoy";
+} else if (fecha === tomorrowISO) {
+  label =
+    currentLang === "en"
+      ? "Tomorrow"
+      : currentLang === "it"
+      ? "Domani"
+      : currentLang === "fr"
+      ? "Demain"
+      : "Mañana";
+}
 
     btn.className =
   "px-4 py-2 rounded-full border border-gray-300 text-sm bg-white hover:border-yellow-400 transition whitespace-nowrap flex-shrink-0";
@@ -274,9 +279,10 @@ btn.style.scrollSnapAlign = "start";
   btn.classList.add("border-yellow-400", "bg-yellow-100");
 
   btn.scrollIntoView({
-    behavior: "smooth",
-    inline: "start"
-  });
+  behavior: "smooth",
+  inline: "center",
+  block: "nearest"
+});
 
   renderHorarios(fecha);
 };
@@ -369,22 +375,40 @@ function getUrgencyText(spots: number): string | null {
 
   // 3️⃣ Si no hay horarios válidos → auto avanzar
   if (!delDia.length) {
-    const currentIndex = fechasDisponibles.indexOf(fecha);
+  const currentIndex = fechasDisponibles.indexOf(fecha);
 
-    if (
-      currentIndex !== -1 &&
-      currentIndex < fechasDisponibles.length - 1
-    ) {
-      const siguienteFecha = fechasDisponibles[currentIndex + 1];
+  if (
+    currentIndex !== -1 &&
+    currentIndex < fechasDisponibles.length - 1
+  ) {
+    const siguienteFecha = fechasDisponibles[currentIndex + 1];
+
+    contenedor.innerHTML = `
+      <p class="text-sm text-gray-500 mb-3">
+        ${
+          currentLang === "en"
+            ? "No tours available that day. Showing next available tour."
+            : currentLang === "it"
+            ? "Nessun tour disponibile quel giorno. Mostriamo il prossimo disponibile."
+            : currentLang === "fr"
+            ? "Aucun tour ce jour-là. Affichage du prochain disponible."
+            : "No hay tours ese día. Mostrando el próximo disponible."
+        }
+      </p>
+    `;
+
+    setTimeout(() => {
       fechaPicker.value = siguienteFecha;
       renderHorarios(siguienteFecha);
-      return;
-    }
+    }, 900);
 
-    contenedor.innerHTML =
-      `<p class='text-sm text-gray-500'>${noTimesText}</p>`;
     return;
   }
+
+  contenedor.innerHTML =
+    `<p class='text-sm text-gray-500'>${noTimesText}</p>`;
+  return;
+}
 
   // 4️⃣ Render horarios válidos
   const maxVisible = 2;
@@ -400,23 +424,42 @@ function getUrgencyText(spots: number): string | null {
       : "";
 
     btn.className = `
-      time-slot
-      border border-gray-300
-      rounded-2xl p-4 text-center
-      bg-white
-      hover:border-yellow-400 hover:bg-yellow-50
-      transition
-    `;
+  time-slot
+  border border-gray-300
+  rounded-xl
+  p-4
+  text-center
+  bg-white
+  hover:border-yellow-400
+  hover:bg-yellow-50
+  transition
+  cursor-pointer
+  shadow-sm
+`;
 
     btn.innerHTML = `
-      <div class="text-lg font-semibold text-gray-900">
-        ${h.hora}
-      </div>
-      <div class="text-xs text-gray-500 mt-1">
-        ${h.cupoDisponible} ${spotsText}
-      </div>
-      ${urgencia}
-    `;
+  <div class="text-lg font-bold text-gray-900">
+    ${h.hora}
+  </div>
+
+  <div class="text-xs text-gray-500 mt-1">
+    ${h.cupoDisponible} ${spotsText}
+  </div>
+
+  ${urgencia}
+
+  <div class="text-xs text-gray-400 mt-2">
+    ${
+      currentLang === "en"
+        ? "Select"
+        : currentLang === "it"
+        ? "Seleziona"
+        : currentLang === "fr"
+        ? "Sélectionner"
+        : "Seleccionar"
+    }
+  </div>
+`;
 
     btn.onclick = () => {
       document.querySelectorAll(".time-slot").forEach((el) => {
@@ -437,6 +480,17 @@ function getUrgencyText(spots: number): string | null {
 
       window.dispatchEvent(new CustomEvent("dateSelected"));
       window.dispatchEvent(new CustomEvent("timeSelected"));
+
+      setTimeout(() => {
+  const participantSection = document.querySelector(".participant-counter");
+
+  if (participantSection) {
+    participantSection.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+  }
+}, 200);
       
     };
 
@@ -448,11 +502,8 @@ function getUrgencyText(spots: number): string | null {
     const btn = createHorarioButton(h);
     contenedor.appendChild(btn);
 
-    // Solo auto-selecciona si aún no hay horario seleccionado
-    if (index === 0) {
-  btn.click();
-}
-  });
+
+   });
 
   // 🔹 Si hay más → crear toggle
   if (delDia.length > maxVisible) {

@@ -161,7 +161,7 @@ const STRAPI_API_BASE =
 
   <BookingSteps currentStep={1} lang={lang} />
 
-  <div class="p-5 md:p-7 space-y-8">
+  <div class="p-5 md:p-7 space-y-8 pb-28">
     <!-- PASO 1: FECHA / HORARIO / PARTICIPANTES -->
     <div id="step1" class="booking-step active space-y-6">
         <h3 class="text-xl md:text-2xl font-bold text-gray-900">
@@ -744,12 +744,16 @@ const STRAPI_API_BASE =
     display: none;
   }
 
-  @media (max-width: 768px) {
+ @media (max-width: 768px) {
   #bookingNav {
-    position: sticky;
+    position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     background: white;
-    padding-bottom: 10px;
+    padding: 12px 20px;
+    border-top: 1px solid #e5e7eb;
+    z-index: 50;
   }
 }
 

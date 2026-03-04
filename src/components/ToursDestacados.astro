@@ -47,7 +47,7 @@ const toursData = {
       id: 3,
       titulo: "Tour del Chocolate y cerveza en Español",
       descripcion: "Ruta gastronómica por las mejores chocolaterías de Bruselas. Degustaciones incluidas.",
-      precio: 45,
+      precio: 39,
       moneda: "€",
       tipoPrecio: "por persona",
       duracion: "2 h 30 min",
@@ -64,9 +64,10 @@ const toursData = {
       id: 4,
       titulo: "Tour Privado Bruselas en Español",
       descripcion: "Experiencia personalizada con guía privado. Itinerario flexible según tus intereses.",
-      precio: 120,
+      precio: 0,
       moneda: "€",
       tipoPrecio: "por grupo",
+      precioTexto: "Solicita tu presupuesto", // ← NUEVO
       duracion: "2 h 15 min",
       idiomas: ["🇪🇸 Español"],
       rating: 5.0,
@@ -80,9 +81,10 @@ const toursData = {
       id: 5,
       titulo: "Tour Privado Brujas en Español",
       descripcion: "Descubre Brujas de forma exclusiva con un guía privado especializado.",
-      precio: 140,
+      precio: 0,
       moneda: "€", 
       tipoPrecio: "por grupo",
+      precioTexto: "Solicita tu presupuesto", // ← NUEVO
       duracion: "2 h 15 min",
       idiomas: ["🇪🇸 Español"],
       rating: 4.9,
@@ -116,9 +118,10 @@ const toursData = {
       id: 2,
       titulo: "Private Tour Brussels in English",
       descripcion: "Personalized experience with private guide. Flexible itinerary according to your interests.",
-      precio: 120,
+      precio: 0,
       moneda: "€",
-      tipoPrecio: "per group", 
+      tipoPrecio: "per group",
+      precioTexto: "Get your custom quote", // ← NUEVO 
       duracion: "2 h 15 min",
       idiomas: ["🇬🇧 English"],
       rating: 5.0,
@@ -152,9 +155,10 @@ const toursData = {
       id: 2,
       titulo: "Tour Privato Bruxelles in Italiano",
       descripcion: "Esperienza personalizzata con guida privata. Itinerario flessibile secondo i tuoi interessi.",
-      precio: 120,
+      precio: 0,
       moneda: "€",
       tipoPrecio: "per gruppo",
+      precioTexto: "Richiedi un preventivo", // ← NUEVO
       duracion: "2 h 15 min",
       idiomas: ["🇮🇹 Italiano"],
       rating: 5.0,
@@ -171,9 +175,10 @@ const toursData = {
       id: 1,
       titulo: "Tour Privé Bruxelles Personnalisé",
       descripcion: "Expérience exclusive avec guide privé francophone. Itinéraire flexible selon vos intérêts. Découvrez Bruxelles à votre rythme.",
-      precio: 120,
+      precio: 0,
       moneda: "€",
       tipoPrecio: "par groupe",
+      precioTexto: "Demandez votre devis", // ← NUEVO
       duracion: "2 h 15 min", 
       idiomas: ["🇫🇷 Français"],
       rating: 5.0,
@@ -258,9 +263,10 @@ const toursData = {
      id: 5,
      titulo: "Tour Privado de Bruxelas em Inglês",
      descripcion: "Experiência personalizada com guia privado. Itinerário flexível de acordo com seus interesses.",
-     precio: 120,
+     precio: 0,
      moneda: "€",
-     tipoPrecio: "por grupo",
+     tipoPrecio: "",
+     precioTexto: "Peça seu orçamento", // ← NUEVO
      duracion: "2 h 15 min",
      idiomas: ["🇬🇧 English"],
      rating: 5.0,
@@ -275,9 +281,10 @@ const toursData = {
      id: 6,
      titulo: "Tour Privado de Bruxelas em Espanhol",
      descripcion: "Experiência personalizada com guia privado. Itinerário flexível de acordo com seus interesses.",
-     precio: 120,
+     precio: 0,
      moneda: "€",
      tipoPrecio: "por grupo",
+     precioTexto: "Peça seu orçamento", // ← NUEVO
      duracion: " 2 h 15 min",
      idiomas: ["🇪🇸 Español"],
      rating: 5.0,
@@ -292,9 +299,10 @@ const toursData = {
      id: 7,
      titulo: "Tour Privado de Bruges em Espanhol",
      descripcion: "Descubra Bruges de forma exclusiva com um guia privado especializado.",
-     precio: 140,
+     precio: 0,
      moneda: "€",
      tipoPrecio: "por grupo",
+     precioTexto: "Peça seu orçamento", // ← NUEVO
      duracion: "2 h 10 min",
      idiomas: ["🇪🇸 Español"],
      rating: 4.9,
@@ -576,16 +584,58 @@ const getTourUrl = (tourSlug: string, lang: string, tourIdiomas: string[]) => {
   </a>
 
   <!-- Precio / tipo (información secundaria a la derecha) -->
-  <div class="flex flex-col text-right">
-    <span class="text-2xl font-bold text-gray-800">
-      {tour.precio === 0
-        ? texts.tourDetails.free
-        : `${tour.precio}${tour.moneda}`}
-    </span>
-    <span class="text-xs text-gray-500">
-      {getPriceType(tour)}
-    </span>
-  </div>
+<div class="flex flex-col text-right">
+
+  {/* FREE TOUR */}
+  {tour.categoria === "free-tour" && (
+    <>
+      <span class="text-2xl font-bold text-gray-800">
+        {texts.tourDetails.free}
+      </span>
+      <span class="text-xs text-gray-500">
+        {texts.tourDetails.perPerson}
+      </span>
+    </>
+  )}
+
+  {/* TOUR ESPECIAL */}
+  {tour.categoria === "tour-especial" && (
+    <>
+      <span class="text-2xl font-bold text-gray-800">
+        {tour.precio}{tour.moneda}
+      </span>
+      <span class="text-xs text-gray-500">
+        {texts.tourDetails.perPerson}
+      </span>
+    </>
+  )}
+
+  {/* TOUR PRIVADO */}
+  {tour.categoria === "tour-privado" && (
+    <>
+      {tour.precioTexto ? (
+        <>
+          <span class="text-xl font-bold text-gray-800">
+            {tour.precioTexto}
+          </span>
+          <span class="text-xs text-gray-500">
+            {texts.tourDetails.perGroup}
+          </span>
+        </>
+      ) : (
+        <>
+          <span class="text-2xl font-bold text-gray-800">
+            {tour.precio}{tour.moneda}
+          </span>
+          <span class="text-xs text-gray-500">
+            {texts.tourDetails.perGroup}
+          </span>
+        </>
+      )}
+    </>
+  )}
+
+</div>
 
 </div>
 
