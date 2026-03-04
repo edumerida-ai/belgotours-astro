@@ -228,12 +228,21 @@ function renderQuickDates() {
 
   let validDates = [...fechasDisponibles];
 
-// 🔥 Si hoy no tiene horarios disponibles lo quitamos de las pills
-const todayHasTimes = horarios.some(
-  (h: any) => h.fecha === todayStr
-);
+// 🔥 comprobar si hoy aún tiene horarios futuros
+const nowTime = new Date();
 
-if (!todayHasTimes) {
+const todayHasFutureTimes = horarios.some((h: any) => {
+  if (h.fecha !== todayStr) return false;
+
+  const [hh, mm] = h.hora.split(":").map(Number);
+  const horarioDate = new Date();
+  horarioDate.setHours(hh, mm, 0, 0);
+
+  return horarioDate > nowTime;
+});
+
+// si hoy no tiene horarios futuros → eliminarlo
+if (!todayHasFutureTimes) {
   validDates = validDates.filter((f) => f !== todayStr);
 }
 
