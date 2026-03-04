@@ -85,7 +85,7 @@ const TEXTS: Record<
 const texts = TEXTS[safeLang];
 function todayISO() {
   const d = new Date();
-  return d.toISOString().split("T")[0];
+  return d.toLocaleDateString("sv-SE");
 }
 
 async function getHorariosByTourId(id: number | string): Promise<Horario[]> {
@@ -222,11 +222,11 @@ function renderQuickDates() {
   if (!quickDatesContainer) return;
 
   quickDatesContainer.innerHTML = "";
+const now = new Date();
 
-  const now = new Date();
-  const todayStr = now.toISOString().split("T")[0];
+const todayStr = now.toLocaleDateString("sv-SE");
 
-  let validDates = [...fechasDisponibles];
+let validDates = [...fechasDisponibles];
 
 // 🔥 comprobar si hoy aún tiene horarios futuros
 const nowTime = new Date();
@@ -253,13 +253,12 @@ const limitedDates = validDates.slice(0, 10);
     btn.type = "button";
 
     let label = formatShortDate(fecha);
-
 const today = new Date();
-const todayISO = today.toISOString().split("T")[0];
+const todayISO = today.toLocaleDateString("sv-SE");
 
 const tomorrow = new Date();
 tomorrow.setDate(today.getDate() + 1);
-const tomorrowISO = tomorrow.toISOString().split("T")[0];
+const tomorrowISO = tomorrow.toLocaleDateString("sv-SE");
 
 if (fecha === todayISO) {
   label =
@@ -378,7 +377,7 @@ function getUrgencyText(spots: number): string | null {
   });
 
   const now = new Date();
-  const todayStr = now.toISOString().split("T")[0];
+const todayStr = now.toLocaleDateString("sv-SE"); 
 
   // 1️⃣ Filtrar por fecha
   let delDia = horarios.filter((h: any) => h.fecha === fecha);
@@ -431,7 +430,7 @@ function getUrgencyText(spots: number): string | null {
 }
 
   // 4️⃣ Render horarios válidos
-  const maxVisible = 2;
+  const maxVisible = 4;
   let expanded = false;
 
   function createHorarioButton(h: any) {
