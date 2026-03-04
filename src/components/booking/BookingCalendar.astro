@@ -144,10 +144,10 @@ const lastDate = fechasDisponibles[fechasDisponibles.length - 1] ?? firstDate;
 
   <!-- Toggle ver más -->
   <button
-    type="button"
-    id="toggleCalendar"
-    class="text-sm text-gray-600 hover:text-gray-900 underline"
-  >
+  type="button"
+  id="toggleCalendar"
+  class="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:border-yellow-400 hover:bg-yellow-50 transition"
+>
     {lang === "es" && "Ver más fechas"}
     {lang === "en" && "See more dates"}
     {lang === "it" && "Vedi più date"}
@@ -226,7 +226,18 @@ function renderQuickDates() {
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
 
-  const limitedDates = fechasDisponibles.slice(0, 10);
+  let validDates = [...fechasDisponibles];
+
+// 🔥 Si hoy no tiene horarios disponibles lo quitamos de las pills
+const todayHasTimes = horarios.some(
+  (h: any) => h.fecha === todayStr
+);
+
+if (!todayHasTimes) {
+  validDates = validDates.filter((f) => f !== todayStr);
+}
+
+const limitedDates = validDates.slice(0, 10);
 
   limitedDates.forEach((fecha: string, index: number) => {
     const btn = document.createElement("button");
@@ -519,7 +530,7 @@ function getUrgencyText(spots: number): string | null {
     const toggleBtn = document.createElement("button");
     toggleBtn.type = "button";
     toggleBtn.className =
-      "col-span-full mt-4 text-sm text-gray-600 hover:text-gray-900 underline";
+  "col-span-full mt-4 inline-flex items-center justify-center px-4 py-2 rounded-full border border-gray-300 text-sm font-medium text-gray-700 bg-white hover:border-yellow-400 hover:bg-yellow-50 transition";
 
     toggleBtn.textContent =
       currentLang === "en"
