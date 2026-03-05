@@ -494,9 +494,7 @@ description={metaDescription}
 canonical={canonicalUrl}
 >
 {tourSchema && (
-<script type="application/ld+json">
-{JSON.stringify(tourSchema)}
-</script>
+<script type="application/ld+json" set:html={JSON.stringify(tourSchema)} />
 )}
 
 <!-- 1) HEADER (global) -->
