@@ -1,0 +1,39 @@
+---
+import AppSidebar from './AppSidebar.astro';
+import AppHeader from './AppHeader.astro';
+import type { AppUser } from '../../../lib/app/types';
+
+interface Props {
+  title: string;
+  user: AppUser;
+}
+const { title, user } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{title} — BelgoTours Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f3f4f6; color: #111827; }
+    .app-layout { display: flex; min-height: 100vh; }
+    .app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+    .app-content { flex: 1; padding: 1.75rem 2rem; overflow-y: auto; }
+    @media (max-width: 768px) { .app-content { padding: 1rem; } }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <AppSidebar role={user.role} />
+    <div class="app-main">
+      <AppHeader user={user} />
+      <main class="app-content">
+        <slot />
+      </main>
+    </div>
+  </div>
+</body>
+</html>

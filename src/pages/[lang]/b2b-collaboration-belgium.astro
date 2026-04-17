@@ -245,9 +245,9 @@ const copy = t[lang] || t.en;
 
   <!-- 🔒 CLAVE: PASAMOS LANG -->
   <Footer lang={lang} />
-
+  <script is:inline define:vars={{ lang }}>
   <script is:inline>
-  const currentLang = {JSON.stringify(lang)};
+  const currentLang = lang;
 
   const form = document.getElementById("b2bForm");
   const successMsg = document.getElementById("successMsg");

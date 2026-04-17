@@ -1,0 +1,126 @@
+---
+export const prerender = false;
+import AppShell from '../../components/app/layout/AppShell.astro';
+import { crmApi } from '../../lib/app/apiClient';
+import { can } from '../../lib/app/permissions';
+
+const user = Astro.locals.user;
+if (!can(user.role, 'horarios', 'read')) return Astro.redirect('/app');
+
+// Calcular semana actual
+const p       = Astro.url.searchParams;
+const hoyDate = new Date();
+const offsetDias = Number(p.get('offset') ?? 0);
+const baseDate   = new Date(hoyDate);
+baseDate.setDate(baseDate.getDate() + offsetDias);
+
+// Lunes de la semana
+const diaSemana = baseDate.getDay();
+const lunesDiff = diaSemana === 0 ? -6 : 1 - diaSemana;
+const lunes     = new Date(baseDate);
+lunes.setDate(baseDate.getDate() + lunesDiff);
+
+const dias = Array.from({ length: 7 }, (_, i) => {
+  const d = new Date(lunes);
+  d.setDate(lunes.getDate() + i);
+  return d;
+});
+
+const fechaDesde = dias[0].toISOString().split('T')[0];
+const fechaHasta = dias[6].toISOString().split('T')[0];
+
+let horarios: any[] = [];
+let errorMsg = '';
+try {
+  const res = await crmApi.horarios(user, { fecha_desde: fechaDesde, fecha_hasta: fechaHasta });
+  horarios = res.data;
+} catch { errorMsg = 'Error cargando horarios.'; }
+
+// Agrupar horarios por fecha
+const porFecha = new Map<string, any[]>();
+for (const d of dias) {
+  porFecha.set(d.toISOString().split('T')[0], []);
+}
+for (const h of horarios) {
+  const arr = porFecha.get(h.fecha);
+  if (arr) arr.push(h);
+}
+
+const DIAS_LABEL = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const hoyStr = hoyDate.toISOString().split('T')[0];
+---
+
+<AppShell title="Calendario" user={user}>
+  <div class="cal-header">
+    <a href={`/app/calendario?offset=${offsetDias - 7}`} class="btn-nav">← Semana anterior</a>
+    <div class="cal-title">
+      <h1>Semana del {dias[0].toLocaleDateString('es-ES', { day:'numeric', month:'long' })} al {dias[6].toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' })}</h1>
+    </div>
+    <a href={`/app/calendario?offset=${offsetDias + 7}`} class="btn-nav">Semana siguiente →</a>
+  </div>
+  {offsetDias !== 0 && (
+    <div class="cal-hoy">
+      <a href="/app/calendario">Ir a esta semana</a>
+    </div>
+  )}
+
+  {errorMsg && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="cal-grid">
+    {dias.map((dia, i) => {
+      const fechaStr  = dia.toISOString().split('T')[0];
+      const esHoy     = fechaStr === hoyStr;
+      const horariosD = porFecha.get(fechaStr) ?? [];
+      return (
+        <div class:list={['cal-dia', { 'cal-hoy-col': esHoy }]}>
+          <div class="dia-header">
+            <span class="dia-label">{DIAS_LABEL[i]}</span>
+            <span class:list={['dia-num', { 'dia-num-hoy': esHoy }]}>
+              {dia.getDate()}
+            </span>
+          </div>
+          <div class="dia-horarios">
+            {horariosD.length === 0 && (
+              <span class="dia-vacio">—</span>
+            )}
+            {horariosD.map((h: any) => (
+              <a href={`/app/horarios/${h.id}`} class:list={['horario-chip', { 'chip-cerrado': !h.disponible }]}>
+                <span class="chip-hora">{h.hora}</span>
+                <span class="chip-tour">{h.tour?.titulo ?? '?'}</span>
+                <span class="chip-cupo">{h.cupoOcupado ?? 0}/{h.cupoMaximo ?? '?'}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</AppShell>
+
+<style>
+  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 1rem; }
+  h1 { font-size: 1.1rem; font-weight: 600; color: #111827; text-align: center; }
+  .btn-nav { background: #fff; border: 1px solid #d1d5db; color: #374151; padding: 0.45rem 0.875rem; border-radius: 7px; text-decoration: none; font-size: 0.85rem; white-space: nowrap; }
+  .btn-nav:hover { background: #f9fafb; }
+  .cal-hoy { text-align: center; margin-bottom: 0.75rem; }
+  .cal-hoy a { color: #2563eb; font-size: 0.85rem; text-decoration: none; }
+  .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; }
+  @media (max-width: 900px) { .cal-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .cal-grid { grid-template-columns: 1fr; } }
+  .cal-dia { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; min-height: 160px; display: flex; flex-direction: column; }
+  .cal-hoy-col { border-color: #3b82f6; box-shadow: 0 0 0 2px #bfdbfe; }
+  .dia-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.6rem; border-bottom: 1px solid #f3f4f6; }
+  .dia-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: #6b7280; }
+  .dia-num { font-size: 1rem; font-weight: 700; color: #374151; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .dia-num-hoy { background: #2563eb; color: #fff; }
+  .dia-horarios { flex: 1; padding: 0.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .dia-vacio { font-size: 0.75rem; color: #d1d5db; text-align: center; margin-top: 0.5rem; }
+  .horario-chip { display: flex; flex-direction: column; gap: 0.1rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 5px; padding: 0.35rem 0.5rem; text-decoration: none; }
+  .horario-chip:hover { background: #dbeafe; }
+  .chip-cerrado { background: #f9fafb; border-color: #e5e7eb; opacity: 0.7; }
+  .chip-hora { font-size: 0.75rem; font-weight: 700; color: #1e40af; }
+  .chip-cerrado .chip-hora { color: #9ca3af; }
+  .chip-tour { font-size: 0.7rem; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chip-cupo { font-size: 0.68rem; color: #6b7280; }
+</style>

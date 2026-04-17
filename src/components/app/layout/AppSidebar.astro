@@ -1,0 +1,93 @@
+---
+import type { AppRole } from '../../../lib/app/types';
+import { can } from '../../../lib/app/permissions';
+
+interface Props { role: AppRole; }
+const { role } = Astro.props;
+const path = Astro.url.pathname;
+
+const nav = [
+  { href: '/app',                 label: 'Inicio',       icon: '⊞', resource: null },
+  { href: '/app/calendario',      label: 'Calendario',   icon: '◫', resource: 'horarios' },
+  { href: '/app/reservas',        label: 'Reservas',     icon: '≡',  resource: 'reservas' },
+  { href: '/app/tours',           label: 'Tours',        icon: '◎', resource: 'tours' },
+  { href: '/app/horarios',        label: 'Horarios',     icon: '◷', resource: 'horarios' },
+  { href: '/app/reviews',         label: 'Reviews',      icon: '★',  resource: 'reviews' },
+  { href: '/app/clientes',        label: 'Clientes',     icon: '◉', resource: 'clientes' },
+  { href: '/app/usuarios',        label: 'Usuarios',     icon: '◐', resource: 'usuarios' },
+];
+
+const roleLabels: Record<string, string> = {
+  super_admin:      'Super Admin',
+  operations_admin: 'Operations',
+  staff:            'Staff',
+  guide:            'Guía',
+};
+---
+
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-mark">BT</span>
+    <span class="brand-name">Admin</span>
+  </div>
+
+  <ul class="nav-list">
+    {nav.map(item => {
+      if (item.resource && !can(role, item.resource as any, 'read')) return null;
+      const active = item.href === '/app'
+        ? path === '/app'
+        : path.startsWith(item.href);
+      return (
+        <li>
+          <a href={item.href} class:list={['nav-link', { active }]}>
+            <span class="nav-icon">{item.icon}</span>
+            <span>{item.label}</span>
+          </a>
+        </li>
+      );
+    })}
+  </ul>
+
+  <div class="sidebar-footer">
+    <span class="role-pill">{roleLabels[role] ?? role}</span>
+    <a href="/app/logout" class="logout-link">Salir</a>
+  </div>
+</nav>
+
+<style>
+  .sidebar {
+    width: 216px; min-height: 100vh; background: #111827;
+    display: flex; flex-direction: column;
+    border-right: 1px solid #1f2937; flex-shrink: 0;
+  }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 0.625rem;
+    padding: 1.25rem 1.25rem; border-bottom: 1px solid #1f2937;
+  }
+  .brand-mark {
+    background: #f59e0b; color: #000; font-weight: 700;
+    font-size: 0.8rem; padding: 0.2rem 0.45rem; border-radius: 4px;
+  }
+  .brand-name { color: #f9fafb; font-weight: 600; font-size: 0.95rem; }
+  .nav-list { list-style: none; padding: 0.5rem 0; margin: 0; flex: 1; }
+  .nav-link {
+    display: flex; align-items: center; gap: 0.625rem;
+    padding: 0.6rem 1.25rem; color: #9ca3af;
+    text-decoration: none; font-size: 0.875rem;
+    transition: background 0.12s, color 0.12s; border-radius: 0;
+  }
+  .nav-link:hover { background: #1f2937; color: #f3f4f6; }
+  .nav-link.active { background: #1d4ed8; color: #fff; }
+  .nav-icon { font-size: 0.9rem; width: 1.1rem; text-align: center; }
+  .sidebar-footer {
+    padding: 1rem 1.25rem; border-top: 1px solid #1f2937;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .role-pill {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #6b7280; background: #1f2937;
+    padding: 0.2rem 0.45rem; border-radius: 4px;
+  }
+  .logout-link { color: #6b7280; font-size: 0.75rem; text-decoration: none; }
+  .logout-link:hover { color: #ef4444; }
+</style>

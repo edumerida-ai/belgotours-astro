@@ -1,0 +1,142 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { crmApi } from '../../../lib/app/apiClient';
+import { can } from '../../../lib/app/permissions';
+
+const user    = Astro.locals.user;
+if (!can(user.role, 'horarios', 'read')) return Astro.redirect('/app');
+const canEdit = can(user.role, 'horarios', 'write');
+
+const p = Astro.url.searchParams;
+const filters: Record<string, string> = {};
+for (const [k, v] of p.entries()) { if (v) filters[k] = v; }
+if (!filters.fecha_desde && !filters.fecha && !filters.fecha_hasta) {
+  filters.fecha_desde = new Date().toISOString().split('T')[0];
+}
+
+let horarios: any[] = [];
+let errorMsg = '';
+try {
+  const res = await crmApi.horarios(user, filters);
+  horarios = res.data;
+} catch { errorMsg = 'Error cargando horarios.'; }
+---
+
+<AppShell title="Horarios" user={user}>
+  <div class="page-top">
+    <h1 class="page-title">Horarios</h1>
+    <div class="top-actions">
+      <a href="/app/calendario" class="btn-outline">Ver calendario</a>
+      <a href="/app/horarios/recurrencias" class="btn-outline">Recurrencias</a>
+    </div>
+  </div>
+
+  <form class="filters" method="GET">
+    <input type="date" name="fecha_desde" value={p.get('fecha_desde') ?? filters.fecha_desde ?? ''} title="Desde" />
+    <input type="date" name="fecha_hasta" value={p.get('fecha_hasta') ?? ''} title="Hasta" />
+    <select name="disponible">
+      <option value="">Todos</option>
+      <option value="true"  selected={p.get('disponible') === 'true'}>Abiertos</option>
+      <option value="false" selected={p.get('disponible') === 'false'}>Cerrados</option>
+    </select>
+    <button type="submit" class="btn-primary">Filtrar</button>
+    <a href="/app/horarios" class="btn-ghost">Limpiar</a>
+  </form>
+
+  {errorMsg && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Tour</th>
+          <th>Ciudad</th>
+          <th>Cupo</th>
+          <th>Ocupado</th>
+          <th>Estado</th>
+          {canEdit && <th>Acciones</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {horarios.length === 0 && (
+          <tr><td colspan="8" class="empty-row">No hay horarios en este rango.</td></tr>
+        )}
+        {horarios.map((h: any) => (
+          <tr>
+            <td>{h.fecha}</td>
+            <td class="td-hora">{h.hora}</td>
+            <td>
+              <a href={`/app/horarios/${h.id}`} class="tour-link">{h.tour?.titulo ?? '—'}</a>
+              {h.recurrencia?.idioma && (
+                <span class="lang-tag">{h.recurrencia.idioma.toUpperCase()}</span>
+              )}
+            </td>
+            <td style="text-transform:capitalize">{h.tour?.ciudad ?? '—'}</td>
+            <td class="td-center">{h.cupoMaximo ?? '—'}</td>
+            <td class="td-center">{h.cupoOcupado ?? 0}</td>
+            <td>
+              <span class:list={['badge', h.disponible ? 'badge-abierto' : 'badge-cerrado']}>
+                {h.disponible ? 'Abierto' : 'Cerrado'}
+              </span>
+            </td>
+            {canEdit && (
+              <td>
+                <div class="action-btns">
+                  <a href={`/app/horarios/${h.id}`} class="btn-ver">Ver</a>
+                  <form method="POST" action={`/api/app/horario-toggle`} style="display:inline">
+                    <input type="hidden" name="id" value={h.id} />
+                    <input type="hidden" name="disponible" value={h.disponible ? 'false' : 'true'} />
+                    <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+                    <button type="submit" class:list={['btn-toggle', h.disponible ? 'btn-cerrar' : 'btn-abrir']}>
+                      {h.disponible ? 'Cerrar' : 'Abrir'}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">Total: <strong>{horarios.length}</strong> horarios</div>
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+  .top-actions { display: flex; gap: 0.5rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .filters input, .filters select { padding: 0.45rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: 0.85rem; background: #fff; color: #111827; outline: none; }
+  .filters input:focus, .filters select:focus { border-color: #3b82f6; }
+  .btn-primary  { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 0.45rem 1rem; font-size: 0.85rem; cursor: pointer; }
+  .btn-outline  { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.45rem 0.875rem; font-size: 0.85rem; text-decoration: none; }
+  .btn-ghost    { color: #6b7280; font-size: 0.85rem; padding: 0.45rem 0.5rem; text-decoration: none; }
+  .alert-error  { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
+  .table-wrap   { overflow-x: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .table        { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table th     { text-align: left; padding: 0.7rem 1rem; background: #f9fafb; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
+  .table td     { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: #f9fafb; }
+  .empty-row    { text-align: center; color: #9ca3af; padding: 2rem !important; }
+  .td-hora      { font-family: monospace; font-weight: 600; }
+  .td-center    { text-align: center; }
+  .tour-link    { color: #1f2937; text-decoration: none; font-weight: 500; }
+  .tour-link:hover { color: #2563eb; }
+  .lang-tag     { font-size: 0.7rem; background: #eff6ff; color: #1d4ed8; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 600; margin-left: 0.35rem; }
+  .badge        { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; }
+  .badge-abierto { background: #dcfce7; color: #166534; }
+  .badge-cerrado { background: #fee2e2; color: #991b1b; }
+  .action-btns  { display: flex; gap: 0.4rem; align-items: center; }
+  .btn-ver      { color: #2563eb; text-decoration: none; font-size: 0.8rem; font-weight: 500; }
+  .btn-toggle   { border: none; border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
+  .btn-cerrar   { background: #fee2e2; color: #991b1b; }
+  .btn-cerrar:hover { background: #fecaca; }
+  .btn-abrir    { background: #dcfce7; color: #166534; }
+  .btn-abrir:hover  { background: #bbf7d0; }
+  .table-footer { padding: 0.75rem 0; color: #6b7280; font-size: 0.85rem; }
+</style>

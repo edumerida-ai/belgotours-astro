@@ -1,0 +1,5 @@
+---
+export const prerender = false;
+Astro.cookies.delete('bt_session', { path: '/' });
+return Astro.redirect('/app/login?r=logout');
+---

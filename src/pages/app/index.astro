@@ -1,0 +1,138 @@
+---
+export const prerender = false;
+import AppShell from '../../components/app/layout/AppShell.astro';
+import { crmApi } from '../../lib/app/apiClient';
+
+const user = Astro.locals.user;
+
+let stats = null;
+let horarios = [];
+let errorMsg = '';
+
+try {
+  const [statsRes, horariosRes] = await Promise.all([
+    crmApi.stats(user),
+    crmApi.horariosHoy(user),
+  ]);
+  stats   = statsRes.data;
+  horarios = horariosRes.data;
+} catch (e) {
+  errorMsg = 'Error cargando datos. Verifica la conexión con Strapi.';
+}
+
+const hoy = new Date().toLocaleDateString('es-ES', {
+  weekday: 'long', day: 'numeric', month: 'long'
+});
+---
+
+<AppShell title="Dashboard" user={user}>
+  <div class="page-top">
+    <div>
+      <h1 class="page-title">Operaciones</h1>
+      <p class="page-sub">{hoy}</p>
+    </div>
+    <a href="/app/reservas" class="btn-outline">Ver todas las reservas →</a>
+  </div>
+
+  {errorMsg && <div class="alert-error">{errorMsg}</div>}
+
+  {stats && (
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-value">{stats.reservas_hoy}</span>
+        <span class="stat-label">Reservas hoy</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{stats.pax_hoy}</span>
+        <span class="stat-label">Personas hoy</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{stats.tours_hoy}</span>
+        <span class="stat-label">Tours activos</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{stats.horarios_abiertos_hoy}</span>
+        <span class="stat-label">Horarios abiertos</span>
+      </div>
+      <div class:list={['stat-card', { 'stat-warn': stats.reviews_pendientes > 0 }]}>
+        <span class="stat-value">{stats.reviews_pendientes}</span>
+        <span class="stat-label">Reviews pendientes</span>
+      </div>
+      <div class:list={['stat-card', { 'stat-danger': stats.mail_jobs_fallidos > 0 }]}>
+        <span class="stat-value">{stats.mail_jobs_fallidos}</span>
+        <span class="stat-label">Emails fallidos</span>
+      </div>
+      <div class:list={['stat-card', { 'stat-warn': stats.sin_resena_enviada > 0 }]}>
+        <span class="stat-value">{stats.sin_resena_enviada}</span>
+        <span class="stat-label">Sin reseña enviada</span>
+      </div>
+      <div class:list={['stat-card', { 'stat-danger': stats.horarios_cerrados_hoy > 0 }]}>
+        <span class="stat-value">{stats.horarios_cerrados_hoy}</span>
+        <span class="stat-label">Horarios cerrados</span>
+      </div>
+    </div>
+  )}
+
+  <div class="section-header">
+    <h2>Tours de hoy</h2>
+    <a href="/app/calendario" class="link-more">Ver calendario →</a>
+  </div>
+
+  {horarios.length === 0 && (
+    <div class="empty-state">No hay horarios programados para hoy.</div>
+  )}
+
+  {horarios.length > 0 && (
+    <div class="horarios-grid">
+      {horarios.map((h: any) => (
+        <div class:list={['horario-card', { 'horario-cerrado': !h.disponible }]}>
+          <div class="horario-top">
+            <span class="horario-hora">{h.hora}</span>
+            <span class:list={['horario-estado', h.disponible ? 'estado-abierto' : 'estado-cerrado']}>
+              {h.disponible ? 'Abierto' : 'Cerrado'}
+            </span>
+          </div>
+          <p class="horario-tour">{h.tour?.titulo ?? '—'}</p>
+          <p class="horario-ciudad">{h.tour?.ciudad ?? ''}</p>
+          <div class="horario-cupo">
+            <span>{(h.reservas ?? []).length} reservas</span>
+            <span>{h.cupoLibre ?? 0} libres / {h.cupoMaximo ?? 0}</span>
+          </div>
+          <a href={`/app/horarios/${h.id}`} class="horario-link">Ver detalle →</a>
+        </div>
+      ))}
+    </div>
+  )}
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.75rem; }
+  .page-title { font-size: 1.6rem; font-weight: 700; color: #111827; }
+  .page-sub { color: #6b7280; font-size: 0.875rem; margin-top: 0.2rem; text-transform: capitalize; }
+  .btn-outline { border: 1px solid #d1d5db; background: #fff; color: #374151; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; font-size: 0.875rem; }
+  .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.875rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.3rem; }
+  .stat-value { font-size: 2rem; font-weight: 700; color: #111827; line-height: 1; }
+  .stat-label { font-size: 0.8rem; color: #6b7280; }
+  .stat-warn { border-color: #fbbf24; background: #fffbeb; }
+  .stat-warn .stat-value { color: #92400e; }
+  .stat-danger { border-color: #f87171; background: #fef2f2; }
+  .stat-danger .stat-value { color: #991b1b; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  h2 { font-size: 1.1rem; font-weight: 600; color: #111827; }
+  .link-more { color: #2563eb; text-decoration: none; font-size: 0.875rem; }
+  .empty-state { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.875rem; }
+  .horarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+  .horario-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .horario-cerrado { opacity: 0.6; border-color: #d1d5db; }
+  .horario-top { display: flex; justify-content: space-between; align-items: center; }
+  .horario-hora { font-size: 1.3rem; font-weight: 700; color: #111827; }
+  .horario-estado { font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; text-transform: uppercase; }
+  .estado-abierto { background: #dcfce7; color: #166534; }
+  .estado-cerrado { background: #fee2e2; color: #991b1b; }
+  .horario-tour { font-size: 0.9rem; font-weight: 600; color: #1f2937; }
+  .horario-ciudad { font-size: 0.78rem; color: #9ca3af; text-transform: capitalize; }
+  .horario-cupo { display: flex; justify-content: space-between; font-size: 0.78rem; color: #6b7280; margin-top: 0.25rem; }
+  .horario-link { font-size: 0.8rem; color: #2563eb; text-decoration: none; margin-top: 0.25rem; }
+</style>

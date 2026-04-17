@@ -1,0 +1,123 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { can } from '../../../lib/app/permissions';
+
+const user = Astro.locals.user;
+if (!can(user.role, 'tours', 'read')) return Astro.redirect('/app');
+
+const STRAPI = import.meta.env.STRAPI_URL;
+
+let tours: any[] = [];
+let errorMsg = '';
+
+// Tours tienen i18n — hay que pedir todos los locales
+const locales = ['es', 'en', 'it', 'fr'];
+try {
+  const resultados = await Promise.all(
+    locales.map(locale =>
+      fetch(`${STRAPI}/api/tours?locale=${locale}&fields[0]=titulo&fields[1]=ciudad&fields[2]=tipo_tour&fields[3]=duracion&fields[4]=rating&fields[5]=slug&fields[6]=locale&pagination[pageSize]=50`, {
+        headers: { Authorization: `Bearer ${user.strapiToken}` },
+      }).then(r => r.json()).then(r => r.data ?? [])
+    )
+  );
+
+  // Aplanar y deduplicar por id
+  const mapaIds = new Map<number, any>();
+  for (const grupo of resultados) {
+    for (const t of grupo) {
+      if (!mapaIds.has(t.id)) mapaIds.set(t.id, t);
+    }
+  }
+  tours = Array.from(mapaIds.values());
+} catch (e: any) {
+  errorMsg = 'Error cargando tours: ' + (e.message ?? '');
+}
+
+// Normalizar campos — Strapi v5 puede devolver campos directos o en attributes
+function campo(t: any, key: string) {
+  return t[key] ?? t.attributes?.[key] ?? '—';
+}
+---
+
+<AppShell title="Tours" user={user}>
+  <div class="page-top">
+    <h1 class="page-title">Tours ({tours.length})</h1>
+    <a href="https://api.belgotours.com/admin/content-manager/collection-types/api::tour.tour"
+       target="_blank" rel="noopener" class="btn-strapi">
+      Editar en Strapi →
+    </a>
+  </div>
+
+  {errorMsg && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Ciudad</th>
+          <th>Tipo</th>
+          <th>Idioma</th>
+          <th>Duración</th>
+          <th>Rating</th>
+          <th>Slug</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {tours.length === 0 && !errorMsg && (
+          <tr><td colspan="8" class="empty-row">No hay tours disponibles.</td></tr>
+        )}
+        {tours.map((t: any) => {
+          const titulo    = campo(t, 'titulo');
+          const ciudad    = campo(t, 'ciudad');
+          const tipo      = campo(t, 'tipo_tour');
+          const duracion  = campo(t, 'duracion');
+          const rating    = Number(campo(t, 'rating')) || 0;
+          const slug      = campo(t, 'slug');
+          const locale    = campo(t, 'locale');
+          return (
+            <tr>
+              <td class="td-titulo">{titulo}</td>
+              <td style="text-transform:capitalize">{ciudad}</td>
+              <td><span class={`badge badge-${tipo}`}>{tipo}</span></td>
+              <td><span class="badge-lang">{locale?.toUpperCase()}</span></td>
+              <td>{duracion} min</td>
+              <td class="td-stars">{'★'.repeat(Math.round(rating))}{'☆'.repeat(5 - Math.round(rating))}</td>
+              <td><code class="slug">{slug}</code></td>
+              <td>
+                <a href={`/app/horarios?tour_id=${t.id}`} class="btn-ver">Horarios →</a>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+  .btn-strapi { background: #4945ff; color: #fff; text-decoration: none; padding: 0.45rem 0.875rem; border-radius: 7px; font-size: 0.85rem; font-weight: 600; }
+  .btn-strapi:hover { background: #3b39e0; }
+  .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
+  .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table th { text-align: left; padding: 0.7rem 1rem; background: #f9fafb; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
+  .table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: #f9fafb; }
+  .empty-row { text-align: center; color: #9ca3af; padding: 2rem !important; }
+  .td-titulo { font-weight: 500; max-width: 280px; }
+  .td-stars { color: #f59e0b; letter-spacing: -0.05em; }
+  .badge { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; }
+  .badge-free     { background: #f0fdf4; color: #166534; }
+  .badge-privado  { background: #eff6ff; color: #1e40af; }
+  .badge-especial { background: #fef9c3; color: #854d0e; }
+  .badge-lang { font-size: 0.7rem; font-weight: 700; background: #f3f4f6; color: #374151; padding: 0.15rem 0.4rem; border-radius: 4px; }
+  .slug { font-family: monospace; font-size: 0.75rem; background: #f3f4f6; padding: 0.15rem 0.4rem; border-radius: 4px; color: #374151; }
+  .btn-ver { color: #2563eb; text-decoration: none; font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
+  .btn-ver:hover { text-decoration: underline; }
+</style>

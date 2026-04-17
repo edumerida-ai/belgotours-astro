@@ -1,0 +1,125 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { crmApi } from '../../../lib/app/apiClient';
+import { can } from '../../../lib/app/permissions';
+
+const user = Astro.locals.user;
+if (!can(user.role, 'clientes', 'read')) return Astro.redirect('/app');
+
+const p = Astro.url.searchParams;
+const filters: Record<string, string> = {};
+for (const [k, v] of p.entries()) { if (v) filters[k] = v; }
+
+let reservas: any[] = [];
+let errorMsg = '';
+try {
+  const res = await crmApi.reservas(user, { ...filters, pageSize: '100' });
+  // Agrupar por email para vista de clientes únicos
+  const mapa = new Map<string, any>();
+  for (const r of res.data) {
+    if (!mapa.has(r.email)) {
+      mapa.set(r.email, { ...r, total_reservas: 1 });
+    } else {
+      mapa.get(r.email).total_reservas++;
+    }
+  }
+  reservas = Array.from(mapa.values());
+} catch { errorMsg = 'Error cargando clientes.'; }
+---
+
+<AppShell title="Clientes" user={user}>
+  <div class="page-top">
+    <h1 class="page-title">Clientes</h1>
+    <span class="subtitle">Vista agrupada por email · últimas reservas</span>
+  </div>
+
+  <form class="filters" method="GET">
+    <input type="date" name="fecha_desde" value={p.get('fecha_desde') ?? ''} title="Desde" />
+    <input type="date" name="fecha_hasta" value={p.get('fecha_hasta') ?? ''} title="Hasta" />
+    <select name="idioma_tour">
+      <option value="">Idioma</option>
+      {['es','en','it'].map(i => <option value={i} selected={p.get('idioma_tour')===i}>{i.toUpperCase()}</option>)}
+    </select>
+    <button type="submit" class="btn-primary">Filtrar</button>
+    <a href="/app/clientes" class="btn-ghost">Limpiar</a>
+  </form>
+
+  {errorMsg && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>WhatsApp</th>
+          <th>País</th>
+          <th>Idioma</th>
+          <th>Reservas</th>
+          <th>Comportamiento</th>
+          <th>Última reserva</th>
+        </tr>
+      </thead>
+      <tbody>
+        {reservas.length === 0 && (
+          <tr><td colspan="8" class="empty-row">No hay clientes con estos filtros.</td></tr>
+        )}
+        {reservas.map((r: any) => (
+          <tr>
+            <td class="td-nombre">{r.nombre} {r.apellidos ?? ''}</td>
+            <td>
+              <a href={`mailto:${r.email}`} class="link-email">{r.email}</a>
+            </td>
+            <td>
+              {r.telefono
+                ? <a href={`https://wa.me/${r.telefono.replace(/\D/g,'')}`}
+                     target="_blank" rel="noopener" class="link-wa">{r.telefono}</a>
+                : <span class="muted">—</span>}
+            </td>
+            <td>{r.pais ?? '—'}</td>
+            <td>{r.idioma_cliente?.toUpperCase()}</td>
+            <td class="td-center"><strong>{r.total_reservas}</strong></td>
+            <td>
+              {r.comportamiento_cliente !== 'normal'
+                ? <span class="badge-warn">{r.comportamiento_cliente}</span>
+                : <span class="muted">—</span>}
+            </td>
+            <td class="td-small">
+              {new Date(r.fecha_hora_tour).toLocaleDateString('es-ES')}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">Total: <strong>{reservas.length}</strong> clientes únicos</div>
+</AppShell>
+
+<style>
+  .page-top { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.25rem; }
+  .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+  .subtitle { color: #9ca3af; font-size: 0.8rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .filters input, .filters select { padding: 0.45rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: 0.85rem; background: #fff; color: #111827; outline: none; }
+  .btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 0.45rem 1rem; font-size: 0.85rem; cursor: pointer; }
+  .btn-ghost   { color: #6b7280; font-size: 0.85rem; padding: 0.45rem 0.5rem; text-decoration: none; }
+  .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
+  .table-wrap  { overflow-x: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .table       { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table th    { text-align: left; padding: 0.7rem 1rem; background: #f9fafb; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
+  .table td    { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: #f9fafb; }
+  .empty-row   { text-align: center; color: #9ca3af; padding: 2rem !important; }
+  .td-nombre   { font-weight: 500; }
+  .td-center   { text-align: center; }
+  .td-small    { font-size: 0.8rem; color: #6b7280; }
+  .link-email  { color: #2563eb; text-decoration: none; font-size: 0.82rem; }
+  .link-email:hover { text-decoration: underline; }
+  .link-wa     { color: #16a34a; text-decoration: none; font-size: 0.82rem; }
+  .link-wa:hover { text-decoration: underline; }
+  .muted       { color: #d1d5db; }
+  .badge-warn  { background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; }
+  .table-footer { padding: 0.75rem 0; color: #6b7280; font-size: 0.85rem; }
+</style>

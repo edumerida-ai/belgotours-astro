@@ -1,0 +1,317 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { crmFetch } from '../../../lib/app/apiClient';
+import { can } from '../../../lib/app/permissions';
+
+const user    = Astro.locals.user;
+if (!can(user.role, 'recurrencias', 'read')) return Astro.redirect('/app');
+const canEdit = can(user.role, 'recurrencias', 'write');
+
+let successMsg = '';
+let errorMsg   = '';
+
+if (Astro.request.method === 'POST' && canEdit) {
+  const form   = await Astro.request.formData();
+  const action = form.get('_action') as string;
+
+  try {
+    if (action === 'create') {
+      const body = {
+        fechaInicio: form.get('fechaInicio'),
+        fechaFin:    form.get('fechaFin'),
+        lunes:       form.get('lunes') === 'on',
+        martes:      form.get('martes') === 'on',
+        miercoles:   form.get('miercoles') === 'on',
+        jueves:      form.get('jueves') === 'on',
+        viernes:     form.get('viernes') === 'on',
+        sabado:      form.get('sabado') === 'on',
+        domingo:     form.get('domingo') === 'on',
+        horarios:    form.get('horarios'),
+        cupoMaximo:  form.get('cupoMaximo'),
+        idioma:      form.get('idioma'),
+        tour_id:     form.get('tour_id'),
+      };
+      await crmFetch('/recurrencias', user, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+      successMsg = 'Recurrencia creada correctamente.';
+    }
+
+    if (action === 'generar') {
+      const recId = form.get('recurrencia_id');
+      const res   = await crmFetch<any>(`/recurrencias/${recId}/generar`, user, { method: 'POST' });
+      successMsg  = `Horarios generados: ${res.generados} nuevos, ${res.saltados} ya existían.`;
+    }
+
+    if (action === 'delete') {
+      const recId = form.get('recurrencia_id');
+      await crmFetch(`/recurrencias/${recId}`, user, { method: 'DELETE' });
+      successMsg = 'Recurrencia eliminada.';
+    }
+
+    if (action === 'toggle') {
+      const recId  = form.get('recurrencia_id');
+      const activo = form.get('activo') === 'true';
+      await crmFetch(`/recurrencias/${recId}`, user, {
+        method: 'PATCH',
+        body: JSON.stringify({ activo }),
+      });
+      successMsg = activo ? 'Recurrencia activada.' : 'Recurrencia desactivada.';
+    }
+  } catch (e: any) {
+    errorMsg = 'Error: ' + (e.message ?? 'desconocido');
+  }
+}
+
+// Cargar datos
+let recurrencias: any[] = [];
+let tours: any[]        = [];
+
+try {
+  const [recRes, tourRes] = await Promise.all([
+    crmFetch<any>('/recurrencias', user),
+    fetch(`${import.meta.env.STRAPI_URL}/api/tours?fields[0]=titulo&fields[1]=ciudad&fields[2]=tipo_tour&pagination[pageSize]=50&locale=es`, {
+      headers: { Authorization: `Bearer ${user.strapiToken}` },
+    }).then(r => r.json()),
+  ]);
+  recurrencias = recRes.data ?? [];
+  tours        = tourRes.data ?? [];
+} catch (e) {
+  errorMsg = 'Error cargando datos.';
+}
+
+const DIAS = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+const DIAS_LABEL: Record<string,string> = {
+  lunes:'Lun', martes:'Mar', miercoles:'Mié',
+  jueves:'Jue', viernes:'Vie', sabado:'Sáb', domingo:'Dom',
+};
+---
+
+<AppShell title="Recurrencias" user={user}>
+  <div class="page-top">
+    <div class="breadcrumb">
+      <a href="/app/horarios">← Horarios</a>
+      <span>Recurrencias</span>
+    </div>
+  </div>
+
+  {successMsg && <div class="alert-success">{successMsg}</div>}
+  {errorMsg   && <div class="alert-error">{errorMsg}</div>}
+
+  <!-- Lista de recurrencias existentes -->
+  <h2 class="section-title">Recurrencias activas ({recurrencias.length})</h2>
+
+  {recurrencias.length === 0 && (
+    <div class="empty-state">No hay recurrencias. Crea una abajo.</div>
+  )}
+
+  <div class="rec-list">
+    {recurrencias.map((r: any) => {
+      const diasActivos = DIAS.filter(d => r[d]);
+      return (
+        <div class:list={['rec-card', { 'rec-inactiva': !r.activo }]}>
+          <div class="rec-header">
+            <div>
+              <span class="rec-tour">{r.tour?.titulo ?? '—'}</span>
+              <span class="rec-ciudad">{r.tour?.ciudad}</span>
+            </div>
+            <div class="rec-badges">
+              <span class={`badge-idioma idioma-${r.idioma}`}>{r.idioma?.toUpperCase()}</span>
+              <span class:list={['badge-estado', r.activo ? 'activo' : 'inactivo']}>
+                {r.activo ? 'Activa' : 'Inactiva'}
+              </span>
+            </div>
+          </div>
+
+          <div class="rec-body">
+            <div class="rec-fechas">
+              <span>{r.fechaInicio}</span>
+              <span class="arrow">→</span>
+              <span>{r.fechaFin}</span>
+            </div>
+            <div class="rec-dias">
+              {DIAS.map(d => (
+                <span class:list={['dia-chip', { 'dia-on': r[d] }]}>
+                  {DIAS_LABEL[d]}
+                </span>
+              ))}
+            </div>
+            <div class="rec-horas">
+              <span class="rec-label">Horas:</span>
+              {r.horarios.split(',').map((h: string) => (
+                <span class="hora-chip">{h.trim()}</span>
+              ))}
+            </div>
+            <div class="rec-cupo">
+              <span class="rec-label">Cupo:</span>
+              <strong>{r.cupoMaximo}</strong> personas
+            </div>
+          </div>
+
+          <div class="rec-actions">
+            <form method="POST">
+              <input type="hidden" name="_action" value="generar" />
+              <input type="hidden" name="recurrencia_id" value={r.id} />
+              <button type="submit" class="btn-generar">
+                Generar horarios
+              </button>
+            </form>
+            <form method="POST">
+              <input type="hidden" name="_action" value="toggle" />
+              <input type="hidden" name="recurrencia_id" value={r.id} />
+              <input type="hidden" name="activo" value={r.activo ? 'false' : 'true'} />
+              <button type="submit" class:list={['btn-toggle', r.activo ? 'btn-desactivar' : 'btn-activar']}>
+                {r.activo ? 'Desactivar' : 'Activar'}
+              </button>
+            </form>
+            <form method="POST" onsubmit="return confirm('¿Eliminar esta recurrencia? Los horarios generados NO se borran.')">
+              <input type="hidden" name="_action" value="delete" />
+              <input type="hidden" name="recurrencia_id" value={r.id} />
+              <button type="submit" class="btn-delete">Eliminar</button>
+            </form>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <!-- Formulario crear nueva recurrencia -->
+  {canEdit && (
+    <div class="create-section">
+      <h2 class="section-title">Nueva recurrencia</h2>
+      <div class="create-card">
+        <form method="POST" class="create-form">
+          <input type="hidden" name="_action" value="create" />
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>Tour *</label>
+              <select name="tour_id" required>
+                <option value="">Selecciona un tour</option>
+                {tours.map((t: any) => (
+                  <option value={t.id}>
+                    {t.titulo ?? t.attributes?.titulo} — {t.ciudad ?? t.attributes?.ciudad}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Idioma *</label>
+              <select name="idioma" required>
+                <option value="es">Español</option>
+                <option value="en">English</option>
+                <option value="it">Italiano</option>
+                <option value="fr">Français</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>Fecha inicio *</label>
+              <input type="date" name="fechaInicio" required />
+            </div>
+            <div class="form-field">
+              <label>Fecha fin *</label>
+              <input type="date" name="fechaFin" required />
+            </div>
+            <div class="form-field">
+              <label>Cupo máximo *</label>
+              <input type="number" name="cupoMaximo" value="25" min="1" max="200" required />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>Días de la semana *</label>
+            <div class="dias-selector">
+              {DIAS.map(d => (
+                <label class="dia-toggle">
+                  <input type="checkbox" name={d} />
+                  <span>{DIAS_LABEL[d]}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>Horas (separadas por coma) *</label>
+            <input type="text" name="horarios" placeholder="10:00, 14:00, 17:00" required />
+            <span class="field-hint">Ejemplo: 10:00, 14:00 — se crearán horarios para cada hora en cada día seleccionado</span>
+          </div>
+
+          <button type="submit" class="btn-create">Crear recurrencia</button>
+        </form>
+      </div>
+    </div>
+  )}
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .breadcrumb { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; }
+  .breadcrumb a { color: #2563eb; text-decoration: none; }
+  .breadcrumb span { color: #6b7280; }
+  .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
+  .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
+  .section-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
+  .empty-state { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.875rem; margin-bottom: 2rem; }
+  .rec-list { display: flex; flex-direction: column; gap: 0.875rem; margin-bottom: 2.5rem; }
+  .rec-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; }
+  .rec-inactiva { opacity: 0.6; border-style: dashed; }
+  .rec-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.875rem; }
+  .rec-tour { font-weight: 600; color: #111827; font-size: 0.95rem; display: block; }
+  .rec-ciudad { font-size: 0.78rem; color: #9ca3af; text-transform: capitalize; }
+  .rec-badges { display: flex; gap: 0.4rem; align-items: center; }
+  .badge-idioma { font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; }
+  .idioma-es { background: #fef9c3; color: #854d0e; }
+  .idioma-en { background: #eff6ff; color: #1e40af; }
+  .idioma-it { background: #fdf4ff; color: #7e22ce; }
+  .idioma-fr { background: #f0fdf4; color: #166534; }
+  .badge-estado { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; }
+  .activo   { background: #dcfce7; color: #166534; }
+  .inactivo { background: #f3f4f6; color: #6b7280; }
+  .rec-body { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+  .rec-fechas { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #374151; }
+  .arrow { color: #9ca3af; }
+  .rec-dias { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .dia-chip { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.45rem; border-radius: 4px; background: #f3f4f6; color: #9ca3af; }
+  .dia-on   { background: #2563eb; color: #fff; }
+  .rec-horas, .rec-cupo { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .rec-label { font-size: 0.78rem; color: #6b7280; }
+  .hora-chip { font-size: 0.78rem; font-weight: 600; background: #f3f4f6; color: #374151; padding: 0.15rem 0.45rem; border-radius: 4px; font-family: monospace; }
+  .rec-cupo { font-size: 0.85rem; color: #374151; }
+  .rec-actions { display: flex; gap: 0.5rem; padding-top: 0.875rem; border-top: 1px solid #f3f4f6; flex-wrap: wrap; }
+  .btn-generar  { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 0.4rem 0.875rem; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .btn-generar:hover { background: #1d4ed8; }
+  .btn-toggle   { border: none; border-radius: 6px; padding: 0.4rem 0.875rem; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .btn-desactivar { background: #f3f4f6; color: #374151; }
+  .btn-activar    { background: #dcfce7; color: #166534; }
+  .btn-delete   { background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; padding: 0.4rem 0.875rem; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .btn-delete:hover { background: #fecaca; }
+  .create-section { margin-top: 1rem; }
+  .create-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.5rem; }
+  .create-form { display: flex; flex-direction: column; gap: 1rem; }
+  .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .form-field { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; min-width: 180px; }
+  .form-field label { font-size: 0.78rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .form-field select, .form-field input[type="date"],
+  .form-field input[type="number"], .form-field input[type="text"] {
+    padding: 0.55rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px;
+    font-size: 0.875rem; color: #111827; background: #fff; outline: none;
+  }
+  .form-field select:focus, .form-field input:focus { border-color: #3b82f6; }
+  .field-hint { font-size: 0.75rem; color: #9ca3af; }
+  .dias-selector { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .dia-toggle { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; }
+  .dia-toggle input { display: none; }
+  .dia-toggle span {
+    font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.6rem;
+    border-radius: 6px; background: #f3f4f6; color: #6b7280;
+    border: 2px solid transparent; transition: all 0.1s; user-select: none;
+  }
+  .dia-toggle input:checked + span { background: #2563eb; color: #fff; border-color: #1d4ed8; }
+  .btn-create { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; align-self: flex-start; }
+  .btn-create:hover { background: #1d4ed8; }
+</style>

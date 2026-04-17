@@ -1,0 +1,351 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { crmApi } from '../../../lib/app/apiClient';
+import { can } from '../../../lib/app/permissions';
+
+const user   = Astro.locals.user;
+const id     = Number(Astro.params.id);
+const canEdit = can(user.role, 'reservas', 'write');
+
+if (!can(user.role, 'reservas', 'read')) return Astro.redirect('/app');
+
+// Manejar acciones POST
+let successMsg = '';
+let errorMsg   = '';
+
+if (Astro.request.method === 'POST' && canEdit) {
+  const form   = await Astro.request.formData();
+  const action = form.get('_action') as string;
+
+  try {
+    if (action === 'update') {
+      await crmApi.reservaUpdate(user, id, {
+        estado:                  form.get('estado') as any,
+        notas_internas:          form.get('notas_internas') as string,
+        observaciones_guia:      form.get('observaciones_guia') as string,
+        comportamiento_cliente:  form.get('comportamiento_cliente') as any,
+      });
+      successMsg = 'Reserva actualizada correctamente.';
+    }
+    if (action === 'send_review') {
+      await crmApi.sendReview(user, id);
+      successMsg = 'Email de reseña enviado correctamente.';
+    }
+  } catch (e) {
+    errorMsg = 'Error al procesar la acción.';
+  }
+}
+
+let reserva: any = null;
+try {
+  const res = await crmApi.reserva(user, id);
+  reserva = res.data;
+} catch {
+  return Astro.redirect('/app/reservas');
+}
+
+const fechaTour  = new Date(reserva.fecha_hora_tour);
+const paxTotal   = (reserva.adultos || 0) + (reserva.ninos || 0);
+const createdAt  = new Date(reserva.createdAt);
+---
+
+<AppShell title={`Reserva #${id}`} user={user}>
+  <div class="page-top">
+    <div class="breadcrumb">
+      <a href="/app/reservas">← Reservas</a>
+      <span>Reserva #{id}</span>
+    </div>
+    <div class="top-badges">
+      <span class={`badge badge-${reserva.estado}`}>{reserva.estado}</span>
+      <span class={`badge badge-plataforma`}>{reserva.plataforma_origen}</span>
+    </div>
+  </div>
+
+  {successMsg && <div class="alert-success">{successMsg}</div>}
+  {errorMsg   && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="detail-grid">
+
+    <!-- Columna izquierda -->
+    <div class="col-left">
+
+      <!-- Datos del cliente -->
+      <div class="card">
+        <h2 class="card-title">Cliente</h2>
+        <div class="field-row">
+          <span class="field-label">Nombre</span>
+          <span class="field-value">{reserva.nombre} {reserva.apellidos ?? ''}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Email</span>
+          <a href={`mailto:${reserva.email}`} class="field-link">{reserva.email}</a>
+        </div>
+        {reserva.telefono && (
+          <div class="field-row">
+            <span class="field-label">WhatsApp</span>
+            <a href={`https://wa.me/${reserva.telefono.replace(/\D/g,'')}`}
+               target="_blank" rel="noopener" class="field-link field-wa">
+              {reserva.telefono}
+            </a>
+          </div>
+        )}
+        {reserva.ciudad && (
+          <div class="field-row">
+            <span class="field-label">Ciudad</span>
+            <span class="field-value">{reserva.ciudad}{reserva.pais ? `, ${reserva.pais}` : ''}</span>
+          </div>
+        )}
+        <div class="field-row">
+          <span class="field-label">Idioma cliente</span>
+          <span class="field-value">{reserva.idioma_cliente?.toUpperCase()}</span>
+        </div>
+        {reserva.comportamiento_cliente !== 'normal' && (
+          <div class="field-row">
+            <span class="field-label">Comportamiento</span>
+            <span class="badge-warn">{reserva.comportamiento_cliente}</span>
+          </div>
+        )}
+      </div>
+
+      <!-- Datos del tour -->
+      <div class="card">
+        <h2 class="card-title">Tour</h2>
+        <div class="field-row">
+          <span class="field-label">Tour</span>
+          <span class="field-value">{reserva.tour?.titulo ?? '—'}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Ciudad</span>
+          <span class="field-value" style="text-transform:capitalize">{reserva.tour?.ciudad}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Fecha y hora</span>
+          <span class="field-value">
+            {fechaTour.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
+            &nbsp;·&nbsp;
+            {fechaTour.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}
+          </span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Idioma tour</span>
+          <span class="field-value">{reserva.idioma_tour?.toUpperCase()}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Tipo</span>
+          <span class="field-value">{reserva.tipo_tour}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Personas</span>
+          <span class="field-value">
+            {reserva.adultos} adulto{reserva.adultos !== 1 ? 's' : ''}
+            {reserva.ninos > 0 ? ` + ${reserva.ninos} niño${reserva.ninos !== 1 ? 's' : ''}` : ''}
+            &nbsp;=&nbsp;<strong>{paxTotal} total</strong>
+          </span>
+        </div>
+        {reserva.guia && (
+          <div class="field-row">
+            <span class="field-label">Guía</span>
+            <span class="field-value">{reserva.guia.nombre}</span>
+          </div>
+        )}
+        {reserva.horario && (
+          <div class="field-row">
+            <span class="field-label">Horario</span>
+            <a href={`/app/horarios/${reserva.horario.id}`} class="field-link">
+              {reserva.horario.fecha} · {reserva.horario.hora}
+            </a>
+          </div>
+        )}
+      </div>
+
+      <!-- Comisiones -->
+      {(reserva.comision_por_persona || reserva.comision_total) && (
+        <div class="card">
+          <h2 class="card-title">Comisión</h2>
+          {reserva.comision_por_persona && (
+            <div class="field-row">
+              <span class="field-label">Por persona</span>
+              <span class="field-value">{reserva.comision_por_persona} €</span>
+            </div>
+          )}
+          {reserva.comision_total && (
+            <div class="field-row">
+              <span class="field-label">Total</span>
+              <span class="field-value"><strong>{reserva.comision_total} €</strong></span>
+            </div>
+          )}
+          {reserva.plataforma_fee && (
+            <div class="field-row">
+              <span class="field-label">Fee plataforma</span>
+              <span class="field-value">{reserva.plataforma_fee} €</span>
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+
+    <!-- Columna derecha -->
+    <div class="col-right">
+
+      <!-- Estado y acciones -->
+      {canEdit && (
+        <div class="card">
+          <h2 class="card-title">Editar reserva</h2>
+          <form method="POST">
+            <input type="hidden" name="_action" value="update" />
+
+            <div class="form-field">
+              <label>Estado</label>
+              <select name="estado">
+                {['pendiente','confirmada','cancelada'].map(e => (
+                  <option value={e} selected={reserva.estado === e}>{e}</option>
+                ))}
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Comportamiento cliente</label>
+              <select name="comportamiento_cliente">
+                {['normal','conflictivo','sospechoso','agresivo','borracho','competencia','otro'].map(c => (
+                  <option value={c} selected={reserva.comportamiento_cliente === c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label>Notas internas</label>
+              <textarea name="notas_internas" rows="3">{reserva.notas_internas ?? ''}</textarea>
+            </div>
+
+            <div class="form-field">
+              <label>Observaciones guía</label>
+              <textarea name="observaciones_guia" rows="3">{reserva.observaciones_guia ?? ''}</textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">Guardar cambios</button>
+          </form>
+        </div>
+      )}
+
+      <!-- Acciones rápidas -->
+      <div class="card">
+        <h2 class="card-title">Acciones</h2>
+        <div class="actions-list">
+          <div class="action-row">
+            <div>
+              <span class="action-label">Email confirmación</span>
+              <span class="action-status">
+                {reserva.email_confirmacion_enviado ? '✓ Enviado' : '✗ No enviado'}
+              </span>
+            </div>
+          </div>
+          <div class="action-row">
+            <div>
+              <span class="action-label">Email de reseña</span>
+              <span class="action-status">
+                {reserva.resena_enviada ? '✓ Enviado' : '✗ Pendiente'}
+              </span>
+            </div>
+            {canEdit && !reserva.resena_enviada && (
+              <form method="POST">
+                <input type="hidden" name="_action" value="send_review" />
+                <button type="submit" class="btn-action">Enviar ahora</button>
+              </form>
+            )}
+            {canEdit && reserva.resena_enviada && (
+              <form method="POST">
+                <input type="hidden" name="_action" value="send_review" />
+                <button type="submit" class="btn-action btn-reenviar">Reenviar</button>
+              </form>
+            )}
+          </div>
+          <div class="action-row">
+            <div>
+              <span class="action-label">WhatsApp enviado</span>
+              <span class="action-status">
+                {reserva.whatsapp_enviado ? '✓ Sí' : '✗ No'}
+              </span>
+            </div>
+            {reserva.telefono && (
+              <a href={`https://wa.me/${reserva.telefono.replace(/\D/g,'')}?text=Hola%20${encodeURIComponent(reserva.nombre)}`}
+                 target="_blank" rel="noopener" class="btn-action">Abrir WA</a>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <!-- Metadatos -->
+      <div class="card card-meta">
+        <div class="field-row">
+          <span class="field-label">Origen reserva</span>
+          <span class="field-value">{reserva.origen_reserva}</span>
+        </div>
+        {reserva.external_reference_id && (
+          <div class="field-row">
+            <span class="field-label">Ref. externa</span>
+            <code class="field-code">{reserva.external_reference_id}</code>
+          </div>
+        )}
+        <div class="field-row">
+          <span class="field-label">Creada</span>
+          <span class="field-value">{createdAt.toLocaleString('es-ES')}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">Sync plataforma</span>
+          <span class="field-value">{reserva.synced_with_platform ? 'Sí' : 'No'}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .breadcrumb { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; }
+  .breadcrumb a { color: #2563eb; text-decoration: none; }
+  .breadcrumb span { color: #6b7280; }
+  .top-badges { display: flex; gap: 0.5rem; }
+  .badge { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 999px; text-transform: lowercase; }
+  .badge-confirmada { background: #dcfce7; color: #166534; }
+  .badge-pendiente  { background: #fef9c3; color: #854d0e; }
+  .badge-cancelada  { background: #fee2e2; color: #991b1b; }
+  .badge-plataforma { background: #f3f4f6; color: #374151; }
+  .badge-warn { background: #fef3c7; color: #92400e; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; }
+  .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
+  .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  @media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
+  .col-left, .col-right { display: flex; flex-direction: column; gap: 1.25rem; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; }
+  .card-meta { background: #f9fafb; }
+  .card-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 1rem; }
+  .field-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6; gap: 1rem; }
+  .field-row:last-child { border-bottom: none; }
+  .field-label { font-size: 0.8rem; color: #6b7280; flex-shrink: 0; }
+  .field-value { font-size: 0.875rem; color: #111827; text-align: right; }
+  .field-link { font-size: 0.875rem; color: #2563eb; text-decoration: none; text-align: right; }
+  .field-link:hover { text-decoration: underline; }
+  .field-wa:hover { color: #16a34a; }
+  .field-code { font-family: monospace; font-size: 0.8rem; background: #f3f4f6; padding: 0.1rem 0.4rem; border-radius: 4px; }
+  .form-field { margin-bottom: 1rem; }
+  .form-field label { display: block; font-size: 0.78rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.35rem; }
+  .form-field select, .form-field textarea {
+    width: 100%; padding: 0.55rem 0.75rem; border: 1px solid #d1d5db;
+    border-radius: 7px; font-size: 0.875rem; color: #111827;
+    background: #fff; outline: none; resize: vertical;
+  }
+  .form-field select:focus, .form-field textarea:focus { border-color: #3b82f6; }
+  .btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 0.6rem 1.25rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; width: 100%; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .actions-list { display: flex; flex-direction: column; gap: 0; }
+  .action-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6; gap: 0.75rem; }
+  .action-row:last-child { border-bottom: none; }
+  .action-label { display: block; font-size: 0.8rem; color: #6b7280; }
+  .action-status { font-size: 0.8rem; color: #374151; }
+  .btn-action { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.78rem; cursor: pointer; white-space: nowrap; text-decoration: none; }
+  .btn-action:hover { background: #e5e7eb; }
+  .btn-reenviar { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+</style>

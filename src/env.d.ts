@@ -1,23 +1,9 @@
-interface BookingState {
-  selectedDate?: string | null;
-  selectedTime?: string | null;
-  horarioId?: number | null;
+/// <reference types="astro/client" />
 
-  participants?: {
-    adults: number;
-    children: number;
-  };
+import type { AppUser } from './lib/app/types';
 
-  tracking?: {
-    utm_source?: string;
-    utm_medium?: string;
-    utm_campaign?: string;
-    utm_content?: string;
-    gclid?: string;
-    referrer?: string;
-  };
-}
-
-interface Window {
-  bookingState?: BookingState;
+declare namespace App {
+  interface Locals {
+    user: AppUser;
+  }
 }

@@ -1,0 +1,65 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { can } from '../../../lib/app/permissions';
+
+const user = Astro.locals.user;
+if (!can(user.role, 'usuarios', 'read')) return Astro.redirect('/app');
+---
+
+<AppShell title="Usuarios" user={user}>
+  <div class="page-top">
+    <h1 class="page-title">Usuarios del sistema</h1>
+  </div>
+
+  <div class="info-card">
+    <h2>Gestión de usuarios</h2>
+    <p>
+      Los usuarios del dashboard se gestionan directamente desde el panel de administración de Strapi.
+    </p>
+    <p>
+      Para crear, editar o desactivar usuarios ve a:
+      <strong>Strapi Admin → Settings → Users</strong>
+    </p>
+    <a href="https://api.belgotours.com/admin" target="_blank" rel="noopener" class="btn-strapi">
+      Abrir Strapi Admin →
+    </a>
+  </div>
+
+  <div class="roles-card">
+    <h2>Roles disponibles</h2>
+    <div class="roles-list">
+      <div class="role-row">
+        <span class="role-name">Super Admin</span>
+        <span class="role-desc">Acceso total — crear usuarios, ver finanzas, eliminar datos</span>
+      </div>
+      <div class="role-row">
+        <span class="role-name">Operations Admin</span>
+        <span class="role-desc">Reservas, horarios, reviews, clientes — sin configuración crítica</span>
+      </div>
+      <div class="role-row">
+        <span class="role-name">Staff</span>
+        <span class="role-desc">Ver y editar reservas y horarios — sin usuarios ni finanzas</span>
+      </div>
+      <div class="role-row">
+        <span class="role-name">Guide</span>
+        <span class="role-desc">Solo lectura de reservas y horarios propios</span>
+      </div>
+    </div>
+  </div>
+</AppShell>
+
+<style>
+  .page-top { margin-bottom: 1.5rem; }
+  .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+  .info-card, .roles-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
+  h2 { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 0.875rem; }
+  p  { font-size: 0.875rem; color: #6b7280; line-height: 1.6; margin-bottom: 0.75rem; }
+  .btn-strapi { display: inline-block; background: #4945ff; color: #fff; text-decoration: none; padding: 0.6rem 1.25rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; margin-top: 0.5rem; }
+  .btn-strapi:hover { background: #3b39e0; }
+  .roles-list { display: flex; flex-direction: column; gap: 0; }
+  .role-row { display: flex; align-items: baseline; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6; }
+  .role-row:last-child { border-bottom: none; }
+  .role-name { font-size: 0.875rem; font-weight: 600; color: #111827; min-width: 160px; flex-shrink: 0; }
+  .role-desc { font-size: 0.825rem; color: #6b7280; }
+</style>

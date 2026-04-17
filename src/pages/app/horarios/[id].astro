@@ -1,0 +1,189 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { crmFetch } from '../../../lib/app/apiClient';
+import { can } from '../../../lib/app/permissions';
+
+const user    = Astro.locals.user;
+if (!can(user.role, 'horarios', 'read')) return Astro.redirect('/app');
+const canEdit = can(user.role, 'horarios', 'write');
+const id      = Number(Astro.params.id);
+
+let successMsg = '';
+let errorMsg   = '';
+
+if (Astro.request.method === 'POST' && canEdit) {
+  const form   = await Astro.request.formData();
+  const action = form.get('_action') as string;
+  try {
+    if (action === 'toggle') {
+      const disponible = form.get('disponible') === 'true';
+      await crmFetch(`/horarios/${id}/disponibilidad`, user, {
+        method: 'PATCH',
+        body: JSON.stringify({ disponible }),
+      });
+      successMsg = disponible ? 'Horario abierto.' : 'Horario cerrado.';
+    }
+    if (action === 'cupo') {
+      const cupoMaximo = Number(form.get('cupoMaximo'));
+      await crmFetch(`/horarios/${id}/cupo`, user, {
+        method: 'PATCH',
+        body: JSON.stringify({ cupoMaximo }),
+      });
+      successMsg = 'Cupo actualizado.';
+    }
+  } catch { errorMsg = 'Error al procesar la acción.'; }
+}
+
+let horario: any = null;
+try {
+  const res = await crmFetch<any>(`/horarios/${id}`, user);
+  horario = res.data;
+} catch { return Astro.redirect('/app/horarios'); }
+
+if (!horario) return Astro.redirect('/app/horarios');
+
+const confirmadas = (horario.reservas ?? []).filter((r: any) => r.estado !== 'cancelada');
+---
+
+<AppShell title={`Horario ${horario.fecha} ${horario.hora}`} user={user}>
+  <div class="page-top">
+    <div class="breadcrumb">
+      <a href="/app/horarios">← Horarios</a>
+      <span>{horario.fecha} · {horario.hora}</span>
+    </div>
+    <span class:list={['badge-estado', horario.disponible ? 'estado-abierto' : 'estado-cerrado']}>
+      {horario.disponible ? 'Abierto' : 'Cerrado'}
+    </span>
+  </div>
+
+  {successMsg && <div class="alert-success">{successMsg}</div>}
+  {errorMsg   && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="detail-grid">
+    <div class="col-left">
+      <div class="card">
+        <h2 class="card-title">Información</h2>
+        <div class="field-row"><span class="field-label">Tour</span><span class="field-value">{horario.tour?.titulo ?? '—'}</span></div>
+        <div class="field-row"><span class="field-label">Ciudad</span><span class="field-value" style="text-transform:capitalize">{horario.tour?.ciudad ?? '—'}</span></div>
+        <div class="field-row"><span class="field-label">Fecha</span>
+          <span class="field-value">{new Date(horario.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</span>
+        </div>
+        <div class="field-row"><span class="field-label">Hora</span><span class="field-value">{horario.hora}</span></div>
+        <div class="field-row"><span class="field-label">Idioma</span><span class="field-value">{horario.recurrencia?.idioma?.toUpperCase() ?? '—'}</span></div>
+        <div class="field-row"><span class="field-label">Cupo máximo</span><span class="field-value">{horario.cupoMaximo ?? '—'}</span></div>
+        <div class="field-row"><span class="field-label">Cupo libre</span><span class="field-value">{horario.cupoLibre ?? '—'}</span></div>
+        <div class="field-row"><span class="field-label">Total personas</span><span class="field-value"><strong>{horario.paxTotal ?? 0}</strong></span></div>
+        {horario.tour?.punto_encuentro && (
+          <div class="field-row"><span class="field-label">Punto encuentro</span><span class="field-value">{horario.tour.punto_encuentro}</span></div>
+        )}
+      </div>
+
+      {canEdit && (
+        <div class="card">
+          <h2 class="card-title">Acciones rápidas</h2>
+          <div class="quick-actions">
+            <form method="POST">
+              <input type="hidden" name="_action" value="toggle" />
+              <input type="hidden" name="disponible" value={horario.disponible ? 'false' : 'true'} />
+              <button type="submit" class:list={['btn-full', horario.disponible ? 'btn-cerrar' : 'btn-abrir']}>
+                {horario.disponible ? '🔒 Cerrar este horario' : '🔓 Abrir este horario'}
+              </button>
+            </form>
+            <form method="POST" class="cupo-form">
+              <input type="hidden" name="_action" value="cupo" />
+              <div class="cupo-row">
+                <input type="number" name="cupoMaximo" value={horario.cupoMaximo ?? 25} min="1" max="200" class="cupo-input" />
+                <button type="submit" class="btn-cupo">Actualizar cupo</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+
+    <div class="col-right">
+      <div class="card">
+        <h2 class="card-title">Reservas confirmadas ({confirmadas.length})</h2>
+        {confirmadas.length === 0 && <p class="empty-msg">Sin reservas confirmadas.</p>}
+        <div class="reservas-list">
+          {confirmadas.map((r: any) => (
+            <div class="reserva-row">
+              <div class="reserva-info">
+                <span class="reserva-nombre">{r.nombre} {r.apellidos ?? ''}</span>
+                <div class="reserva-meta">
+                  <span class="pax-count">{(r.adultos||0)+(r.ninos||0)} pax</span>
+                  <span class={`badge-mini badge-${r.plataforma_origen ?? 'web'}`}>{r.plataforma_origen ?? 'web'}</span>
+                  <span class={`badge-mini estado-${r.estado}`}>{r.estado}</span>
+                  {r.resena_enviada && <span class="resena-ok" title="Reseña enviada">★</span>}
+                </div>
+                {r.email && (
+                  <div class="reserva-contacto">
+                    <a href={`mailto:${r.email}`} class="link-sm">{r.email}</a>
+                    {r.telefono && <a href={`https://wa.me/${r.telefono.replace(/\D/g,'')}`} target="_blank" class="link-sm link-wa">{r.telefono}</a>}
+                  </div>
+                )}
+              </div>
+              <a href={`/app/reservas/${r.id}`} class="btn-ver">Ver →</a>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .breadcrumb { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; }
+  .breadcrumb a { color: #2563eb; text-decoration: none; }
+  .breadcrumb span { color: #6b7280; }
+  .badge-estado { font-size: 0.8rem; font-weight: 600; padding: 0.3rem 0.75rem; border-radius: 999px; }
+  .estado-abierto { background: #dcfce7; color: #166534; }
+  .estado-cerrado { background: #fee2e2; color: #991b1b; }
+  .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
+  .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  @media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
+  .col-left, .col-right { display: flex; flex-direction: column; gap: 1.25rem; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; }
+  .card-title { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 1rem; }
+  .field-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6; gap: 1rem; }
+  .field-row:last-child { border-bottom: none; }
+  .field-label { font-size: 0.8rem; color: #6b7280; flex-shrink: 0; }
+  .field-value { font-size: 0.875rem; color: #111827; text-align: right; }
+  .quick-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+  .btn-full { width: 100%; border: none; border-radius: 8px; padding: 0.75rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+  .btn-cerrar { background: #fee2e2; color: #991b1b; }
+  .btn-cerrar:hover { background: #fecaca; }
+  .btn-abrir  { background: #dcfce7; color: #166534; }
+  .btn-abrir:hover { background: #bbf7d0; }
+  .cupo-row { display: flex; gap: 0.5rem; }
+  .cupo-input { flex: 1; padding: 0.55rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: 0.875rem; outline: none; }
+  .cupo-input:focus { border-color: #3b82f6; }
+  .btn-cupo { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.55rem 0.875rem; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+  .empty-msg { color: #9ca3af; font-size: 0.875rem; padding: 0.5rem 0; }
+  .reservas-list { display: flex; flex-direction: column; }
+  .reserva-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 0.75rem 0; border-bottom: 1px solid #f3f4f6; gap: 0.75rem; }
+  .reserva-row:last-child { border-bottom: none; }
+  .reserva-info { display: flex; flex-direction: column; gap: 0.25rem; }
+  .reserva-nombre { font-size: 0.875rem; font-weight: 500; color: #111827; }
+  .reserva-meta { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+  .pax-count { font-size: 0.78rem; font-weight: 700; color: #374151; }
+  .badge-mini { font-size: 0.68rem; font-weight: 600; padding: 0.15rem 0.4rem; border-radius: 999px; }
+  .badge-web { background: #eff6ff; color: #1e40af; }
+  .badge-guruwalk { background: #f5f3ff; color: #5b21b6; }
+  .badge-civitatis { background: #f0fdf4; color: #166534; }
+  .badge-viator { background: #fff7ed; color: #9a3412; }
+  .badge-manual { background: #f3f4f6; color: #374151; }
+  .badge-whatsapp { background: #f0fdf4; color: #15803d; }
+  .estado-confirmada { background: #dcfce7; color: #166534; }
+  .estado-pendiente  { background: #fef9c3; color: #854d0e; }
+  .estado-cancelada  { background: #fee2e2; color: #991b1b; }
+  .resena-ok { color: #f59e0b; font-size: 0.8rem; }
+  .reserva-contacto { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .link-sm { font-size: 0.75rem; color: #6b7280; text-decoration: none; }
+  .link-sm:hover { color: #2563eb; }
+  .link-wa:hover { color: #16a34a; }
+  .btn-ver { color: #2563eb; text-decoration: none; font-size: 0.8rem; font-weight: 500; flex-shrink: 0; white-space: nowrap; }
+</style>

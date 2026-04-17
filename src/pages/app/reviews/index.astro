@@ -1,0 +1,164 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { crmApi } from '../../../lib/app/apiClient';
+import { can } from '../../../lib/app/permissions';
+
+const user     = Astro.locals.user;
+if (!can(user.role, 'reviews', 'read')) return Astro.redirect('/app');
+const canApprove = can(user.role, 'reviews', 'approve');
+
+const p = Astro.url.searchParams;
+const filters: Record<string, string> = {};
+for (const [k, v] of p.entries()) { if (v) filters[k] = v; }
+if (!filters.estado) filters.estado = 'pendiente';
+
+let result: any = { data: [], meta: { pagination: { total: 0 } } };
+let errorMsg = '';
+try { result = await crmApi.reviews(user, filters); }
+catch { errorMsg = 'Error cargando reviews.'; }
+---
+
+<AppShell title="Reviews" user={user}>
+  <div class="page-top">
+    <h1 class="page-title">Reviews</h1>
+    <a href="/app/reviews/mail-jobs" class="btn-outline">Cola de emails →</a>
+  </div>
+
+  <form class="filters" method="GET">
+    <select name="estado">
+      <option value="">Todos</option>
+      {['pendiente','aprobada','rechazada'].map(e => (
+        <option value={e} selected={(p.get('estado') ?? 'pendiente') === e}>{e}</option>
+      ))}
+    </select>
+    <select name="idioma">
+      <option value="">Idioma</option>
+      {['es','en','it','fr'].map(i => (
+        <option value={i} selected={p.get('idioma') === i}>{i.toUpperCase()}</option>
+      ))}
+    </select>
+    <select name="visible_web">
+      <option value="">Visibilidad</option>
+      <option value="true"  selected={p.get('visible_web') === 'true'}>Publicadas</option>
+      <option value="false" selected={p.get('visible_web') === 'false'}>Ocultas</option>
+    </select>
+    <button type="submit" class="btn-primary">Filtrar</button>
+    <a href="/app/reviews" class="btn-ghost">Limpiar</a>
+  </form>
+
+  {errorMsg && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="reviews-list">
+    {result.data.length === 0 && (
+      <div class="empty-state">No hay reviews con estos filtros.</div>
+    )}
+    {result.data.map((r: any) => (
+      <div class="review-card">
+        <div class="review-header">
+          <div class="review-meta">
+            <span class="review-autor">{r.cliente_nombre}</span>
+            {r.cliente_pais && <span class="review-pais">{r.cliente_pais}</span>}
+            <span class="review-fecha">{new Date(r.fecha_tour).toLocaleDateString('es-ES')}</span>
+            <span class="review-idioma">{r.idioma?.toUpperCase()}</span>
+          </div>
+          <div class="review-badges">
+            <span class:list={['badge', `badge-${r.estado}`]}>{r.estado}</span>
+            {r.visible_web && <span class="badge badge-visible">web</span>}
+            {r.es_verificada && <span class="badge badge-verificada">✓ verificada</span>}
+          </div>
+        </div>
+
+        <div class="review-estrellas">
+          {'★'.repeat(r.rating_general)}{'☆'.repeat(5 - r.rating_general)}
+          <span class="rating-num">{r.rating_general}/5</span>
+        </div>
+
+        {r.comentario_publico && (
+          <p class="review-comentario">{r.comentario_publico}</p>
+        )}
+        {r.comentario_privado && (
+          <p class="review-privado">🔒 {r.comentario_privado}</p>
+        )}
+
+        <div class="review-tour">
+          {r.tour?.titulo && <span>{r.tour.titulo}</span>}
+          {r.guia?.nombre && <span>· Guía: {r.guia.nombre}</span>}
+        </div>
+
+        {canApprove && (
+          <div class="review-actions">
+            {r.estado !== 'aprobada' && (
+              <form method="POST" action="/api/app/review-estado">
+                <input type="hidden" name="id" value={r.id} />
+                <input type="hidden" name="estado" value="aprobada" />
+                <input type="hidden" name="visible_web" value="true" />
+                <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+                <button type="submit" class="btn-aprobar">Aprobar y publicar</button>
+              </form>
+            )}
+            {r.estado !== 'rechazada' && (
+              <form method="POST" action="/api/app/review-estado">
+                <input type="hidden" name="id" value={r.id} />
+                <input type="hidden" name="estado" value="rechazada" />
+                <input type="hidden" name="visible_web" value="false" />
+                <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+                <button type="submit" class="btn-rechazar">Rechazar</button>
+              </form>
+            )}
+            {r.estado === 'aprobada' && r.visible_web && (
+              <form method="POST" action="/api/app/review-estado">
+                <input type="hidden" name="id" value={r.id} />
+                <input type="hidden" name="estado" value="aprobada" />
+                <input type="hidden" name="visible_web" value="false" />
+                <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+                <button type="submit" class="btn-ocultar">Ocultar de web</button>
+              </form>
+            )}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <div class="table-footer">Total: <strong>{result.meta.pagination.total}</strong> reviews</div>
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .filters select { padding: 0.45rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: 0.85rem; background: #fff; color: #111827; outline: none; }
+  .btn-primary  { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 0.45rem 1rem; font-size: 0.85rem; cursor: pointer; }
+  .btn-outline  { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.45rem 0.875rem; font-size: 0.85rem; text-decoration: none; }
+  .btn-ghost    { color: #6b7280; font-size: 0.85rem; padding: 0.45rem 0.5rem; text-decoration: none; }
+  .alert-error  { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
+  .reviews-list { display: flex; flex-direction: column; gap: 1rem; }
+  .review-card  { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; }
+  .review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 1rem; }
+  .review-meta  { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+  .review-autor { font-weight: 600; color: #111827; font-size: 0.9rem; }
+  .review-pais  { font-size: 0.8rem; color: #9ca3af; }
+  .review-fecha { font-size: 0.8rem; color: #9ca3af; }
+  .review-idioma { font-size: 0.72rem; background: #eff6ff; color: #1d4ed8; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 600; }
+  .review-badges { display: flex; gap: 0.4rem; flex-shrink: 0; }
+  .badge { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; }
+  .badge-pendiente  { background: #fef9c3; color: #854d0e; }
+  .badge-aprobada   { background: #dcfce7; color: #166534; }
+  .badge-rechazada  { background: #fee2e2; color: #991b1b; }
+  .badge-visible    { background: #eff6ff; color: #1d4ed8; }
+  .badge-verificada { background: #f0fdf4; color: #15803d; }
+  .review-estrellas { color: #f59e0b; font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .rating-num { font-size: 0.8rem; color: #6b7280; margin-left: 0.4rem; }
+  .review-comentario { font-size: 0.875rem; color: #374151; line-height: 1.6; margin-bottom: 0.5rem; }
+  .review-privado { font-size: 0.8rem; color: #6b7280; font-style: italic; background: #f9fafb; padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; }
+  .review-tour { font-size: 0.78rem; color: #9ca3af; margin-bottom: 0.75rem; }
+  .review-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.75rem; border-top: 1px solid #f3f4f6; }
+  .btn-aprobar  { background: #dcfce7; color: #166534; border: 1px solid #86efac; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+  .btn-aprobar:hover { background: #bbf7d0; }
+  .btn-rechazar { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+  .btn-rechazar:hover { background: #fecaca; }
+  .btn-ocultar  { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer; }
+  .empty-state  { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.875rem; }
+  .table-footer { padding: 0.75rem 0; color: #6b7280; font-size: 0.85rem; }
+</style>

@@ -1,0 +1,205 @@
+---
+export const prerender = false;
+import AppShell from '../../../components/app/layout/AppShell.astro';
+import { crmApi } from '../../../lib/app/apiClient';
+import { can } from '../../../lib/app/permissions';
+
+const user = Astro.locals.user;
+if (!can(user.role, 'reservas', 'read')) return Astro.redirect('/app');
+
+const p = Astro.url.searchParams;
+const filters: Record<string, string> = {};
+for (const [k, v] of p.entries()) { if (v) filters[k] = v; }
+
+let result = { data: [], meta: { pagination: { total: 0, page: 1, pageSize: 50, pageCount: 1 } } };
+let errorMsg = '';
+
+try {
+  result = await crmApi.reservas(user, filters) as any;
+} catch (e) {
+  errorMsg = 'Error cargando reservas.';
+}
+
+const canEdit   = can(user.role, 'reservas', 'write');
+const canExport = can(user.role, 'reservas', 'export');
+
+const plataformaColor: Record<string, string> = {
+  web: 'bg-blue',   guruwalk: 'bg-purple', civitatis: 'bg-green',
+  viator: 'bg-orange', freetour: 'bg-teal', tripadvisor: 'bg-lime',
+  manual: 'bg-gray', whatsapp: 'bg-green', walkin: 'bg-gray',
+};
+---
+
+<AppShell title="Reservas" user={user}>
+  <div class="page-top">
+    <h1 class="page-title">Reservas</h1>
+    <div class="top-actions">
+      {canExport && (
+        <a href={`/api/app/export-reservas?${p.toString()}`} class="btn-secondary">
+          Exportar CSV
+        </a>
+      )}
+    </div>
+  </div>
+
+  <form class="filters" method="GET">
+    <input type="date" name="fecha" value={p.get('fecha') ?? ''} title="Fecha exacta" />
+    <input type="date" name="fecha_desde" value={p.get('fecha_desde') ?? ''} placeholder="Desde" title="Desde" />
+    <input type="date" name="fecha_hasta" value={p.get('fecha_hasta') ?? ''} placeholder="Hasta" title="Hasta" />
+    <select name="idioma_tour">
+      <option value="">Idioma</option>
+      {['es','en','it'].map(i => (
+        <option value={i} selected={p.get('idioma_tour') === i}>{i.toUpperCase()}</option>
+      ))}
+    </select>
+    <select name="estado">
+      <option value="">Estado</option>
+      {['pendiente','confirmada','cancelada'].map(e => (
+        <option value={e} selected={p.get('estado') === e}>{e}</option>
+      ))}
+    </select>
+    <select name="plataforma_origen">
+      <option value="">Plataforma</option>
+      {['web','guruwalk','civitatis','freetour','viator','tripadvisor','getyourguide','whatsapp','manual'].map(s => (
+        <option value={s} selected={p.get('plataforma_origen') === s}>{s}</option>
+      ))}
+    </select>
+    <button type="submit" class="btn-primary">Filtrar</button>
+    <a href="/app/reservas" class="btn-ghost">Limpiar</a>
+  </form>
+
+  {errorMsg && <div class="alert-error">{errorMsg}</div>}
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Fecha tour</th>
+          <th>Hora</th>
+          <th>Tour</th>
+          <th>Cliente</th>
+          <th>Contacto</th>
+          <th>Pax</th>
+          <th>Plataforma</th>
+          <th>Estado</th>
+          <th>Reseña</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {result.data.length === 0 && (
+          <tr>
+            <td colspan="10" class="empty-row">No hay reservas con estos filtros.</td>
+          </tr>
+        )}
+        {result.data.map((r: any) => {
+          const fechaTour = new Date(r.fecha_hora_tour);
+          const paxTotal  = (r.adultos || 0) + (r.ninos || 0);
+          return (
+            <tr>
+              <td>{fechaTour.toLocaleDateString('es-ES')}</td>
+              <td class="td-hora">{fechaTour.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</td>
+              <td>
+                <span class="tour-titulo">{r.tour?.titulo ?? '—'}</span>
+                <span class="tour-idioma">{r.idioma_tour?.toUpperCase()}</span>
+              </td>
+              <td>
+                <span class="cliente-nombre">{r.nombre} {r.apellidos ?? ''}</span>
+                {r.comportamiento_cliente !== 'normal' && (
+                  <span class="alerta-comportamiento" title={r.comportamiento_cliente}>⚠</span>
+                )}
+              </td>
+              <td>
+                <div class="contacto">
+                  <a href={`mailto:${r.email}`} class="link-contact">{r.email}</a>
+                  {r.telefono && (
+                    <a href={`https://wa.me/${r.telefono.replace(/\D/g,'')}`}
+                       target="_blank" rel="noopener" class="link-wa">
+                      {r.telefono}
+                    </a>
+                  )}
+                </div>
+              </td>
+              <td class="td-center">
+                <span class="pax-badge">{paxTotal}</span>
+                {r.ninos > 0 && <span class="pax-ninos">+{r.ninos}n</span>}
+              </td>
+              <td>
+                <span class={`badge badge-plataforma badge-${r.plataforma_origen}`}>
+                  {r.plataforma_origen}
+                </span>
+              </td>
+              <td>
+                <span class={`badge badge-estado badge-${r.estado}`}>{r.estado}</span>
+              </td>
+              <td class="td-center">
+                {r.resena_enviada
+                  ? <span class="resena-si" title="Reseña enviada">✓</span>
+                  : <span class="resena-no" title="Sin reseña">—</span>}
+              </td>
+              <td>
+                <a href={`/app/reservas/${r.id}`} class="btn-ver">Ver</a>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer">
+    <span>Total: <strong>{result.meta.pagination.total}</strong> reservas</span>
+  </div>
+</AppShell>
+
+<style>
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+  .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
+  .top-actions { display: flex; gap: 0.5rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+  .filters input, .filters select {
+    padding: 0.45rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px;
+    font-size: 0.85rem; background: #fff; color: #111827; outline: none;
+  }
+  .filters input:focus, .filters select:focus { border-color: #3b82f6; }
+  .btn-primary { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 0.45rem 1rem; font-size: 0.85rem; cursor: pointer; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.45rem 0.875rem; font-size: 0.85rem; text-decoration: none; }
+  .btn-ghost { color: #6b7280; font-size: 0.85rem; padding: 0.45rem 0.5rem; text-decoration: none; }
+  .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
+  .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; }
+  .table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table th { text-align: left; padding: 0.7rem 1rem; background: #f9fafb; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
+  .table td { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  .table tr:last-child td { border-bottom: none; }
+  .table tr:hover td { background: #f9fafb; }
+  .empty-row { text-align: center; color: #9ca3af; padding: 2rem !important; }
+  .td-hora { font-family: monospace; font-weight: 600; }
+  .td-center { text-align: center; }
+  .tour-titulo { display: block; font-weight: 500; color: #1f2937; }
+  .tour-idioma { display: inline-block; font-size: 0.7rem; background: #eff6ff; color: #1d4ed8; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 600; margin-top: 0.1rem; }
+  .cliente-nombre { font-weight: 500; }
+  .alerta-comportamiento { color: #f59e0b; margin-left: 0.3rem; cursor: help; }
+  .contacto { display: flex; flex-direction: column; gap: 0.1rem; }
+  .link-contact { color: #374151; text-decoration: none; font-size: 0.8rem; }
+  .link-contact:hover { color: #2563eb; }
+  .link-wa { color: #374151; text-decoration: none; font-size: 0.8rem; }
+  .link-wa:hover { color: #16a34a; }
+  .pax-badge { font-weight: 700; font-size: 1rem; color: #111827; }
+  .pax-ninos { font-size: 0.7rem; color: #9ca3af; margin-left: 0.2rem; }
+  .badge { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; text-transform: lowercase; }
+  .badge-confirmada { background: #dcfce7; color: #166534; }
+  .badge-pendiente  { background: #fef9c3; color: #854d0e; }
+  .badge-cancelada  { background: #fee2e2; color: #991b1b; }
+  .badge-web        { background: #eff6ff; color: #1e40af; }
+  .badge-guruwalk   { background: #f5f3ff; color: #5b21b6; }
+  .badge-civitatis  { background: #f0fdf4; color: #166534; }
+  .badge-viator     { background: #fff7ed; color: #9a3412; }
+  .badge-manual     { background: #f3f4f6; color: #374151; }
+  .badge-whatsapp   { background: #f0fdf4; color: #15803d; }
+  .resena-si { color: #16a34a; font-weight: 700; }
+  .resena-no { color: #d1d5db; }
+  .btn-ver { color: #2563eb; text-decoration: none; font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
+  .btn-ver:hover { text-decoration: underline; }
+  .table-footer { padding: 0.75rem 0; color: #6b7280; font-size: 0.85rem; }
+</style>
