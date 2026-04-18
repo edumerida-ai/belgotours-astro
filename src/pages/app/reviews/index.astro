@@ -9,8 +9,6 @@ if (!can(user.role, 'reviews', 'read')) return Astro.redirect('/app');
 const canApprove = can(user.role, 'reviews', 'approve');
 
 const p = Astro.url.searchParams;
-
-// Sin filtro por defecto — mostrar todas
 const filters: Record<string, string> = {};
 for (const [k, v] of p.entries()) { if (v) filters[k] = v; }
 
@@ -26,6 +24,10 @@ const tabs = [
   { value: 'aprobada',  label: 'Aprobadas' },
   { value: 'rechazada', label: 'Rechazadas' },
 ];
+
+function estrellas(n: number) {
+  return '★'.repeat(Math.max(0, Math.min(5, n))) + '☆'.repeat(5 - Math.max(0, Math.min(5, n)));
+}
 ---
 
 <AppShell title="Reviews" user={user}>
@@ -34,7 +36,6 @@ const tabs = [
     <a href="/app/reviews/mail-jobs" class="btn-outline">Cola de emails →</a>
   </div>
 
-  <!-- Tabs de estado -->
   <div class="tabs">
     {tabs.map(tab => {
       const url = new URL(Astro.url.href);
@@ -49,7 +50,6 @@ const tabs = [
     })}
   </div>
 
-  <!-- Filtros secundarios -->
   <form class="filters" method="GET">
     {estadoActual && <input type="hidden" name="estado" value={estadoActual} />}
     <select name="idioma">
@@ -60,7 +60,7 @@ const tabs = [
     </select>
     <select name="visible_web">
       <option value="">Visibilidad</option>
-      <option value="true"  selected={p.get('visible_web') === 'true'}>Publicadas en web</option>
+      <option value="true"  selected={p.get('visible_web') === 'true'}>Publicadas</option>
       <option value="false" selected={p.get('visible_web') === 'false'}>Ocultas</option>
     </select>
     <button type="submit" class="btn-primary">Filtrar</button>
@@ -78,20 +78,20 @@ const tabs = [
         <div class="review-header">
           <div class="review-meta">
             <span class="review-autor">{r.cliente_nombre}</span>
-            {r.cliente_pais && <span class="review-pais">{r.cliente_pais}</span>}
-            <span class="review-fecha">{new Date(r.fecha_tour).toLocaleDateString('es-ES')}</span>
-            <span class="review-idioma">{r.idioma?.toUpperCase()}</span>
-            {r.tour?.titulo && <span class="review-tour">{r.tour.titulo}</span>}
+            {r.cliente_pais && <span class="review-info">{r.cliente_pais}</span>}
+            <span class="review-info">{new Date(r.fecha_tour).toLocaleDateString('es-ES')}</span>
+            <span class="lang-badge">{r.idioma?.toUpperCase()}</span>
+            {r.tour?.titulo && <span class="tour-badge">{r.tour.titulo}</span>}
           </div>
           <div class="review-badges">
             <span class:list={['badge', `badge-${r.estado}`]}>{r.estado}</span>
-            {r.visible_web  && <span class="badge badge-visible">web ✓</span>}
+            {r.visible_web   && <span class="badge badge-web">web ✓</span>}
             {r.es_verificada && <span class="badge badge-verificada">verificada</span>}
           </div>
         </div>
 
         <div class="review-estrellas">
-          {'★'.repeat(r.rating_general)}{'☆'.repeat(5 - r.rating_general)}
+          <span class="stars">{estrellas(r.rating_general)}</span>
           <span class="rating-num">{r.rating_general}/5</span>
         </div>
 
@@ -102,6 +102,7 @@ const tabs = [
           <p class="review-privado">🔒 {r.comentario_privado}</p>
         )}
 
+        <!-- Acciones de moderación -->
         {canApprove && (
           <div class="review-actions">
             {r.estado !== 'aprobada' && (
@@ -140,6 +141,42 @@ const tabs = [
                 <button type="submit" class="btn-rechazar">✗ Rechazar</button>
               </form>
             )}
+            <!-- Botón editar -->
+            <button type="button" class="btn-editar"
+                    onclick={`document.getElementById('editor-${r.id}').classList.toggle('hidden')`}>
+              ✏️ Editar
+            </button>
+          </div>
+        )}
+
+        <!-- Editor inline oculto -->
+        {canApprove && (
+          <div id={`editor-${r.id}`} class="review-editor hidden">
+            <form method="POST" action="/api/app/review-edit">
+              <input type="hidden" name="id" value={r.id} />
+              <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+              <div class="editor-row">
+                <div class="editor-field">
+                  <label>Estrellas</label>
+                  <select name="rating_general">
+                    {[5,4,3,2,1].map(n => (
+                      <option value={n} selected={r.rating_general === n}>{n} ★</option>
+                    ))}
+                  </select>
+                </div>
+                <div class="editor-field" style="flex:3">
+                  <label>Comentario público</label>
+                  <textarea name="comentario_publico" rows="3">{r.comentario_publico ?? ''}</textarea>
+                </div>
+              </div>
+              <div class="editor-actions">
+                <button type="submit" class="btn-guardar">Guardar cambios</button>
+                <button type="button" class="btn-cancelar"
+                        onclick={`document.getElementById('editor-${r.id}').classList.add('hidden')`}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </div>
@@ -154,7 +191,7 @@ const tabs = [
   .page-title { font-size: 1.5rem; font-weight: 700; color: #111827; }
   .btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.45rem 0.875rem; font-size: 0.85rem; text-decoration: none; }
   .tabs { display: flex; gap: 0; margin-bottom: 1.25rem; border-bottom: 2px solid #e5e7eb; }
-  .tab { padding: 0.6rem 1.25rem; font-size: 0.875rem; color: #6b7280; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+  .tab { padding: 0.6rem 1.25rem; font-size: 0.875rem; color: #6b7280; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color 0.15s; }
   .tab:hover { color: #111827; }
   .tab-active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
   .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
@@ -164,29 +201,40 @@ const tabs = [
   .alert-error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
   .reviews-list { display: flex; flex-direction: column; gap: 0.875rem; }
   .review-card  { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; }
-  .review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 1rem; }
-  .review-meta  { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-  .review-autor { font-weight: 600; color: #111827; font-size: 0.9rem; }
-  .review-pais, .review-fecha { font-size: 0.8rem; color: #9ca3af; }
-  .review-idioma { font-size: 0.72rem; background: #eff6ff; color: #1d4ed8; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 600; }
-  .review-tour { font-size: 0.78rem; color: #6b7280; background: #f3f4f6; padding: 0.1rem 0.5rem; border-radius: 4px; }
-  .review-badges { display: flex; gap: 0.4rem; flex-shrink: 0; flex-wrap: wrap; }
-  .badge { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; }
+  .review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.625rem; gap: 1rem; flex-wrap: wrap; }
+  .review-meta  { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+  .review-autor { font-weight: 700; color: #111827; font-size: 0.9rem; }
+  .review-info  { font-size: 0.78rem; color: #9ca3af; }
+  .lang-badge   { font-size: 0.7rem; background: #eff6ff; color: #1d4ed8; padding: 0.1rem 0.35rem; border-radius: 4px; font-weight: 600; }
+  .tour-badge   { font-size: 0.75rem; color: #6b7280; background: #f3f4f6; padding: 0.1rem 0.5rem; border-radius: 4px; }
+  .review-badges { display: flex; gap: 0.35rem; flex-shrink: 0; flex-wrap: wrap; }
+  .badge        { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; }
   .badge-pendiente  { background: #fef9c3; color: #854d0e; }
   .badge-aprobada   { background: #dcfce7; color: #166534; }
   .badge-rechazada  { background: #fee2e2; color: #991b1b; }
-  .badge-visible    { background: #eff6ff; color: #1d4ed8; }
+  .badge-web        { background: #eff6ff; color: #1d4ed8; }
   .badge-verificada { background: #f0fdf4; color: #15803d; }
-  .review-estrellas { color: #f59e0b; font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .review-estrellas { margin-bottom: 0.5rem; }
+  .stars  { color: #f59e0b; font-size: 1rem; letter-spacing: -0.02em; }
   .rating-num { font-size: 0.8rem; color: #6b7280; margin-left: 0.4rem; }
   .review-comentario { font-size: 0.875rem; color: #374151; line-height: 1.6; margin-bottom: 0.5rem; font-style: italic; }
   .review-privado { font-size: 0.8rem; color: #6b7280; background: #f9fafb; padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; }
-  .review-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; padding-top: 0.75rem; border-top: 1px solid #f3f4f6; }
-  .btn-aprobar  { background: #dcfce7; color: #166534; border: 1px solid #86efac; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
-  .btn-aprobar:hover { background: #bbf7d0; }
-  .btn-publicar { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
-  .btn-ocultar  { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer; }
-  .btn-rechazar { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.35rem 0.75rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+  .review-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; padding-top: 0.75rem; border-top: 1px solid #f3f4f6; }
+  .btn-aprobar  { background: #dcfce7; color: #166534; border: 1px solid #86efac; border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+  .btn-ocultar  { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; }
+  .btn-publicar { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+  .btn-rechazar { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+  .btn-editar   { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.7rem; font-size: 0.8rem; cursor: pointer; font-weight: 600; }
+  .hidden { display: none !important; }
+  .review-editor { margin-top: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; }
+  .editor-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .editor-field { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 140px; }
+  .editor-field label { font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .editor-field select, .editor-field textarea { padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: 0.875rem; color: #111827; background: #fff; outline: none; resize: vertical; }
+  .editor-field select:focus, .editor-field textarea:focus { border-color: #3b82f6; }
+  .editor-actions { display: flex; gap: 0.5rem; }
+  .btn-guardar  { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .btn-cancelar { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.5rem 0.875rem; font-size: 0.85rem; cursor: pointer; }
   .empty-state  { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.875rem; }
   .table-footer { padding: 0.75rem 0; color: #6b7280; font-size: 0.85rem; }
 </style>

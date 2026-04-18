@@ -1,7 +1,7 @@
 ---
-import AppSidebar from './AppSidebar.astro';
-import AppHeader from './AppHeader.astro';
-import type { AppUser } from '../../../lib/app/types';
+import AppSidebar from "./AppSidebar.astro";
+import AppHeader from "./AppHeader.astro";
+import type { AppUser } from "../../../lib/app/types";
 
 interface Props {
   title: string;
@@ -21,13 +21,31 @@ const { title, user } = Astro.props;
     body { font-family: system-ui, -apple-system, sans-serif; background: #f3f4f6; color: #111827; }
     .app-layout { display: flex; min-height: 100vh; }
     .app-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
-    .app-content { flex: 1; padding: 1.75rem 2rem; overflow-y: auto; }
-    @media (max-width: 768px) { .app-content { padding: 1rem; } }
+    .app-content { flex: 1; padding: 1.5rem; overflow-y: auto; }
+    .sidebar-wrapper { flex-shrink: 0; }
+    @media (max-width: 768px) {
+      .sidebar-wrapper { display: none; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+      .sidebar-wrapper.open { display: flex; }
+      .app-content { padding: 1rem; }
+    }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    @media (max-width: 640px) {
+      .form-row { flex-direction: column !important; }
+      .filters { flex-direction: column; }
+      .filters input, .filters select, .filters button { width: 100%; }
+      .top-actions { flex-wrap: wrap; gap: 0.35rem; }
+      .action-btns { flex-wrap: wrap; }
+      .detail-grid { grid-template-columns: 1fr !important; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .horarios-grid { grid-template-columns: 1fr !important; }
+    }
   </style>
 </head>
 <body>
   <div class="app-layout">
-    <AppSidebar role={user.role} />
+    <div class="sidebar-wrapper" id="sidebar-wrapper">
+      <AppSidebar role={user.role} />
+    </div>
     <div class="app-main">
       <AppHeader user={user} />
       <main class="app-content">
@@ -35,5 +53,31 @@ const { title, user } = Astro.props;
       </main>
     </div>
   </div>
+
+  <button id="menu-toggle" aria-label="Menu" style="display:none;position:fixed;bottom:1.25rem;right:1.25rem;background:#2563eb;color:#fff;border:none;border-radius:50%;width:52px;height:52px;font-size:1.3rem;cursor:pointer;z-index:200;box-shadow:0 4px 12px rgba(37,99,235,0.4);align-items:center;justify-content:center;">☰</button>
+  <div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;"></div>
+
+  <script>
+    const wrapper = document.getElementById("sidebar-wrapper");
+    const toggle  = document.getElementById("menu-toggle");
+    const overlay = document.getElementById("sidebar-overlay");
+    function isMobile() { return window.innerWidth <= 768; }
+    function showToggle() {
+      if (!toggle) return;
+      toggle.style.display = isMobile() ? "flex" : "none";
+    }
+    function open() {
+      wrapper?.classList.add("open");
+      if (overlay) overlay.style.display = "block";
+    }
+    function close() {
+      wrapper?.classList.remove("open");
+      if (overlay) overlay.style.display = "none";
+    }
+    toggle?.addEventListener("click", open);
+    overlay?.addEventListener("click", close);
+    window.addEventListener("resize", showToggle);
+    showToggle();
+  </script>
 </body>
 </html>

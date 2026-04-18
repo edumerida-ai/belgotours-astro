@@ -1,7 +1,7 @@
 ---
 export const prerender = false;
 import AppShell from '../../../components/app/layout/AppShell.astro';
-import { crmApi } from '../../../lib/app/apiClient';
+import { crmApi, crmFetch } from '../../../lib/app/apiClient';
 import { can } from '../../../lib/app/permissions';
 
 const user    = Astro.locals.user;
@@ -9,36 +9,60 @@ if (!can(user.role, 'horarios', 'read')) return Astro.redirect('/app');
 const canEdit = can(user.role, 'horarios', 'write');
 
 const p = Astro.url.searchParams;
+
+// Mensajes de feedback
+const successMsg = p.get('success') === 'creado' ? '✅ Horario creado correctamente.' : '';
+const errorMsg   = p.get('error')   === 'duplicado' ? '⚠️ Ya existe un horario para ese tour, fecha y hora.' :
+                   p.get('error')   === 'tiene_reservas' ? '⚠️ No se puede eliminar: tiene reservas. Ciérralo.' : '';
+
 const filters: Record<string, string> = {};
-for (const [k, v] of p.entries()) { if (v) filters[k] = v; }
+for (const [k, v] of p.entries()) {
+  if (v && k !== 'success' && k !== 'error') filters[k] = v;
+}
 if (!filters.fecha_desde && !filters.fecha && !filters.fecha_hasta) {
   filters.fecha_desde = new Date().toISOString().split('T')[0];
 }
 
-const errorMsg = p.get('error') === 'tiene_reservas'
-  ? 'No se puede eliminar: el horario tiene reservas confirmadas. Ciérralo en su lugar.'
-  : '';
-
 let horarios: any[] = [];
+let tours: any[]    = [];
 let fetchError = '';
+
 try {
-  const res = await crmApi.horarios(user, filters);
-  horarios = res.data;
-} catch { fetchError = 'Error cargando horarios.'; }
+  const [horariosRes, toursRes] = await Promise.all([
+    crmApi.horarios(user, filters),
+    fetch(`${import.meta.env.STRAPI_URL}/api/tours?locale=es&fields[0]=titulo&fields[1]=ciudad&pagination[pageSize]=50`, {
+      headers: { Authorization: `Bearer ${user.strapiToken}` },
+    }).then(r => r.json()).then(r => r.data ?? []),
+  ]);
+  horarios = horariosRes.data;
+  tours    = toursRes;
+} catch { fetchError = 'Error cargando datos.'; }
 ---
 
 <AppShell title="Horarios" user={user}>
   <div class="page-top">
     <h1 class="page-title">Horarios</h1>
     <div class="top-actions">
-      <a href="/app/calendario" class="btn-outline">Ver calendario</a>
+      <a href="/app/calendario" class="btn-outline">Calendario</a>
       <a href="/app/horarios/recurrencias" class="btn-outline">Recurrencias</a>
     </div>
   </div>
 
+  {successMsg && <div class="alert-success">{successMsg}</div>}
+  {(errorMsg || fetchError) && <div class="alert-error">{errorMsg || fetchError}</div>}
+
+  <!-- Filtros -->
   <form class="filters" method="GET">
-    <input type="date" name="fecha_desde" value={p.get('fecha_desde') ?? filters.fecha_desde ?? ''} title="Desde" />
-    <input type="date" name="fecha_hasta" value={p.get('fecha_hasta') ?? ''} title="Hasta" />
+    <input type="date" name="fecha_desde" value={p.get('fecha_desde') ?? filters.fecha_desde ?? ''} />
+    <input type="date" name="fecha_hasta" value={p.get('fecha_hasta') ?? ''} />
+    <select name="tour_id">
+      <option value="">Todos los tours</option>
+      {tours.map((t: any) => (
+        <option value={t.id} selected={p.get('tour_id') === String(t.id)}>
+          {t.titulo ?? t.attributes?.titulo}
+        </option>
+      ))}
+    </select>
     <select name="disponible">
       <option value="">Todos</option>
       <option value="true"  selected={p.get('disponible') === 'true'}>Abiertos</option>
@@ -48,9 +72,7 @@ try {
     <a href="/app/horarios" class="btn-ghost">Limpiar</a>
   </form>
 
-  {errorMsg && <div class="alert-error">{errorMsg}</div>}
-  {fetchError && <div class="alert-error">{fetchError}</div>}
-
+  <!-- Tabla de horarios -->
   <div class="table-wrap">
     <table class="table">
       <thead>
@@ -58,7 +80,6 @@ try {
           <th>Fecha</th>
           <th>Hora</th>
           <th>Tour</th>
-          <th>Ciudad</th>
           <th>Cupo</th>
           <th>Reservas</th>
           <th>Estado</th>
@@ -67,22 +88,19 @@ try {
       </thead>
       <tbody>
         {horarios.length === 0 && (
-          <tr><td colspan="8" class="empty-row">No hay horarios en este rango.</td></tr>
+          <tr><td colspan="7" class="empty-row">No hay horarios en este rango.</td></tr>
         )}
         {horarios.map((h: any) => (
           <tr class:list={[{ 'row-cerrado': !h.disponible }]}>
-            <td>{h.fecha}</td>
+            <td>{new Date(h.fecha + 'T12:00:00').toLocaleDateString('es-ES', { weekday:'short', day:'numeric', month:'short' })}</td>
             <td class="td-hora">{h.hora}</td>
             <td>
               <a href={`/app/horarios/${h.id}`} class="tour-link">{h.tour?.titulo ?? '—'}</a>
-              {h.recurrencia?.idioma && (
-                <span class="lang-tag">{h.recurrencia.idioma.toUpperCase()}</span>
-              )}
+              {h.recurrencia?.idioma && <span class="lang-tag">{h.recurrencia.idioma.toUpperCase()}</span>}
             </td>
-            <td style="text-transform:capitalize">{h.tour?.ciudad ?? '—'}</td>
             <td class="td-center">{h.cupoMaximo ?? '—'}</td>
             <td class="td-center">
-              <span class:list={['reservas-count', { 'has-reservas': (h.cupoOcupado || 0) > 0 }]}>
+              <span class:list={['reservas-num', { 'has-reservas': (h.cupoOcupado || 0) > 0 }]}>
                 {h.cupoOcupado ?? 0}
               </span>
             </td>
@@ -95,27 +113,23 @@ try {
               <td>
                 <div class="action-btns">
                   <a href={`/app/horarios/${h.id}`} class="btn-ver">Ver</a>
-
                   <form method="POST" action="/api/app/horario-toggle" style="display:inline">
                     <input type="hidden" name="id" value={h.id} />
                     <input type="hidden" name="disponible" value={h.disponible ? 'false' : 'true'} />
-                    <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+                    <input type="hidden" name="redirect" value={Astro.url.pathname + '?' + new URLSearchParams(filters).toString()} />
                     <button type="submit" class:list={['btn-toggle', h.disponible ? 'btn-cerrar' : 'btn-abrir']}>
                       {h.disponible ? 'Cerrar' : 'Abrir'}
                     </button>
                   </form>
-
                   {(h.cupoOcupado || 0) === 0 ? (
                     <form method="POST" action="/api/app/horario-delete" style="display:inline"
                           onsubmit="return confirm('¿Eliminar este horario? Desaparecerá del frontend inmediatamente.')">
                       <input type="hidden" name="id" value={h.id} />
-                      <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+                      <input type="hidden" name="redirect" value={Astro.url.pathname + '?' + new URLSearchParams(filters).toString()} />
                       <button type="submit" class="btn-eliminar">Eliminar</button>
                     </form>
                   ) : (
-                    <span class="btn-eliminar-disabled" title={`Tiene ${h.cupoOcupado} reservas — no se puede eliminar`}>
-                      🔒
-                    </span>
+                    <span class="btn-locked" title={`${h.cupoOcupado} reservas — no eliminable`}>🔒</span>
                   )}
                 </div>
               </td>
@@ -126,6 +140,44 @@ try {
     </table>
   </div>
   <div class="table-footer">Total: <strong>{horarios.length}</strong> horarios</div>
+
+  <!-- Crear horario puntual -->
+  {canEdit && (
+    <div class="crear-section">
+      <h2 class="section-title">Crear horario puntual</h2>
+      <div class="crear-card">
+        <form method="POST" action="/api/app/horario-crear" class="crear-form">
+          <input type="hidden" name="redirect" value={Astro.url.pathname + '?' + new URLSearchParams(filters).toString()} />
+          <div class="form-row">
+            <div class="form-field">
+              <label>Tour *</label>
+              <select name="tour_id" required>
+                <option value="">Selecciona un tour</option>
+                {tours.map((t: any) => (
+                  <option value={t.id}>{t.titulo ?? t.attributes?.titulo} — {t.ciudad ?? t.attributes?.ciudad}</option>
+                ))}
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Fecha *</label>
+              <input type="date" name="fecha" required
+                     min={new Date().toISOString().split('T')[0]}
+                     value={filters.fecha_desde ?? new Date().toISOString().split('T')[0]} />
+            </div>
+            <div class="form-field">
+              <label>Hora *</label>
+              <input type="time" name="hora" required placeholder="10:45" />
+            </div>
+            <div class="form-field">
+              <label>Cupo máximo</label>
+              <input type="number" name="cupoMaximo" value="25" min="1" max="200" />
+            </div>
+          </div>
+          <button type="submit" class="btn-crear">+ Crear horario</button>
+        </form>
+      </div>
+    </div>
+  )}
 </AppShell>
 
 <style>
@@ -138,16 +190,17 @@ try {
   .btn-primary  { background: #2563eb; color: #fff; border: none; border-radius: 7px; padding: 0.45rem 1rem; font-size: 0.85rem; cursor: pointer; }
   .btn-outline  { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.45rem 0.875rem; font-size: 0.85rem; text-decoration: none; }
   .btn-ghost    { color: #6b7280; font-size: 0.85rem; padding: 0.45rem 0.5rem; text-decoration: none; }
-  .alert-error  { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.85rem; }
+  .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem; }
+  .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem; }
   .table-wrap   { overflow-x: auto; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; }
   .table        { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
   .table th     { text-align: left; padding: 0.7rem 1rem; background: #f9fafb; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5e7eb; font-weight: 600; }
-  .table td     { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  .table td     { padding: 0.75rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
   .table tr:last-child td { border-bottom: none; }
   .table tr:hover td { background: #f9fafb; }
-  .row-cerrado td { opacity: 0.6; }
+  .row-cerrado td { opacity: 0.55; }
   .empty-row    { text-align: center; color: #9ca3af; padding: 2rem !important; }
-  .td-hora      { font-family: monospace; font-weight: 600; }
+  .td-hora      { font-family: monospace; font-weight: 700; font-size: 0.95rem; }
   .td-center    { text-align: center; }
   .tour-link    { color: #1f2937; text-decoration: none; font-weight: 500; }
   .tour-link:hover { color: #2563eb; }
@@ -155,8 +208,8 @@ try {
   .badge        { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; }
   .badge-abierto { background: #dcfce7; color: #166534; }
   .badge-cerrado { background: #fee2e2; color: #991b1b; }
-  .reservas-count { font-weight: 600; color: #6b7280; }
-  .has-reservas   { color: #1d4ed8; }
+  .reservas-num  { font-weight: 600; color: #9ca3af; }
+  .has-reservas  { color: #2563eb; }
   .action-btns  { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
   .btn-ver      { color: #2563eb; text-decoration: none; font-size: 0.8rem; font-weight: 500; }
   .btn-toggle   { border: none; border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
@@ -164,8 +217,19 @@ try {
   .btn-cerrar:hover { background: #fecaca; }
   .btn-abrir    { background: #dcfce7; color: #166534; }
   .btn-abrir:hover  { background: #bbf7d0; }
-  .btn-eliminar { background: #1f2937; color: #fff; border: none; border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
+  .btn-eliminar { background: #374151; color: #fff; border: none; border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
   .btn-eliminar:hover { background: #111827; }
-  .btn-eliminar-disabled { font-size: 0.85rem; cursor: help; opacity: 0.5; }
+  .btn-locked   { font-size: 0.85rem; opacity: 0.4; cursor: help; }
   .table-footer { padding: 0.75rem 0; color: #6b7280; font-size: 0.85rem; }
+  .crear-section { margin-top: 2rem; }
+  .section-title { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 0.875rem; }
+  .crear-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; }
+  .crear-form { display: flex; flex-direction: column; gap: 1rem; }
+  .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .form-field { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; min-width: 160px; }
+  .form-field label { font-size: 0.78rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .form-field select, .form-field input { padding: 0.55rem 0.75rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: 0.875rem; color: #111827; background: #fff; outline: none; }
+  .form-field select:focus, .form-field input:focus { border-color: #3b82f6; }
+  .btn-crear { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 0.65rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; align-self: flex-start; }
+  .btn-crear:hover { background: #1d4ed8; }
 </style>
