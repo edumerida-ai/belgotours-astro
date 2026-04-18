@@ -15,12 +15,16 @@ if (!filters.fecha_desde && !filters.fecha && !filters.fecha_hasta) {
   filters.fecha_desde = new Date().toISOString().split('T')[0];
 }
 
+const errorMsg = p.get('error') === 'tiene_reservas'
+  ? 'No se puede eliminar: el horario tiene reservas confirmadas. Ciérralo en su lugar.'
+  : '';
+
 let horarios: any[] = [];
-let errorMsg = '';
+let fetchError = '';
 try {
   const res = await crmApi.horarios(user, filters);
   horarios = res.data;
-} catch { errorMsg = 'Error cargando horarios.'; }
+} catch { fetchError = 'Error cargando horarios.'; }
 ---
 
 <AppShell title="Horarios" user={user}>
@@ -45,6 +49,7 @@ try {
   </form>
 
   {errorMsg && <div class="alert-error">{errorMsg}</div>}
+  {fetchError && <div class="alert-error">{fetchError}</div>}
 
   <div class="table-wrap">
     <table class="table">
@@ -55,7 +60,7 @@ try {
           <th>Tour</th>
           <th>Ciudad</th>
           <th>Cupo</th>
-          <th>Ocupado</th>
+          <th>Reservas</th>
           <th>Estado</th>
           {canEdit && <th>Acciones</th>}
         </tr>
@@ -65,7 +70,7 @@ try {
           <tr><td colspan="8" class="empty-row">No hay horarios en este rango.</td></tr>
         )}
         {horarios.map((h: any) => (
-          <tr>
+          <tr class:list={[{ 'row-cerrado': !h.disponible }]}>
             <td>{h.fecha}</td>
             <td class="td-hora">{h.hora}</td>
             <td>
@@ -76,7 +81,11 @@ try {
             </td>
             <td style="text-transform:capitalize">{h.tour?.ciudad ?? '—'}</td>
             <td class="td-center">{h.cupoMaximo ?? '—'}</td>
-            <td class="td-center">{h.cupoOcupado ?? 0}</td>
+            <td class="td-center">
+              <span class:list={['reservas-count', { 'has-reservas': (h.cupoOcupado || 0) > 0 }]}>
+                {h.cupoOcupado ?? 0}
+              </span>
+            </td>
             <td>
               <span class:list={['badge', h.disponible ? 'badge-abierto' : 'badge-cerrado']}>
                 {h.disponible ? 'Abierto' : 'Cerrado'}
@@ -86,7 +95,8 @@ try {
               <td>
                 <div class="action-btns">
                   <a href={`/app/horarios/${h.id}`} class="btn-ver">Ver</a>
-                  <form method="POST" action={`/api/app/horario-toggle`} style="display:inline">
+
+                  <form method="POST" action="/api/app/horario-toggle" style="display:inline">
                     <input type="hidden" name="id" value={h.id} />
                     <input type="hidden" name="disponible" value={h.disponible ? 'false' : 'true'} />
                     <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
@@ -94,6 +104,19 @@ try {
                       {h.disponible ? 'Cerrar' : 'Abrir'}
                     </button>
                   </form>
+
+                  {(h.cupoOcupado || 0) === 0 ? (
+                    <form method="POST" action="/api/app/horario-delete" style="display:inline"
+                          onsubmit="return confirm('¿Eliminar este horario? Desaparecerá del frontend inmediatamente.')">
+                      <input type="hidden" name="id" value={h.id} />
+                      <input type="hidden" name="redirect" value={Astro.url.pathname + Astro.url.search} />
+                      <button type="submit" class="btn-eliminar">Eliminar</button>
+                    </form>
+                  ) : (
+                    <span class="btn-eliminar-disabled" title={`Tiene ${h.cupoOcupado} reservas — no se puede eliminar`}>
+                      🔒
+                    </span>
+                  )}
                 </div>
               </td>
             )}
@@ -122,6 +145,7 @@ try {
   .table td     { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
   .table tr:last-child td { border-bottom: none; }
   .table tr:hover td { background: #f9fafb; }
+  .row-cerrado td { opacity: 0.6; }
   .empty-row    { text-align: center; color: #9ca3af; padding: 2rem !important; }
   .td-hora      { font-family: monospace; font-weight: 600; }
   .td-center    { text-align: center; }
@@ -131,12 +155,17 @@ try {
   .badge        { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px; }
   .badge-abierto { background: #dcfce7; color: #166534; }
   .badge-cerrado { background: #fee2e2; color: #991b1b; }
-  .action-btns  { display: flex; gap: 0.4rem; align-items: center; }
+  .reservas-count { font-weight: 600; color: #6b7280; }
+  .has-reservas   { color: #1d4ed8; }
+  .action-btns  { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
   .btn-ver      { color: #2563eb; text-decoration: none; font-size: 0.8rem; font-weight: 500; }
   .btn-toggle   { border: none; border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
   .btn-cerrar   { background: #fee2e2; color: #991b1b; }
   .btn-cerrar:hover { background: #fecaca; }
   .btn-abrir    { background: #dcfce7; color: #166534; }
   .btn-abrir:hover  { background: #bbf7d0; }
+  .btn-eliminar { background: #1f2937; color: #fff; border: none; border-radius: 6px; padding: 0.3rem 0.65rem; font-size: 0.78rem; cursor: pointer; font-weight: 600; }
+  .btn-eliminar:hover { background: #111827; }
+  .btn-eliminar-disabled { font-size: 0.85rem; cursor: help; opacity: 0.5; }
   .table-footer { padding: 0.75rem 0; color: #6b7280; font-size: 0.85rem; }
 </style>
