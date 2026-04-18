@@ -14,71 +14,61 @@ let errorMsg   = '';
 if (Astro.request.method === 'POST' && canEdit) {
   const form   = await Astro.request.formData();
   const action = form.get('_action') as string;
-
   try {
     if (action === 'create') {
       const body = {
-        fechaInicio: form.get('fechaInicio'),
-        fechaFin:    form.get('fechaFin'),
-        lunes:       form.get('lunes') === 'on',
-        martes:      form.get('martes') === 'on',
-        miercoles:   form.get('miercoles') === 'on',
-        jueves:      form.get('jueves') === 'on',
-        viernes:     form.get('viernes') === 'on',
-        sabado:      form.get('sabado') === 'on',
-        domingo:     form.get('domingo') === 'on',
-        horarios:    form.get('horarios'),
-        cupoMaximo:  form.get('cupoMaximo'),
-        idioma:      form.get('idioma'),
-        tour_id:     form.get('tour_id'),
+        fechaInicio:  form.get('fechaInicio'),
+        fechaFin:     form.get('fechaFin'),
+        lunes:        form.get('lunes')    === 'on',
+        martes:       form.get('martes')   === 'on',
+        miercoles:    form.get('miercoles')=== 'on',
+        jueves:       form.get('jueves')   === 'on',
+        viernes:      form.get('viernes')  === 'on',
+        sabado:       form.get('sabado')   === 'on',
+        domingo:      form.get('domingo')  === 'on',
+        horarios:     form.get('horarios'),
+        cupoMaximo:   form.get('cupoMaximo'),
+        idioma:       form.get('idioma'),
+        tour_id:      form.get('tour_id'),
       };
-      await crmFetch('/recurrencias', user, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-      successMsg = 'Recurrencia creada correctamente.';
+      await crmFetch('/recurrencias', user, { method: 'POST', body: JSON.stringify(body) });
+      successMsg = '✅ Recurrencia creada. Los horarios se generarán automáticamente.';
     }
-
     if (action === 'generar') {
       const recId = form.get('recurrencia_id');
       const res   = await crmFetch<any>(`/recurrencias/${recId}/generar`, user, { method: 'POST' });
-      successMsg  = `Horarios generados: ${res.generados} nuevos, ${res.saltados} ya existían.`;
+      successMsg  = `✅ Generados ${res.generados} horarios nuevos. ${res.saltados} ya existían (no duplicados).`;
     }
-
     if (action === 'delete') {
-      const recId = form.get('recurrencia_id');
-      await crmFetch(`/recurrencias/${recId}`, user, { method: 'DELETE' });
-      successMsg = 'Recurrencia eliminada.';
+      await crmFetch(`/recurrencias/${form.get('recurrencia_id')}`, user, { method: 'DELETE' });
+      successMsg = '🗑️ Recurrencia eliminada. Los horarios generados anteriormente se mantienen.';
     }
-
     if (action === 'toggle') {
       const recId  = form.get('recurrencia_id');
       const activo = form.get('activo') === 'true';
       await crmFetch(`/recurrencias/${recId}`, user, {
-        method: 'PATCH',
-        body: JSON.stringify({ activo }),
+        method: 'PATCH', body: JSON.stringify({ activo }),
       });
-      successMsg = activo ? 'Recurrencia activada.' : 'Recurrencia desactivada.';
+      successMsg = activo ? '✅ Recurrencia activada.' : '⏸️ Recurrencia desactivada.';
     }
   } catch (e: any) {
-    errorMsg = 'Error: ' + (e.message ?? 'desconocido');
+    errorMsg = '❌ Error: ' + (e.message ?? 'desconocido');
   }
 }
 
-// Cargar datos
 let recurrencias: any[] = [];
 let tours: any[]        = [];
 
 try {
   const [recRes, tourRes] = await Promise.all([
     crmFetch<any>('/recurrencias', user),
-    fetch(`${import.meta.env.STRAPI_URL}/api/tours?fields[0]=titulo&fields[1]=ciudad&fields[2]=tipo_tour&pagination[pageSize]=50&locale=es`, {
+    fetch(`${import.meta.env.STRAPI_URL}/api/tours?locale=es&fields[0]=titulo&fields[1]=ciudad&fields[2]=tipo_tour&pagination[pageSize]=50`, {
       headers: { Authorization: `Bearer ${user.strapiToken}` },
-    }).then(r => r.json()),
+    }).then(r => r.json()).then(r => r.data ?? []),
   ]);
   recurrencias = recRes.data ?? [];
-  tours        = tourRes.data ?? [];
-} catch (e) {
+  tours        = tourRes;
+} catch (e: any) {
   errorMsg = 'Error cargando datos.';
 }
 
@@ -87,6 +77,14 @@ const DIAS_LABEL: Record<string,string> = {
   lunes:'Lun', martes:'Mar', miercoles:'Mié',
   jueves:'Jue', viernes:'Vie', sabado:'Sáb', domingo:'Dom',
 };
+
+// Agrupar recurrencias por tour para mejor visualización
+const porTour = new Map<string, any[]>();
+for (const r of recurrencias) {
+  const key = r.tour?.titulo ?? 'Sin tour';
+  if (!porTour.has(key)) porTour.set(key, []);
+  porTour.get(key)!.push(r);
+}
 ---
 
 <AppShell title="Recurrencias" user={user}>
@@ -95,91 +93,101 @@ const DIAS_LABEL: Record<string,string> = {
       <a href="/app/horarios">← Horarios</a>
       <span>Recurrencias</span>
     </div>
+    <a href="/app/horarios" class="btn-outline">Ver horarios generados →</a>
   </div>
 
-  {successMsg && <div class="alert-success">{successMsg}</div>}
-  {errorMsg   && <div class="alert-error">{errorMsg}</div>}
-
-  <!-- Lista de recurrencias existentes -->
-  <h2 class="section-title">Recurrencias activas ({recurrencias.length})</h2>
-
-  {recurrencias.length === 0 && (
-    <div class="empty-state">No hay recurrencias. Crea una abajo.</div>
+  {successMsg && (
+    <div class="alert-success" id="msg-success">
+      {successMsg}
+    </div>
+  )}
+  {errorMsg && (
+    <div class="alert-error">{errorMsg}</div>
   )}
 
-  <div class="rec-list">
-    {recurrencias.map((r: any) => {
-      const diasActivos = DIAS.filter(d => r[d]);
-      return (
-        <div class:list={['rec-card', { 'rec-inactiva': !r.activo }]}>
-          <div class="rec-header">
-            <div>
-              <span class="rec-tour">{r.tour?.titulo ?? '—'}</span>
-              <span class="rec-ciudad">{r.tour?.ciudad}</span>
-            </div>
-            <div class="rec-badges">
-              <span class={`badge-idioma idioma-${r.idioma}`}>{r.idioma?.toUpperCase()}</span>
-              <span class:list={['badge-estado', r.activo ? 'activo' : 'inactivo']}>
-                {r.activo ? 'Activa' : 'Inactiva'}
-              </span>
-            </div>
-          </div>
-
-          <div class="rec-body">
-            <div class="rec-fechas">
-              <span>{r.fechaInicio}</span>
-              <span class="arrow">→</span>
-              <span>{r.fechaFin}</span>
-            </div>
-            <div class="rec-dias">
-              {DIAS.map(d => (
-                <span class:list={['dia-chip', { 'dia-on': r[d] }]}>
-                  {DIAS_LABEL[d]}
-                </span>
-              ))}
-            </div>
-            <div class="rec-horas">
-              <span class="rec-label">Horas:</span>
-              {r.horarios.split(',').map((h: string) => (
-                <span class="hora-chip">{h.trim()}</span>
-              ))}
-            </div>
-            <div class="rec-cupo">
-              <span class="rec-label">Cupo:</span>
-              <strong>{r.cupoMaximo}</strong> personas
-            </div>
-          </div>
-
-          <div class="rec-actions">
-            <form method="POST">
-              <input type="hidden" name="_action" value="generar" />
-              <input type="hidden" name="recurrencia_id" value={r.id} />
-              <button type="submit" class="btn-generar">
-                Generar horarios
-              </button>
-            </form>
-            <form method="POST">
-              <input type="hidden" name="_action" value="toggle" />
-              <input type="hidden" name="recurrencia_id" value={r.id} />
-              <input type="hidden" name="activo" value={r.activo ? 'false' : 'true'} />
-              <button type="submit" class:list={['btn-toggle', r.activo ? 'btn-desactivar' : 'btn-activar']}>
-                {r.activo ? 'Desactivar' : 'Activar'}
-              </button>
-            </form>
-            <form method="POST" onsubmit="return confirm('¿Eliminar esta recurrencia? Los horarios generados NO se borran.')">
-              <input type="hidden" name="_action" value="delete" />
-              <input type="hidden" name="recurrencia_id" value={r.id} />
-              <button type="submit" class="btn-delete">Eliminar</button>
-            </form>
-          </div>
-        </div>
-      );
-    })}
+  <!-- Info sobre cómo funciona -->
+  <div class="info-box">
+    <strong>¿Cómo funcionan las recurrencias?</strong>
+    Cada recurrencia genera horarios automáticamente para un rango de fechas.
+    Puedes tener múltiples recurrencias por tour — por ejemplo una para todo el año y otra
+    para un mes específico con horario diferente. Los horarios ya generados nunca se eliminan al desactivar una recurrencia.
   </div>
+
+  <!-- Recurrencias agrupadas por tour -->
+  {Array.from(porTour.entries()).map(([tourNombre, recs]) => (
+    <div class="tour-group">
+      <h2 class="tour-group-title">{tourNombre}</h2>
+      <div class="rec-list">
+        {recs.map((r: any) => {
+          const diasActivos = DIAS.filter(d => r[d]);
+          return (
+            <div class:list={['rec-card', { 'rec-inactiva': !r.activo }]}>
+              <div class="rec-header">
+                <div class="rec-rango">
+                  <span class="rec-fecha">{r.fechaInicio}</span>
+                  <span class="arrow">→</span>
+                  <span class="rec-fecha">{r.fechaFin}</span>
+                </div>
+                <div class="rec-badges">
+                  <span class={`badge-idioma idioma-${r.idioma}`}>{r.idioma?.toUpperCase()}</span>
+                  <span class:list={['badge-estado', r.activo ? 'activo' : 'inactivo']}>
+                    {r.activo ? 'Activa' : 'Inactiva'}
+                  </span>
+                </div>
+              </div>
+
+              <div class="rec-body">
+                <div class="rec-dias">
+                  {DIAS.map(d => (
+                    <span class:list={['dia-chip', { 'dia-on': r[d] }]}>{DIAS_LABEL[d]}</span>
+                  ))}
+                </div>
+                <div class="rec-detalle">
+                  <div class="rec-horas">
+                    <span class="rec-label">Horas:</span>
+                    {r.horarios.split(',').map((h: string) => (
+                      <span class="hora-chip">{h.trim()}</span>
+                    ))}
+                  </div>
+                  <div class="rec-cupo">
+                    <span class="rec-label">Cupo:</span>
+                    <strong>{r.cupoMaximo}</strong> personas
+                  </div>
+                </div>
+              </div>
+
+              <div class="rec-actions">
+                <form method="POST">
+                  <input type="hidden" name="_action" value="generar" />
+                  <input type="hidden" name="recurrencia_id" value={r.id} />
+                  <button type="submit" class="btn-generar" title="Genera los horarios del rango de fechas. No crea duplicados.">
+                    ⟳ Generar horarios
+                  </button>
+                </form>
+                <form method="POST">
+                  <input type="hidden" name="_action" value="toggle" />
+                  <input type="hidden" name="recurrencia_id" value={r.id} />
+                  <input type="hidden" name="activo" value={r.activo ? 'false' : 'true'} />
+                  <button type="submit" class:list={['btn-toggle', r.activo ? 'btn-desactivar' : 'btn-activar']}>
+                    {r.activo ? '⏸ Desactivar' : '▶ Activar'}
+                  </button>
+                </form>
+                <form method="POST" onsubmit="return confirm('¿Eliminar esta recurrencia? Los horarios ya generados NO se borran.')">
+                  <input type="hidden" name="_action" value="delete" />
+                  <input type="hidden" name="recurrencia_id" value={r.id} />
+                  <button type="submit" class="btn-delete">🗑 Eliminar</button>
+                </form>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ))}
 
   <!-- Formulario crear nueva recurrencia -->
   {canEdit && (
-    <div class="create-section">
+    <div class="create-section" id="nueva-recurrencia">
       <h2 class="section-title">Nueva recurrencia</h2>
       <div class="create-card">
         <form method="POST" class="create-form">
@@ -224,7 +232,7 @@ const DIAS_LABEL: Record<string,string> = {
           </div>
 
           <div class="form-field">
-            <label>Días de la semana *</label>
+            <label>Días activos *</label>
             <div class="dias-selector">
               {DIAS.map(d => (
                 <label class="dia-toggle">
@@ -238,32 +246,50 @@ const DIAS_LABEL: Record<string,string> = {
           <div class="form-field">
             <label>Horas (separadas por coma) *</label>
             <input type="text" name="horarios" placeholder="10:00, 14:00, 17:00" required />
-            <span class="field-hint">Ejemplo: 10:00, 14:00 — se crearán horarios para cada hora en cada día seleccionado</span>
+            <span class="field-hint">
+              Ejemplo: <code>10:00, 14:00</code> — se crea un horario por cada hora en cada día activo del rango de fechas.
+              No se crean duplicados si el horario ya existe.
+            </span>
           </div>
 
-          <button type="submit" class="btn-create">Crear recurrencia</button>
+          <div class="form-actions">
+            <button type="submit" class="btn-create">Crear recurrencia y generar horarios</button>
+            <a href="#nueva-recurrencia" class="btn-ghost">Cancelar</a>
+          </div>
         </form>
       </div>
     </div>
   )}
 </AppShell>
 
+<script>
+  // Scroll automático al mensaje de éxito/error
+  const msg = document.getElementById('msg-success');
+  if (msg) {
+    msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => { msg.style.opacity = '0.5'; }, 4000);
+  }
+</script>
+
 <style>
-  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+  .page-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
   .breadcrumb { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; }
   .breadcrumb a { color: #2563eb; text-decoration: none; }
   .breadcrumb span { color: #6b7280; }
-  .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
-  .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem; }
-  .section-title { font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 1rem; }
-  .empty-state { background: #fff; border: 1px dashed #d1d5db; border-radius: 10px; padding: 2rem; text-align: center; color: #9ca3af; font-size: 0.875rem; margin-bottom: 2rem; }
-  .rec-list { display: flex; flex-direction: column; gap: 0.875rem; margin-bottom: 2.5rem; }
-  .rec-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.25rem; }
-  .rec-inactiva { opacity: 0.6; border-style: dashed; }
-  .rec-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.875rem; }
-  .rec-tour { font-weight: 600; color: #111827; font-size: 0.95rem; display: block; }
-  .rec-ciudad { font-size: 0.78rem; color: #9ca3af; text-transform: capitalize; }
-  .rec-badges { display: flex; gap: 0.4rem; align-items: center; }
+  .btn-outline { background: #fff; color: #374151; border: 1px solid #d1d5db; border-radius: 7px; padding: 0.45rem 0.875rem; font-size: 0.85rem; text-decoration: none; }
+  .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.9rem; font-weight: 500; transition: opacity 1s; }
+  .alert-error   { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.9rem; }
+  .info-box { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 0.875rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.6; }
+  .tour-group { margin-bottom: 2rem; }
+  .tour-group-title { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; }
+  .rec-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .rec-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.1rem 1.25rem; }
+  .rec-inactiva { opacity: 0.55; border-style: dashed; }
+  .rec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+  .rec-rango { display: flex; align-items: center; gap: 0.5rem; }
+  .rec-fecha { font-size: 0.875rem; font-weight: 600; color: #1f2937; font-family: monospace; }
+  .arrow { color: #9ca3af; }
+  .rec-badges { display: flex; gap: 0.4rem; }
   .badge-idioma { font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; }
   .idioma-es { background: #fef9c3; color: #854d0e; }
   .idioma-en { background: #eff6ff; color: #1e40af; }
@@ -272,12 +298,11 @@ const DIAS_LABEL: Record<string,string> = {
   .badge-estado { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 999px; }
   .activo   { background: #dcfce7; color: #166534; }
   .inactivo { background: #f3f4f6; color: #6b7280; }
-  .rec-body { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-  .rec-fechas { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #374151; }
-  .arrow { color: #9ca3af; }
-  .rec-dias { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .rec-body { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.875rem; }
+  .rec-dias { display: flex; gap: 0.25rem; flex-wrap: wrap; }
   .dia-chip { font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.45rem; border-radius: 4px; background: #f3f4f6; color: #9ca3af; }
   .dia-on   { background: #2563eb; color: #fff; }
+  .rec-detalle { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
   .rec-horas, .rec-cupo { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
   .rec-label { font-size: 0.78rem; color: #6b7280; }
   .hora-chip { font-size: 0.78rem; font-weight: 600; background: #f3f4f6; color: #374151; padding: 0.15rem 0.45rem; border-radius: 4px; font-family: monospace; }
@@ -289,8 +314,7 @@ const DIAS_LABEL: Record<string,string> = {
   .btn-desactivar { background: #f3f4f6; color: #374151; }
   .btn-activar    { background: #dcfce7; color: #166534; }
   .btn-delete   { background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; padding: 0.4rem 0.875rem; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-  .btn-delete:hover { background: #fecaca; }
-  .create-section { margin-top: 1rem; }
+  .section-title { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 1rem; }
   .create-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.5rem; }
   .create-form { display: flex; flex-direction: column; gap: 1rem; }
   .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
@@ -302,16 +326,15 @@ const DIAS_LABEL: Record<string,string> = {
     font-size: 0.875rem; color: #111827; background: #fff; outline: none;
   }
   .form-field select:focus, .form-field input:focus { border-color: #3b82f6; }
-  .field-hint { font-size: 0.75rem; color: #9ca3af; }
+  .field-hint { font-size: 0.75rem; color: #9ca3af; line-height: 1.5; }
+  .field-hint code { background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 3px; font-family: monospace; }
   .dias-selector { display: flex; gap: 0.4rem; flex-wrap: wrap; }
   .dia-toggle { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; cursor: pointer; }
   .dia-toggle input { display: none; }
-  .dia-toggle span {
-    font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.6rem;
-    border-radius: 6px; background: #f3f4f6; color: #6b7280;
-    border: 2px solid transparent; transition: all 0.1s; user-select: none;
-  }
+  .dia-toggle span { font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.6rem; border-radius: 6px; background: #f3f4f6; color: #6b7280; border: 2px solid transparent; transition: all 0.1s; user-select: none; }
   .dia-toggle input:checked + span { background: #2563eb; color: #fff; border-color: #1d4ed8; }
-  .btn-create { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; align-self: flex-start; }
+  .form-actions { display: flex; gap: 0.75rem; align-items: center; }
+  .btn-create { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
   .btn-create:hover { background: #1d4ed8; }
+  .btn-ghost { color: #6b7280; font-size: 0.875rem; text-decoration: none; }
 </style>
