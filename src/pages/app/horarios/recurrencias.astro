@@ -5,6 +5,8 @@ import { crmFetch } from '../../../lib/app/apiClient';
 import { can } from '../../../lib/app/permissions';
 
 const user    = Astro.locals.user;
+const p       = Astro.url.searchParams;
+const idiomaRec = p.get('idioma_rec') || 'es';
 if (!can(user.role, 'recurrencias', 'read')) return Astro.redirect('/app');
 const canEdit = can(user.role, 'recurrencias', 'write');
 
@@ -60,14 +62,12 @@ let recurrencias: any[] = [];
 let tours: any[]        = [];
 
 try {
-  const [recRes, tourRes] = await Promise.all([
+  const [recRes, tourResRaw] = await Promise.all([
     crmFetch<any>('/recurrencias', user),
-    fetch(`${import.meta.env.STRAPI_URL}/api/tours?locale=es&fields[0]=titulo&fields[1]=ciudad&fields[2]=tipo_tour&pagination[pageSize]=50`, {
-      headers: { Authorization: `Bearer ${user.strapiToken}` },
-    }).then(r => r.json()).then(r => r.data ?? []),
+    crmFetch(`/tours?locale=${idiomaRec}`, user),
   ]);
   recurrencias = recRes.data ?? [];
-  tours        = tourRes;
+  tours        = (tourResRaw as any).data ?? [];
 } catch (e: any) {
   errorMsg = 'Error cargando datos.';
 }
@@ -195,24 +195,42 @@ for (const r of recurrencias) {
 
           <div class="form-row">
             <div class="form-field">
-              <label>Tour *</label>
-              <select name="tour_id" required>
-                <option value="">Selecciona un tour</option>
-                {tours.map((t: any) => (
-                  <option value={t.id}>
-                    {t.titulo ?? t.attributes?.titulo} — {t.ciudad ?? t.attributes?.ciudad}
-                  </option>
-                ))}
-              </select>
+             <div class="form-field" style="grid-column: 1/-1;">
+               <label>Tour *</label>
+               <input type="hidden" name="tour_id" id="rec_tour_id" value="" />
+               <div class="tour-cards-rec">
+                 {tours.length === 0 ? (
+                   <div class="no-tours-rec">No hay tours en {idiomaRec.toUpperCase()}. Créalos primero en Strapi.</div>
+                 ) : tours.map((t: any) => (
+                   <label class="tour-card-rec">
+                     <input type="radio" name="tour_sel" value={t.id}
+                            onchange="document.getElementById('rec_tour_id').value=this.value" />
+                     <div class="tcr-inner">
+                       <div class="tcr-tipo">{t.tipo_tour === 'free' ? '🎯 Free Tour' : t.tipo_tour === 'privado' ? '👤 Privado' : '⭐ Especial'}</div>
+                       <div class="tcr-nombre">{(t.titulo ?? '').split('–')[0].trim()}</div>
+                       <div class="tcr-ciudad">📍 {t.ciudad ? t.ciudad.charAt(0).toUpperCase() + t.ciudad.slice(1) : ''}</div>
+                     </div>
+                   </label>
+                 ))}
+               </div>
+             </div>
             </div>
             <div class="form-field">
               <label>Idioma *</label>
-              <select name="idioma" required>
-                <option value="es">Español</option>
-                <option value="en">English</option>
-                <option value="it">Italiano</option>
-                <option value="fr">Français</option>
-              </select>
+              <input type="hidden" name="idioma" value={idiomaRec} />
+              <div class="idioma-btns-rec">
+                {[
+                  {v:"es",l:"Español",f:"🇪🇸"},
+                  {v:"en",l:"English",f:"🇬🇧"},
+                  {v:"it",l:"Italiano",f:"🇮🇹"},
+                  {v:"fr",l:"Français",f:"🇫🇷"},
+                ].map(i => (
+                  <a href={`/app/horarios/recurrencias?idioma_rec=${i.v}`}
+                     class:list={["idioma-btn-rec", { "idioma-active-rec": idiomaRec === i.v }]}>
+                    <span>{i.f}</span> {i.l}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -337,4 +355,18 @@ for (const r of recurrencias) {
   .btn-create { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
   .btn-create:hover { background: #1d4ed8; }
   .btn-ghost { color: #6b7280; font-size: 0.875rem; text-decoration: none; }
+  .idioma-btns-rec { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .idioma-btn-rec { display: flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.875rem; border: 2px solid #e5e7eb; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 500; color: #374151; background: #fff; transition: all 0.15s; }
+  .idioma-btn-rec:hover { border-color: #93c5fd; background: #f0f9ff; }
+  .idioma-active-rec { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; font-weight: 700; }
+  .tour-cards-rec { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; }
+  .tour-card-rec { cursor: pointer; }
+  .tour-card-rec input[type="radio"] { display: none; }
+  .tcr-inner { border: 2px solid #e5e7eb; border-radius: 10px; padding: 0.875rem; background: #fff; transition: all 0.15s; display: flex; flex-direction: column; gap: 0.25rem; }
+  .tour-card-rec:hover .tcr-inner { border-color: #93c5fd; background: #f0f9ff; }
+  .tour-card-rec input:checked + .tcr-inner { border-color: #2563eb; background: #eff6ff; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+  .tcr-tipo { font-size: 0.7rem; font-weight: 700; color: #6b7280; text-transform: uppercase; }
+  .tcr-nombre { font-size: 0.875rem; font-weight: 700; color: #111827; line-height: 1.3; }
+  .tcr-ciudad { font-size: 0.75rem; color: #6b7280; }
+  .no-tours-rec { background: #fef9c3; border: 1px solid #fde68a; color: #854d0e; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.875rem; }
 </style>
