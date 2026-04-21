@@ -93,6 +93,7 @@ async function getHorariosByTourId(id: number | string): Promise<Horario[]> {
   params.set("populate", "*");
   params.set("filters[tour][id][$eq]", String(id));
   params.set("filters[fecha][$gte]", todayISO());
+  params.set("filters[disponible][$eq]", "true");
   params.set("pagination[limit]", "100");
   params.set("sort[0]", "fecha:asc");
   params.set("sort[1]", "hora:asc");

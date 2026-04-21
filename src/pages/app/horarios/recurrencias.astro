@@ -96,96 +96,10 @@ for (const r of recurrencias) {
     <a href="/app/horarios" class="btn-outline">Ver horarios generados →</a>
   </div>
 
-  {successMsg && (
-    <div class="alert-success" id="msg-success">
-      {successMsg}
-    </div>
-  )}
-  {errorMsg && (
-    <div class="alert-error">{errorMsg}</div>
-  )}
+  {successMsg && <div class="alert-success" id="msg-success">{successMsg}</div>}
+  {errorMsg   && <div class="alert-error">{errorMsg}</div>}
 
-  <!-- Info sobre cómo funciona -->
-  <div class="info-box">
-    <strong>¿Cómo funcionan las recurrencias?</strong>
-    Cada recurrencia genera horarios automáticamente para un rango de fechas.
-    Puedes tener múltiples recurrencias por tour — por ejemplo una para todo el año y otra
-    para un mes específico con horario diferente. Los horarios ya generados nunca se eliminan al desactivar una recurrencia.
-  </div>
-
-  <!-- Recurrencias agrupadas por tour -->
-  {Array.from(porTour.entries()).map(([tourNombre, recs]) => (
-    <div class="tour-group">
-      <h2 class="tour-group-title">{tourNombre}</h2>
-      <div class="rec-list">
-        {recs.map((r: any) => {
-          const diasActivos = DIAS.filter(d => r[d]);
-          return (
-            <div class:list={['rec-card', { 'rec-inactiva': !r.activo }]}>
-              <div class="rec-header">
-                <div class="rec-rango">
-                  <span class="rec-fecha">{r.fechaInicio}</span>
-                  <span class="arrow">→</span>
-                  <span class="rec-fecha">{r.fechaFin}</span>
-                </div>
-                <div class="rec-badges">
-                  <span class={`badge-idioma idioma-${r.idioma}`}>{r.idioma?.toUpperCase()}</span>
-                  <span class:list={['badge-estado', r.activo ? 'activo' : 'inactivo']}>
-                    {r.activo ? 'Activa' : 'Inactiva'}
-                  </span>
-                </div>
-              </div>
-
-              <div class="rec-body">
-                <div class="rec-dias">
-                  {DIAS.map(d => (
-                    <span class:list={['dia-chip', { 'dia-on': r[d] }]}>{DIAS_LABEL[d]}</span>
-                  ))}
-                </div>
-                <div class="rec-detalle">
-                  <div class="rec-horas">
-                    <span class="rec-label">Horas:</span>
-                    {r.horarios.split(',').map((h: string) => (
-                      <span class="hora-chip">{h.trim()}</span>
-                    ))}
-                  </div>
-                  <div class="rec-cupo">
-                    <span class="rec-label">Cupo:</span>
-                    <strong>{r.cupoMaximo}</strong> personas
-                  </div>
-                </div>
-              </div>
-
-              <div class="rec-actions">
-                <form method="POST">
-                  <input type="hidden" name="_action" value="generar" />
-                  <input type="hidden" name="recurrencia_id" value={r.id} />
-                  <button type="submit" class="btn-generar" title="Genera los horarios del rango de fechas. No crea duplicados.">
-                    ⟳ Generar horarios
-                  </button>
-                </form>
-                <form method="POST">
-                  <input type="hidden" name="_action" value="toggle" />
-                  <input type="hidden" name="recurrencia_id" value={r.id} />
-                  <input type="hidden" name="activo" value={r.activo ? 'false' : 'true'} />
-                  <button type="submit" class:list={['btn-toggle', r.activo ? 'btn-desactivar' : 'btn-activar']}>
-                    {r.activo ? '⏸ Desactivar' : '▶ Activar'}
-                  </button>
-                </form>
-                <form method="POST" onsubmit="return confirm('¿Eliminar esta recurrencia? Los horarios ya generados NO se borran.')">
-                  <input type="hidden" name="_action" value="delete" />
-                  <input type="hidden" name="recurrencia_id" value={r.id} />
-                  <button type="submit" class="btn-delete">🗑 Eliminar</button>
-                </form>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  ))}
-
-  <!-- Formulario crear nueva recurrencia -->
+  <!-- Nueva recurrencia ARRIBA -->
   {canEdit && (
     <div class="create-section" id="nueva-recurrencia">
       <h2 class="section-title">Nueva recurrencia</h2>
@@ -193,44 +107,41 @@ for (const r of recurrencias) {
         <form method="POST" class="create-form">
           <input type="hidden" name="_action" value="create" />
 
-          <div class="form-row">
-            <div class="form-field">
-             <div class="form-field" style="grid-column: 1/-1;">
-               <label>Tour *</label>
-               <input type="hidden" name="tour_id" id="rec_tour_id" value="" />
-               <div class="tour-cards-rec">
-                 {tours.length === 0 ? (
-                   <div class="no-tours-rec">No hay tours en {idiomaRec.toUpperCase()}. Créalos primero en Strapi.</div>
-                 ) : tours.map((t: any) => (
-                   <label class="tour-card-rec">
-                     <input type="radio" name="tour_sel" value={t.id}
-                            onchange="document.getElementById('rec_tour_id').value=this.value" />
-                     <div class="tcr-inner">
-                       <div class="tcr-tipo">{t.tipo_tour === 'free' ? '🎯 Free Tour' : t.tipo_tour === 'privado' ? '👤 Privado' : '⭐ Especial'}</div>
-                       <div class="tcr-nombre">{(t.titulo ?? '').split('–')[0].trim()}</div>
-                       <div class="tcr-ciudad">📍 {t.ciudad ? t.ciudad.charAt(0).toUpperCase() + t.ciudad.slice(1) : ''}</div>
-                     </div>
-                   </label>
-                 ))}
-               </div>
-             </div>
+          <div class="form-field" style="margin-bottom:0.5rem;">
+            <label>Idioma del tour *</label>
+            <input type="hidden" name="idioma" value={idiomaRec} />
+            <div class="idioma-btns-rec">
+              {[
+                {v:"es",l:"Español",f:"🇪🇸"},
+                {v:"en",l:"English",f:"🇬🇧"},
+                {v:"it",l:"Italiano",f:"🇮🇹"},
+                {v:"fr",l:"Français",f:"🇫🇷"},
+              ].map(i => (
+                <a href={`/app/horarios/recurrencias?idioma_rec=${i.v}`}
+                   class:list={["idioma-btn-rec", { "idioma-active-rec": idiomaRec === i.v }]}>
+                  <span>{i.f}</span> {i.l}
+                </a>
+              ))}
             </div>
-            <div class="form-field">
-              <label>Idioma *</label>
-              <input type="hidden" name="idioma" value={idiomaRec} />
-              <div class="idioma-btns-rec">
-                {[
-                  {v:"es",l:"Español",f:"🇪🇸"},
-                  {v:"en",l:"English",f:"🇬🇧"},
-                  {v:"it",l:"Italiano",f:"🇮🇹"},
-                  {v:"fr",l:"Français",f:"🇫🇷"},
-                ].map(i => (
-                  <a href={`/app/horarios/recurrencias?idioma_rec=${i.v}`}
-                     class:list={["idioma-btn-rec", { "idioma-active-rec": idiomaRec === i.v }]}>
-                    <span>{i.f}</span> {i.l}
-                  </a>
-                ))}
-              </div>
+          </div>
+
+          <div class="form-field" style="margin-bottom:0.5rem;">
+            <label>Tour ({idiomaRec.toUpperCase()}) *</label>
+            <input type="hidden" name="tour_id" id="rec_tour_id" value="" />
+            <div class="tour-cards-rec">
+              {tours.length === 0 ? (
+                <div class="no-tours-rec">No hay tours en {idiomaRec.toUpperCase()}. Créalos primero en Strapi.</div>
+              ) : tours.map((t: any) => (
+                <label class="tour-card-rec">
+                  <input type="radio" name="tour_sel" value={t.id}
+                         onchange="document.getElementById('rec_tour_id').value=this.value" />
+                  <div class="tcr-inner">
+                    <div class="tcr-tipo">{t.tipo_tour === 'free' ? '🎯 Free Tour' : t.tipo_tour === 'privado' ? '👤 Privado' : '⭐ Especial'}</div>
+                    <div class="tcr-nombre">{(t.titulo ?? '').split('–')[0].trim()}</div>
+                    <div class="tcr-ciudad">📍 {t.ciudad ? t.ciudad.charAt(0).toUpperCase() + t.ciudad.slice(1) : ''}</div>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
 
@@ -264,20 +175,96 @@ for (const r of recurrencias) {
           <div class="form-field">
             <label>Horas (separadas por coma) *</label>
             <input type="text" name="horarios" placeholder="10:00, 14:00, 17:00" required />
-            <span class="field-hint">
-              Ejemplo: <code>10:00, 14:00</code> — se crea un horario por cada hora en cada día activo del rango de fechas.
-              No se crean duplicados si el horario ya existe.
-            </span>
+            <span class="field-hint">Ejemplo: <code>10:00, 14:00</code> — un horario por hora y día activo. Sin duplicados.</span>
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn-create">Crear recurrencia y generar horarios</button>
-            <a href="#nueva-recurrencia" class="btn-ghost">Cancelar</a>
+            <button type="submit" class="btn-create"
+                    onclick="if(!document.getElementById('rec_tour_id').value){alert('Selecciona un tour');return false}">
+              Crear recurrencia y generar horarios
+            </button>
           </div>
         </form>
       </div>
     </div>
   )}
+
+  <hr style="border:none;border-top:2px solid #e5e7eb;margin:1.75rem 0;" />
+
+  <!-- Lista de recurrencias existentes -->
+  <div class="info-box">
+    <strong>¿Cómo funcionan las recurrencias?</strong>
+    Cada recurrencia genera horarios automáticamente para un rango de fechas.
+    Puedes tener múltiples recurrencias por tour. Los horarios ya generados nunca se eliminan al desactivar una recurrencia.
+  </div>
+
+  {Array.from(porTour.entries()).map(([tourNombre, recs]) => (
+    <div class="tour-group">
+      <h2 class="tour-group-title">{tourNombre}</h2>
+      <div class="rec-list">
+        {recs.map((r: any) => {
+          const diasActivos = DIAS.filter(d => r[d]);
+          return (
+            <div class:list={["rec-card", { "rec-inactiva": !r.activo }]}>
+              <div class="rec-header">
+                <div class="rec-rango">
+                  <span class="rec-fecha">{r.fechaInicio}</span>
+                  <span class="arrow">→</span>
+                  <span class="rec-fecha">{r.fechaFin}</span>
+                </div>
+                <div class="rec-badges">
+                  <span class={`badge-idioma idioma-${r.idioma}`}>{r.idioma?.toUpperCase()}</span>
+                  <span class:list={["badge-estado", r.activo ? "activo" : "inactivo"]}>
+                    {r.activo ? "Activa" : "Inactiva"}
+                  </span>
+                </div>
+              </div>
+              <div class="rec-body">
+                <div class="rec-dias">
+                  {DIAS.map(d => (
+                    <span class:list={["dia-chip", { "dia-on": r[d] }]}>{DIAS_LABEL[d]}</span>
+                  ))}
+                </div>
+                <div class="rec-detalle">
+                  <div class="rec-horas">
+                    <span class="rec-label">Horas:</span>
+                    {(r.horarios ?? '').split(",").map((h: string) => (
+                      <span class="hora-chip">{h.trim()}</span>
+                    ))}
+                  </div>
+                  <div class="rec-cupo">
+                    <span class="rec-label">Cupo:</span>
+                    <strong>{r.cupoMaximo}</strong> personas
+                  </div>
+                </div>
+              </div>
+              <div class="rec-actions">
+                <form method="POST">
+                  <input type="hidden" name="_action" value="generar" />
+                  <input type="hidden" name="recurrencia_id" value={r.id} />
+                  <button type="submit" class="btn-generar">⟳ Generar horarios</button>
+                </form>
+                <form method="POST">
+                  <input type="hidden" name="_action" value="toggle" />
+                  <input type="hidden" name="recurrencia_id" value={r.id} />
+                  <input type="hidden" name="activo" value={r.activo ? "false" : "true"} />
+                  <button type="submit" class:list={["btn-toggle", r.activo ? "btn-desactivar" : "btn-activar"]}>
+                    {r.activo ? "⏸ Desactivar" : "▶ Activar"}
+                  </button>
+                </form>
+                <form method="POST" onsubmit="return confirm('¿Eliminar esta recurrencia? Los horarios futuros sin reservas se borrarán.')">
+                  <input type="hidden" name="_action" value="delete" />
+                  <input type="hidden" name="recurrencia_id" value={r.id} />
+                  <button type="submit" class="btn-delete">🗑 Eliminar</button>
+                </form>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ))}
+
 </AppShell>
 
 <script>
