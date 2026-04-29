@@ -173,46 +173,31 @@ const stars = summary?.stars || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
 
           <!-- RIGHT: REVIEWS -->
           <div class="lg:col-span-7">
-            <div class="grid gap-6">
-              {reviews.map((r) => (
-                <article class="border border-gray-200 rounded-2xl p-6 shadow-sm">
-
-                  <div class="flex justify-between items-start">
-                    <div>
-                      <div class="font-semibold text-gray-900">
-                        {r.nombre || t.verified}
-                      </div>
-
-                      <div class="text-sm text-gray-600 mt-1">
+            <div class="grid gap-4" id="reviews-list">
+              {reviews.map((r, idx) => (
+                <article class:list={["border border-gray-200 rounded-2xl p-5 shadow-sm", idx >= 3 ? "review-extra" : ""]}>
+                  <div class="flex justify-between items-start gap-3">
+                    <div class="min-w-0">
+                      <div class="font-semibold text-gray-900">{r.nombre || t.verified}</div>
+                      <div class="text-sm text-gray-500 mt-0.5">
                         {r.pais && <span>{r.pais}</span>}
-                        {r.fecha && (
-                          <span>
-                            {" • "}
-                            {new Date(r.fecha).toLocaleDateString(
-                              safeLang === "en"
-                                ? "en-US"
-                                : safeLang === "it"
-                                ? "it-IT"
-                                : safeLang === "fr"
-                                ? "fr-FR"
-                                : "es-ES"
-                            )}
-                          </span>
-                        )}
+                        {r.fecha && <span>{" • "}{new Date(r.fecha).toLocaleDateString(safeLang === "en" ? "en-US" : safeLang === "it" ? "it-IT" : safeLang === "fr" ? "fr-FR" : "es-ES")}</span>}
                       </div>
                     </div>
-
-                    <div class="text-yellow-500">
-                      {"★".repeat(Number(r.rating || 0))}
-                    </div>
+                    <div class="text-yellow-400 flex-shrink-0">{"★".repeat(Math.min(5,Number(r.rating||0)))}</div>
                   </div>
-
-                  <p class="text-gray-800 mt-4 leading-relaxed">
-                    {r.comentario}
-                  </p>
+                  <p class="text-gray-700 mt-3 leading-relaxed text-sm md:text-base">{r.comentario}</p>
                 </article>
               ))}
             </div>
+            {reviews.length > 3 && (
+              <div class="mt-6 text-center">
+                <button id="reviews-toggle-btn"
+                  class="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-gray-900 text-gray-900 font-semibold text-sm hover:bg-gray-900 hover:text-white transition-all duration-200">
+                  {safeLang === 'en' ? `See all reviews (${reviews.length})` : safeLang === 'it' ? `Vedi tutte le recensioni (${reviews.length})` : safeLang === 'fr' ? `Voir tous les avis (${reviews.length})` : `Ver todas las reseñas (${reviews.length})`}
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
@@ -225,3 +210,25 @@ const stars = summary?.stars || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     </div>
   </div>
 </section>
+
+<style>
+.review-extra { display: none; }
+.review-extra.visible { display: block; }
+</style>
+
+<script>
+const btn = document.getElementById('reviews-toggle-btn');
+if (btn) {
+  const extras = document.querySelectorAll('.review-extra');
+  let expanded = false;
+  const moreText = btn.textContent.trim();
+  const lessText = btn.closest('[data-lang]')?.dataset.lang === 'en' ? 'See less' :
+                   btn.closest('[data-lang]')?.dataset.lang === 'it' ? 'Vedi meno' :
+                   btn.closest('[data-lang]')?.dataset.lang === 'fr' ? 'Voir moins' : 'Ver menos';
+  btn.addEventListener('click', () => {
+    expanded = !expanded;
+    extras.forEach(el => el.classList.toggle('visible', expanded));
+    btn.textContent = expanded ? lessText : moreText;
+  });
+}
+</script>

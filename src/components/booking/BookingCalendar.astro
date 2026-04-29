@@ -305,13 +305,31 @@ btn.style.scrollSnapAlign = "start";
 });
 
   renderHorarios(fecha);
+  // Scroll a horarios solo en click manual
+  if (!btn.dataset.initial) {
+    setTimeout(() => {
+      const horariosEl = document.getElementById("horariosContainer");
+      if (!horariosEl) return;
+      const panel = document.querySelector(".panel-content");
+      if (panel) {
+        const offset = horariosEl.getBoundingClientRect().top
+          - panel.getBoundingClientRect().top
+          + panel.scrollTop - 20;
+        panel.scrollTo({ top: offset, behavior: "smooth" });
+      } else {
+        horariosEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 500);
+  }
 };
 
     quickDatesContainer.appendChild(btn);
 
     if (index === 0) {
+  btn.dataset.initial = "true";
   setTimeout(() => {
     btn.click();
+    btn.dataset.initial = "";
   }, 0);
 }
   });
@@ -502,15 +520,19 @@ const todayStr = now.toLocaleDateString("sv-SE");
       window.dispatchEvent(new CustomEvent("timeSelected"));
 
       setTimeout(() => {
-  const participantSection = document.querySelector(".participant-counter");
-
-  if (participantSection) {
-    participantSection.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
+  const participantSection = document.getElementById("participantCounter") ||
+    document.querySelector(".participant-counter");
+  if (!participantSection) return;
+  const panel = document.querySelector(".panel-content");
+  if (panel) {
+    const offset = participantSection.getBoundingClientRect().top
+      - panel.getBoundingClientRect().top
+      + panel.scrollTop - 20;
+    panel.scrollTo({ top: offset, behavior: "smooth" });
+  } else {
+    participantSection.scrollIntoView({ behavior: "smooth", block: "center" });
   }
-}, 200);
+}, 350);
       
     };
 

@@ -17,88 +17,16 @@ interface Props {
   ctaLabel: string;
 }
 
-const { lang, title, subtitle, tours = [], ctaLabel } = Astro.props;
+const { lang, title, subtitle, tours = [] } = Astro.props;
 
-/* =========================
-   TEXTOS POR IDIOMA (sin emojis)
-========================= */
 const TEXTS = {
-  es: {
-    cityLabel: "1. Ciudad",
-    cityPlaceholder: "Selecciona una ciudad",
-    langLabel: "2. Idioma",
-    chooseTourLabel: "3. Tours disponibles",
-    empty: "No hay tours disponibles para este idioma.",
-    trust: ["Pago libre", "Confirmación inmediata", "Cancelación fácil"],
-    ctaHelper: "Elige un tour para continuar",
-    cities: {
-      brussels: "Bruselas",
-      bruges: "Brujas",
-      antwerp: "Amberes",
-      leuven: "Lovaina",
-    },
-  },
-  en: {
-    cityLabel: "1. City",
-    cityPlaceholder: "Select a city",
-    langLabel: "2. Language",
-    chooseTourLabel: "3. Available tours",
-    empty: "No tours available for this language.",
-    trust: ["Tip-based", "Instant confirmation", "Easy cancellation"],
-    ctaHelper: "Choose a tour to continue",
-    cities: {
-      brussels: "Brussels",
-      bruges: "Bruges",
-      antwerp: "Antwerp",
-      leuven: "Leuven",
-    },
-  },
-  it: {
-    cityLabel: "1. Città",
-    cityPlaceholder: "Seleziona una città",
-    langLabel: "2. Lingua",
-    chooseTourLabel: "3. Tour disponibili",
-    empty: "Nessun tour disponibile per questa lingua.",
-    trust: ["Prezzo libero", "Conferma immediata", "Cancellazione facile"],
-    ctaHelper: "Scegli un tour per continuare",
-    cities: {
-      brussels: "Bruxelles",
-      bruges: "Bruges",
-      antwerp: "Anversa",
-      leuven: "Lovanio",
-    },
-  },
-  fr: {
-    cityLabel: "1. Ville",
-    cityPlaceholder: "Sélectionnez une ville",
-    langLabel: "2. Langue",
-    chooseTourLabel: "3. Tours disponibles",
-    empty: "Aucun tour disponible pour cette langue.",
-    trust: ["Contribution libre", "Confirmation immédiate", "Annulation facile"],
-    ctaHelper: "Choisissez un tour pour continuer",
-    cities: {
-      brussels: "Bruxelles",
-      bruges: "Bruges",
-      antwerp: "Anvers",
-      leuven: "Louvain",
-    },
-  },
-  pt: {
-    cityLabel: "1. Cidade",
-    cityPlaceholder: "Selecione uma cidade",
-    langLabel: "2. Idioma",
-    chooseTourLabel: "3. Tours disponíveis",
-    empty: "Não há tours disponíveis para este idioma.",
-    trust: ["Contribuição livre", "Confirmação imediata", "Cancelamento fácil"],
-    ctaHelper: "Escolha um tour para continuar",
-    cities: {
-      brussels: "Bruxelas",
-      bruges: "Bruges",
-      antwerp: "Antuérpia",
-      leuven: "Lovaina",
-    },
-  },
+  es: { cityLabel: "¿A qué ciudad vas?", langLabel: "¿En qué idioma quieres el tour?", toursLabel: "Elige tu tour", cities: { brussels: "Bruselas", bruges: "Brujas", antwerp: "Amberes (próximamente)", leuven: "Lovaina (próximamente)" }, kinds: { free: "Free Tour", private: "Tour Privado", special: "Tour Especial" }, free: "Pago libre", perPerson: "por persona", perGroup: "por grupo", noTours: "No hay tours para este idioma. Prueba con otro." },
+  en: { cityLabel: "Which city?", langLabel: "Which language?", toursLabel: "Choose your tour", cities: { brussels: "Brussels", bruges: "Bruges", antwerp: "Antwerp (coming soon)", leuven: "Leuven (coming soon)" }, kinds: { free: "Free Tour", private: "Private Tour", special: "Special Tour" }, free: "Pay what you want", perPerson: "per person", perGroup: "per group", noTours: "No tours for this language. Try another." },
+  it: { cityLabel: "Quale città?", langLabel: "In che lingua?", toursLabel: "Scegli il tuo tour", cities: { brussels: "Bruxelles", bruges: "Bruges", antwerp: "Anversa (presto)", leuven: "Lovanio (presto)" }, kinds: { free: "Free Tour", private: "Tour Privato", special: "Tour Speciale" }, free: "Prezzo libero", perPerson: "a persona", perGroup: "per gruppo", noTours: "Nessun tour per questa lingua." },
+  fr: { cityLabel: "Quelle ville?", langLabel: "Quelle langue?", toursLabel: "Choisissez votre visite", cities: { brussels: "Bruxelles", bruges: "Bruges", antwerp: "💎 Anvers (bientôt)", leuven: "🍺 Louvain (bientôt)" }, kinds: { free: "Free Tour", private: "Tour Privé", special: "Tour Spécial" }, free: "Contribution libre", perPerson: "par personne", perGroup: "par groupe", noTours: "Aucun tour pour cette langue." },
+  pt: { cityLabel: "Qual cidade?", langLabel: "Em que idioma?", toursLabel: "Escolha seu tour", cities: { brussels: "Bruxelas", bruges: "Bruges", antwerp: "Antuérpia (em breve)", leuven: "Lovaina (em breve)" }, kinds: { free: "Free Tour", private: "Tour Privado", special: "Tour Especial" }, free: "Preço livre", perPerson: "por pessoa", perGroup: "por grupo", noTours: "Nenhum tour para este idioma." },
 };
+
 const t = TEXTS[lang] ?? TEXTS.es;
 
 const LANG_META: Record<string, { label: string; flag: string }> = {
@@ -108,289 +36,198 @@ const LANG_META: Record<string, { label: string; flag: string }> = {
   fr: { label: "Français", flag: "🇫🇷" },
 };
 
-const ALL_LANGS: Array<"es" | "en" | "it" | "fr"> = ["es", "en", "it", "fr"];
-const ALL_CITIES: Array<"brussels" | "bruges" | "antwerp" | "leuven"> = ["brussels", "bruges", "antwerp", "leuven"];
+const ALL_LANGS = ["es", "en", "it", "fr"] as const;
+const ALL_CITIES = ["brussels", "bruges", "antwerp", "leuven"] as const;
 
-const uid = `sb-${Math.random().toString(36).slice(2)}`;
+// Preseleccionar idioma según el lang de la página
+const defaultLang = (["es","en","it","fr"].includes(lang) ? lang : null) as string | null;
 ---
 
-<div
-  data-searchbox-card
-  class="max-w-5xl mx-auto bg-white rounded-3xl border border-neutral-200 shadow-xl p-5 md:p-7 mt-6 lg:mt-10 relative z-[70]"
->
-  <section class="relative" data-searchbox={uid}>
-    <header class="text-center mb-5">
-      <h3 class="text-2xl md:text-3xl font-bold text-neutral-900">{title}</h3>
-      <p class="text-neutral-600 mt-1">{subtitle}</p>
-    </header>
+<div class="max-w-2xl mx-auto bg-white rounded-3xl border border-neutral-200 shadow-xl overflow-hidden mt-6 lg:mt-10 relative z-[70]">
 
-    <!-- CONTROLES -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-end">
-      
-      <!-- CIUDAD (Custom Select Minimalista) -->
-<div class="lg:col-span-4 relative" data-city-wrapper>
-  <label class="block text-sm font-medium text-neutral-700 mb-2">
-    {t.cityLabel}
-  </label>
-
-  <!-- Trigger -->
-  <button
-    type="button"
-    data-city-trigger
-    class="w-full h-[52px] px-4 flex items-center justify-between rounded-xl border border-neutral-300 bg-white text-neutral-900 hover:border-neutral-400 transition focus:outline-none focus:ring-2 focus:ring-yellow-300"
-  >
-    <span data-city-label>{t.cities.brussels}</span>
-    <svg class="w-4 h-4 text-neutral-500 transition-transform duration-200" data-city-chevron fill="none" viewBox="0 0 24 24">
-      <path d="M19 9l-7 7-7-7" stroke="currentColor" stroke-width="2" />
-    </svg>
-  </button>
-
-  <!-- Dropdown -->
-  <div
-    data-city-dropdown
-    class="absolute left-0 right-0 mt-2 bg-white border border-neutral-200 rounded-xl shadow-xl opacity-0 pointer-events-none transition z-50 max-h-60 overflow-y-auto"
-  >
-    {ALL_CITIES.map(city => {
-      const isFuture = city === "antwerp" || city === "leuven";
-      return (
-        <button
-          type="button"
-          data-city-option={city}
-          disabled={isFuture}
-          class="w-full text-left px-4 py-3 text-sm text-neutral-800 hover:bg-yellow-50 hover:text-neutral-900 transition disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {t.cities[city]}
-        </button>
-      );
-    })}
+  <!-- PASO 1: CIUDAD -->
+  <div id="sb-step-city" class="p-6 border-b border-neutral-100">
+    <div class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-3">
+      {t.cityLabel}
+    </div>
+    <div class="grid grid-cols-2 gap-2" id="sb-cities">
+      {ALL_CITIES.map(city => {
+        const isFuture = city === "antwerp" || city === "leuven";
+        return (
+          <button
+            type="button"
+            data-city={city}
+            disabled={isFuture}
+            class:list={[
+              "city-btn text-left px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150",
+              city === "brussels" ? "border-yellow-400 bg-yellow-50 text-neutral-900" : "border-neutral-200 bg-white text-neutral-700",
+              isFuture ? "opacity-40 cursor-not-allowed" : "hover:border-yellow-300 hover:bg-yellow-50 cursor-pointer"
+            ]}
+          >
+            {t.cities[city]}
+          </button>
+        );
+      })}
+    </div>
   </div>
 
-      </div>
-
-      <!-- IDIOMA (VISIBLE, SIN DROPDOWN) -->
-      <div class="lg:col-span-5">
-        <label class="block text-sm font-medium text-neutral-700 mb-2">
-          {t.langLabel}
-        </label>
-
-        <div class="flex items-center gap-3 flex-wrap">
-          {ALL_LANGS.map(code => (
-            <button
-              type="button"
-              class="lang-pill w-11 h-11 rounded-full border border-neutral-300 bg-white hover:border-yellow-400 transition flex items-center justify-center text-2xl"
-              data-lang={code}
-              aria-label={LANG_META[code].label}
-              title={LANG_META[code].label}
-            >
-              {LANG_META[code].flag}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <!-- CTA -->
-      <div class="lg:col-span-3">
+  <!-- PASO 2: IDIOMA -->
+  <div id="sb-step-lang" class="p-6 border-b border-neutral-100">
+    <div class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-3">
+      {t.langLabel}
+    </div>
+    <div class="flex gap-3 flex-wrap" id="sb-langs">
+      {ALL_LANGS.map(code => (
         <button
-          data-search-button
-          disabled
-          class="w-full h-[52px] rounded-xl bg-yellow-400 text-black font-semibold hover:bg-yellow-300 transition disabled:opacity-40"
+          type="button"
+          data-lang={code}
+          aria-label={LANG_META[code].label}
+          title={LANG_META[code].label}
+          class:list={[
+            "lang-btn w-12 h-12 rounded-full border-2 text-2xl flex items-center justify-center transition-all duration-150",
+            code === defaultLang
+              ? "border-yellow-400 ring-2 ring-yellow-300 scale-110"
+              : "border-neutral-200 hover:border-yellow-300 hover:scale-105"
+          ]}
         >
-          {ctaLabel}
+          {LANG_META[code].flag}
         </button>
-
-        <div data-cta-helper class="text-xs text-neutral-500 mt-2">
-          {t.ctaHelper}
-        </div>
-      </div>
+      ))}
     </div>
+  </div>
 
-    <!-- RESULTADOS -->
-    <div class="mt-6">
-      <div class="text-sm font-semibold text-neutral-900 mb-3">
-        {t.chooseTourLabel}
-      </div>
-
-      <div
-        data-results
-        class="grid grid-cols-1 md:grid-cols-2 gap-3"
-      >
-        <!-- inyectado por JS -->
-      </div>
-
-      <div data-empty class="hidden text-sm text-neutral-600 mt-3">
-        {t.empty}
-      </div>
+  <!-- PASO 3: TOURS (sin botón intermedio) -->
+  <div id="sb-step-tours" class="p-6">
+    <div class="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-3">
+      {t.toursLabel}
     </div>
-
-    <!-- MICRO CONFIANZA (sin checkmarks) -->
-    <div class="flex flex-wrap justify-center gap-6 text-xs text-neutral-500 mt-6">
-      {t.trust.map(item => <span>{item}</span>)}
+    <div id="sb-results" class="flex flex-col gap-2">
+      <!-- inyectado por JS -->
     </div>
-  </section>
+    <div id="sb-empty" class="hidden text-sm text-neutral-400 text-center py-4">
+      {t.noTours}
+    </div>
+    <div id="sb-placeholder" class="text-sm text-neutral-300 text-center py-4 italic">
+      ↑ Selecciona un idioma para ver los tours
+    </div>
+  </div>
+
 </div>
 
-<script define:vars={{ tours, uid, lang }}>
-  const root = document.querySelector(`[data-searchbox="${uid}"]`);
-  if (!root) return;
+<script define:vars={{ tours, lang, defaultLang, TEXTS_JSON: JSON.stringify(TEXTS) }}>
+(function() {
+  const t = JSON.parse(TEXTS_JSON)[lang] || JSON.parse(TEXTS_JSON).es;
 
-  const card = document.querySelector("[data-searchbox-card]");
-  
-  const pills = root.querySelectorAll(".lang-pill");
-  const results = root.querySelector("[data-results]");
-  const empty = root.querySelector("[data-empty]");
-  const button = root.querySelector("[data-search-button]");
-  const helper = root.querySelector("[data-cta-helper]");
-  const cityWrapper = root.querySelector("[data-city-wrapper]");
-const cityTrigger = root.querySelector("[data-city-trigger]");
-const cityDropdown = root.querySelector("[data-city-dropdown]");
-const cityLabel = root.querySelector("[data-city-label]");
-const cityChevron = root.querySelector("[data-city-chevron]");
-const cityOptions = root.querySelectorAll("[data-city-option]");
-
-  // defaults
-  const DEFAULT_CITY = "brussels";
-  const defaultLang = (["es","en","it","fr"].includes(lang) ? lang : null);
+  const cityBtns   = document.querySelectorAll(".city-btn");
+  const langBtns   = document.querySelectorAll(".lang-btn");
+  const results    = document.getElementById("sb-results");
+  const empty      = document.getElementById("sb-empty");
+  const placeholder = document.getElementById("sb-placeholder");
+  const stepTours  = document.getElementById("sb-step-tours");
 
   let selectedCity = "brussels";
-  let selectedLang = defaultLang; // si vienes de /en/ lo preselecciona
-  let selectedTourUrl = null;
+  let selectedLang = defaultLang;
 
-  // UI: marcar idioma activo
-  const paintLang = () => {
-    pills.forEach((p) => {
-      const isActive = p.dataset.lang === selectedLang;
-      p.classList.toggle("ring-2", isActive);
-      p.classList.toggle("ring-yellow-400", isActive);
-      p.classList.toggle("border-yellow-400", isActive);
-    });
-  };
+  // Orden: free primero
+  const kindRank = k => k === "free" ? 0 : k === "special" ? 1 : 2;
 
-  // orden recomendado: free -> special -> private
-  const kindRank = (k) => (k === "free" ? 0 : k === "special" ? 1 : 2);
-
-  const render = () => {
+  function renderTours() {
     results.innerHTML = "";
-    selectedTourUrl = null;
-    button.disabled = true;
+    empty.classList.add("hidden");
+    placeholder.classList.add("hidden");
 
-    // si no hay idioma aún, no renderices
     if (!selectedLang) {
-      empty.classList.add("hidden");
-      helper.textContent = "Selecciona un idioma para ver los tours disponibles.";
+      placeholder.classList.remove("hidden");
       return;
     }
 
     const filtered = (tours || [])
-      .filter((t) => t.city === selectedCity && t.tourLang === selectedLang)
+      .filter(t => t.city === selectedCity && t.tourLang === selectedLang)
       .sort((a, b) => kindRank(a.kind) - kindRank(b.kind));
 
     if (!filtered.length) {
       empty.classList.remove("hidden");
-      helper.textContent = "Prueba otra ciudad o idioma.";
       return;
     }
 
-    empty.classList.add("hidden");
-    helper.textContent = "Elige un tour para continuar.";
+    filtered.forEach(tour => {
+      const card = document.createElement("a");
+      card.href = tour.url;
+      card.className = "flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border-2 border-neutral-200 bg-white hover:border-yellow-400 hover:bg-yellow-50 transition-all duration-150 group cursor-pointer no-underline";
 
-    filtered.forEach((tour) => {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className =
-        "text-left p-4 rounded-2xl border border-neutral-200 bg-white hover:border-yellow-300 hover:shadow-sm transition";
+      const kindLabel = t.kinds?.[tour.kind] || tour.kind;
+      const kindColor = tour.kind === "free"
+        ? "bg-yellow-100 text-yellow-800"
+        : tour.kind === "private"
+        ? "bg-neutral-100 text-neutral-700"
+        : "bg-orange-100 text-orange-800";
 
-      // badge simple sin emojis
-      let badge = "Experiencia";
-      let badgeClass = "bg-amber-100 text-amber-900";
-      if (tour.kind === "free") { badge = "Free tour"; badgeClass = "bg-yellow-100 text-yellow-900"; }
-      if (tour.kind === "private") { badge = "Tour privado"; badgeClass = "bg-neutral-100 text-neutral-900"; }
-      if (tour.kind === "special") { badge = "Tour especial"; badgeClass = "bg-orange-100 text-orange-900"; }
+      const priceText = tour.kind === "free"
+        ? `<span class="text-green-600 font-semibold text-sm">${t.free}</span>`
+        : `<span class="font-semibold text-neutral-900 text-sm">${tour.price}</span>`;
 
-      item.innerHTML = `
-        <div class="inline-flex text-xs font-semibold px-2 py-1 rounded ${badgeClass}">
-          ${badge}
+      card.innerHTML = `
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full ${kindColor}">${kindLabel}</span>
+          </div>
+          <div class="font-semibold text-neutral-900 text-sm leading-tight">${tour.name}</div>
+          <div class="text-xs text-neutral-400 mt-0.5">${tour.duration}</div>
         </div>
-        <div class="mt-2 font-semibold text-neutral-900 text-sm">
-          ${tour.name}
-        </div>
-        <div class="text-xs text-neutral-600 mt-1">
-          ${tour.duration} · ${tour.price}
+        <div class="flex items-center gap-2 flex-shrink-0">
+          ${priceText}
+          <svg class="w-4 h-4 text-neutral-300 group-hover:text-yellow-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
         </div>
       `;
 
-      item.addEventListener("click", () => {
-        // limpiar selección previa
-        results.querySelectorAll("[data-active='1']").forEach((n) => {
-          n.removeAttribute("data-active");
-          n.classList.remove("ring-2", "ring-yellow-400");
-        });
-
-        item.setAttribute("data-active", "1");
-        item.classList.add("ring-2", "ring-yellow-400");
-
-        selectedTourUrl = tour.url;
-        button.disabled = false;
-
-        // asegurar que el CTA quede visible
-        card?.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
-
-      results.appendChild(item);
+      results.appendChild(card);
     });
-  };
 
-  // events
-  
-
-  pills.forEach((pill) => {
-    pill.addEventListener("click", () => {
-      selectedLang = pill.dataset.lang;
-      paintLang();
-      render();
-    });
-  });
-
-  // CTA
-  button.addEventListener("click", () => {
-    if (selectedTourUrl) window.location.href = selectedTourUrl;
-  });
-
-
-  const closeCityDropdown = () => {
-  cityDropdown.classList.add("opacity-0", "pointer-events-none");
-  cityChevron.classList.remove("rotate-180");
-};
-
-const openCityDropdown = () => {
-  cityDropdown.classList.remove("opacity-0", "pointer-events-none");
-  cityChevron.classList.add("rotate-180");
-};
-
-cityTrigger?.addEventListener("click", () => {
-  const isClosed = cityDropdown.classList.contains("opacity-0");
-  if (isClosed) openCityDropdown();
-  else closeCityDropdown();
-});
-
-cityOptions.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    if (btn.disabled) return;
-
-    selectedCity = btn.dataset.cityOption;
-    cityLabel.textContent = btn.textContent;
-    closeCityDropdown();
-    render();
-  });
-});
-
-document.addEventListener("click", (e) => {
-  if (!cityWrapper.contains(e.target)) {
-    closeCityDropdown();
+    // Scroll suave a los tours
+    setTimeout(() => {
+      stepTours.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 100);
   }
-});
 
-  // init
-  if (citySelect) citySelect.value = DEFAULT_CITY;
-  paintLang();
-  render();
+  // Ciudad
+  cityBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      selectedCity = btn.dataset.city;
+
+      cityBtns.forEach(b => {
+        b.classList.remove("border-yellow-400", "bg-yellow-50");
+        b.classList.add("border-neutral-200", "bg-white");
+      });
+      btn.classList.add("border-yellow-400", "bg-yellow-50");
+      btn.classList.remove("border-neutral-200", "bg-white");
+
+      renderTours();
+
+      // Scroll al selector de idioma
+      document.getElementById("sb-step-lang")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
+
+  // Idioma
+  langBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedLang = btn.dataset.lang;
+
+      langBtns.forEach(b => {
+        b.classList.remove("border-yellow-400", "ring-2", "ring-yellow-300", "scale-110");
+        b.classList.add("border-neutral-200");
+      });
+      btn.classList.add("border-yellow-400", "ring-2", "ring-yellow-300", "scale-110");
+      btn.classList.remove("border-neutral-200");
+
+      renderTours();
+    });
+  });
+
+  // Init — si ya hay idioma preseleccionado renderizar
+  if (selectedLang) renderTours();
+})();
 </script>

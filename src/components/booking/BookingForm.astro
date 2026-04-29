@@ -304,61 +304,58 @@ const STRAPI_API_BASE =
     </div>
 
     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-  <!-- Ciudad -->
-  <div>
-    <label for="customerCity" class="block text-gray-700 font-medium mb-1 text-sm">
-      🏙️
-      {lang === "es" && "Ciudad"}
-      {lang === "en" && "City"}
-      {lang === "it" && "Città"}
-      {lang === "fr" && "Ville"} *
-    </label>
-    <div class="relative">
-  <input
-    id="customerCity"
-    name="customerCity"
-    type="text"
-    required
-    autocomplete="off"
-    class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition"
-    placeholder="Madrid, Brussels, Rome..."
-  />
-  <div id="citySuggestions"
-       class="absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-full mt-1 hidden max-h-48 overflow-y-auto text-sm">
-  </div>
-</div>
-  </div>
-
-  <!-- País -->
+  <!-- País PRIMERO -->
   <div>
     <label for="customerCountry" class="block text-gray-700 font-medium mb-1 text-sm">
-      🌍
       {lang === "es" && "País"}
       {lang === "en" && "Country"}
       {lang === "it" && "Paese"}
       {lang === "fr" && "Pays"} *
     </label>
     <div class="relative">
-  <input
-    id="customerCountry"
-    name="customerCountry"
-    type="text"
-    required
-    autocomplete="off"
-    class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition"
-    placeholder="España, México, Italia..."
-  />
-  <div id="countrySuggestions"
-       class="absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-full mt-1 hidden max-h-48 overflow-y-auto text-sm">
+      <input
+        id="customerCountry"
+        name="customerCountry"
+        type="text"
+        required
+        autocomplete="off"
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition"
+        placeholder={lang === "es" ? "España, México, Italia..." : lang === "en" ? "Spain, Mexico, Italy..." : lang === "it" ? "Spagna, Messico, Italia..." : "Espagne, Mexique, Italie..."}
+      />
+      <div id="countrySuggestions"
+           class="absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-full mt-1 hidden max-h-48 overflow-y-auto text-sm">
+      </div>
+    </div>
   </div>
-</div>
+
+  <!-- Ciudad SEGUNDO -->
+  <div>
+    <label for="customerCity" class="block text-gray-700 font-medium mb-1 text-sm">
+      {lang === "es" && "Ciudad"}
+      {lang === "en" && "City"}
+      {lang === "it" && "Città"}
+      {lang === "fr" && "Ville"} *
+    </label>
+    <div class="relative">
+      <input
+        id="customerCity"
+        name="customerCity"
+        type="text"
+        required
+        autocomplete="off"
+        class="w-full p-3 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition"
+        placeholder={lang === "es" ? "Madrid, Roma, Bruselas..." : lang === "en" ? "Madrid, Rome, Brussels..." : lang === "it" ? "Madrid, Roma, Bruxelles..." : "Madrid, Rome, Bruxelles..."}
+      />
+      <div id="citySuggestions"
+           class="absolute z-20 bg-white border border-gray-200 rounded-xl shadow-lg w-full mt-1 hidden max-h-48 overflow-y-auto text-sm">
+      </div>
+    </div>
   </div>
 </div>
 
     <!-- Teléfono (Intl Tel Input profesional) -->
 <div class="md:col-span-2">
   <label class="block text-sm font-medium text-gray-700 mb-1">
-    📱
     {lang === "es" && "Móvil (WhatsApp recomendado)"}
     {lang === "en" && "Mobile phone (WhatsApp recommended)"}
     {lang === "it" && "Cellulare (WhatsApp consigliato)"}
@@ -393,7 +390,6 @@ const STRAPI_API_BASE =
     <!-- Email -->
     <div>
       <label for="customerEmail" class="block text-sm font-medium text-gray-700 mb-1">
-        📧
         {lang === "es" && "Correo electrónico"}
         {lang === "en" && "Email address"}
         {lang === "it" && "Indirizzo email"}
@@ -412,7 +408,6 @@ const STRAPI_API_BASE =
     <!-- Confirmar Email -->
     <div>
       <label for="customerEmailConfirm" class="block text-sm font-medium text-gray-700 mb-1">
-        ✅
         {lang === "es" && "Confirma tu correo"}
         {lang === "en" && "Confirm your email"}
         {lang === "it" && "Conferma la tua email"}
@@ -432,54 +427,9 @@ const STRAPI_API_BASE =
       </p>
     </div>
 
-    <!-- Comentarios -->
-    <div class="md:col-span-2">
-      <label for="customerComments" class="block text-sm font-medium text-gray-700 mb-1">
-        💬
-        {lang === "es" && "Comentarios (opcional)"}
-        {lang === "en" && "Comments (optional)"}
-        {lang === "it" && "Commenti (opzionale)"}
-        {lang === "fr" && "Commentaires (optionnel)"}
-      </label>
-      <textarea
-        id="customerComments"
-        name="customerComments"
-        rows="3"
-        class="w-full p-2.5 border border-gray-300 rounded-xl focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none transition placeholder-gray-400"
-        placeholder={
-          lang === "es"
-            ? "Ej: viajamos con niños pequeños, silla de ruedas, etc."
-            : "Anything we should know?"
-        }
-      ></textarea>
-    </div>
 
-    <!-- Como nos conociste -->
-    <div>
-      <label for="howHeard" class="block text-sm font-medium text-gray-700 mb-1">
-        {howHeardLabelByLang[lang] || howHeardLabelByLang.es}
-      </label>
-      <select
-        id="howHeard"
-        name="howHeard"
-        class="w-full p-2.5 border border-gray-300 rounded-xl bg-white focus:border-gray-900 focus:ring-2 focus:ring-yellow-300 focus:outline-none text-sm"
-      >
-        <option value="">{lang === "es" ? "Selecciona una opción" : "Select an option"}</option>
-        <option value="google">Web / Google</option>
-        <option value="flyer">Flyer</option>
-        <option value="instagram">Instagram</option>
-        <option value="facebook">Facebook</option>
-        <option value="youtube">YouTube</option>
-        <option value="friends">Amigos / Familia</option>
-        <option value="guruwalk">GuruWalk</option>
-        <option value="civitatis">Civitatis</option>
-        <option value="tripadvisor">TripAdvisor</option>
-        <option value="getyourguide">GetYourGuide</option>
-        <option value="freetour">FreeTour.com</option>
-        <option value="meeting-point">Punto de encuentro</option>
-        <option value="other">Otro</option>
-      </select>
-    </div>
+
+
 
     <!-- Marketing -->
     <div class="flex items-start gap-3 md:col-span-2">
@@ -499,7 +449,7 @@ const STRAPI_API_BASE =
 <!-- PASO 3: RESUMEN + TÉRMINOS -->
     <div id="step3" class="booking-step hidden space-y-6">
       <h3 class="text-2xl font-bold text-gray-900">
-        ✅ {confirmTitleByLang[lang] || confirmTitleByLang.es}
+        {confirmTitleByLang[lang] || confirmTitleByLang.es}
       </h3>
 
       <div class="bg-gray-50 rounded-2xl border-2 border-gray-200 p-6 space-y-4">
@@ -536,7 +486,46 @@ const STRAPI_API_BASE =
       </div>
 
       <div class="space-y-4">
-        <label class="flex items-start gap-3 cursor-pointer">
+        <!-- Comentarios opcionales -->
+      <details class="text-sm text-gray-400 cursor-pointer">
+        <summary class="hover:text-gray-600 transition">
+          {lang === "es" ? "¿Algo que debamos saber?" :
+           lang === "en" ? "Anything we should know?" :
+           lang === "it" ? "Qualcosa che dovremmo sapere?" :
+           "Quelque chose à savoir?"} (opcional)
+        </summary>
+        <textarea
+          id="customerComments"
+          name="customerComments"
+          rows="2"
+          class="mt-2 w-full p-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 focus:border-gray-400 focus:outline-none resize-none"
+          placeholder={lang === "es" ? "Ej: viajamos con niños, silla de ruedas..." : "E.g. traveling with children, wheelchair..."}
+        ></textarea>
+      </details>
+
+      <!-- Cómo nos conociste — campo de marketing, no bloquea -->
+      <details class="text-sm text-gray-400 cursor-pointer">
+        <summary class="hover:text-gray-600 transition">
+          {howHeardLabelByLang[lang] || howHeardLabelByLang.es} (opcional)
+        </summary>
+        <select
+          id="howHeard"
+          name="howHeard"
+          class="mt-2 w-full p-2.5 border border-gray-200 rounded-xl bg-white text-sm text-gray-600 focus:border-gray-400 focus:outline-none"
+        >
+          <option value="">{lang === "es" ? "Selecciona una opción" : "Select an option"}</option>
+          <option value="google">Google</option>
+          <option value="instagram">Instagram</option>
+          <option value="friends">{lang === "es" ? "Amigos / Familia" : "Friends / Family"}</option>
+          <option value="guruwalk">GuruWalk</option>
+          <option value="civitatis">Civitatis</option>
+          <option value="tripadvisor">TripAdvisor</option>
+          <option value="getyourguide">GetYourGuide</option>
+          <option value="other">{lang === "es" ? "Otro" : "Other"}</option>
+        </select>
+      </details>
+
+      <label class="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
             id="agreeToTerms"
@@ -566,21 +555,21 @@ const STRAPI_API_BASE =
 >
   {isPrivateTour && (
     <>
-      {lang === "es" && "📩 Enviar solicitud"}
-      {lang === "en" && "📩 Send request"}
-      {lang === "it" && "📩 Invia richiesta"}
-      {lang === "fr" && "📩 Envoyer la demande"}
-      {!["es", "en", "it", "fr"].includes(lang) && "📩 Send request"}
+      {lang === "es" && "Enviar solicitud"}
+      {lang === "en" && "Send request"}
+      {lang === "it" && "Invia richiesta"}
+      {lang === "fr" && "Envoyer la demande"}
+      {!["es", "en", "it", "fr"].includes(lang) && "Send request"}
     </>
   )}
 
   {!isPrivateTour && (
     <>
-      {lang === "es" && "✅ Confirmar reserva"}
-      {lang === "en" && "✅ Confirm booking"}
-      {lang === "it" && "✅ Conferma prenotazione"}
-      {lang === "fr" && "✅ Confirmer la réservation"}
-      {!["es", "en", "it", "fr"].includes(lang) && "✅ Confirm booking"}
+      {lang === "es" && "Confirmar reserva"}
+      {lang === "en" && "Confirm booking"}
+      {lang === "it" && "Conferma prenotazione"}
+      {lang === "fr" && "Confirmer la réservation"}
+      {!["es", "en", "it", "fr"].includes(lang) && "Confirm booking"}
     </>
   )}
 </button>
@@ -622,21 +611,21 @@ const STRAPI_API_BASE =
   <h3 class="text-2xl md:text-3xl font-bold text-green-600 mb-2">
     {isPrivateTour && (
       <>
-        {lang === "es" && "✅ Solicitud confirmada"}
-        {lang === "en" && "✅ Request confirmed"}
-        {lang === "it" && "✅ Richiesta confermata"}
-        {lang === "fr" && "✅ Demande confirmée"}
-        {!["es", "en", "it", "fr"].includes(lang) && "✅ Request confirmed"}
+        {lang === "es" && "Solicitud confirmada"}
+        {lang === "en" && "Request confirmed"}
+        {lang === "it" && "Richiesta confermata"}
+        {lang === "fr" && "Demande confirmée"}
+        {!["es", "en", "it", "fr"].includes(lang) && "Request confirmed"}
       </>
     )}
 
     {!isPrivateTour && (
       <>
-        {lang === "es" && "🎉 ¡Reserva confirmada!"}
-        {lang === "en" && "🎉 Booking confirmed!"}
-        {lang === "it" && "🎉 Prenotazione confermata!"}
-        {lang === "fr" && "🎉 Réservation confirmée !"}
-        {!["es", "en", "it", "fr"].includes(lang) && "🎉 Booking confirmed!"}
+        {lang === "es" && "¡Reserva confirmada!"}
+        {lang === "en" && "Booking confirmed!"}
+        {lang === "it" && "Prenotazione confermata!"}
+        {lang === "fr" && "Réservation confirmée !"}
+        {!["es", "en", "it", "fr"].includes(lang) && "Booking confirmed!"}
       </>
     )}
   </h3>
@@ -701,29 +690,28 @@ const STRAPI_API_BASE =
   <button
     id="prevStep"
     type="button"
-    class="px-6 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+    class="px-4 py-3 text-gray-400 hover:text-gray-600 font-medium rounded-xl transition disabled:opacity-30 disabled:cursor-not-allowed text-sm"
     disabled
   >
-    {lang === "es" && "← Anterior"}
-    {lang === "en" && "← Previous"}
-    {lang === "it" && "← Precedente"}
-    {lang === "fr" && "← Précédent"}
-    {!["es", "en", "it", "fr"].includes(lang) &&
-      "← Previous"}
+    {lang === "es" && "← Volver"}
+    {lang === "en" && "← Back"}
+    {lang === "it" && "← Indietro"}
+    {lang === "fr" && "← Retour"}
+    {!["es", "en", "it", "fr"].includes(lang) && "← Back"}
   </button>
 
   <!-- SIGUIENTE (FLUJO) -->
   <button
     id="nextStep"
     type="button"
-    class="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition transform hover:scale-105 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:transform-none"
+    class="px-8 py-3.5 bg-yellow-400 hover:bg-yellow-300 text-neutral-900 font-bold rounded-xl transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
     disabled
   >
-    {lang === "es" && "Siguiente →"}
-    {lang === "en" && "Next →"}
-    {lang === "it" && "Successivo →"}
-    {lang === "fr" && "Suivant →"}
-    {!["es", "en", "it", "fr"].includes(lang) && "Next →"}
+    {lang === "es" && "Continuar →"}
+    {lang === "en" && "Continue →"}
+    {lang === "it" && "Continua →"}
+    {lang === "fr" && "Continuer →"}
+    {!["es", "en", "it", "fr"].includes(lang) && "Continue →"}
   </button>
 </div>
 

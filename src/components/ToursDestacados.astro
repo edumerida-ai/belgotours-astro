@@ -6,6 +6,31 @@ interface Props {
 
 const { lang } = Astro.props;
 
+// Fetch ratings reales desde Strapi
+const STRAPI_API = import.meta.env.PUBLIC_STRAPI_URL || "https://api.belgotours.com/api";
+const safeLangForFetch = ['es','en','it','fr'].includes(lang) ? lang : 'es';
+
+async function getRealRating(slug: string, langCode: string): Promise<{rating: number, total: number} | null> {
+  try {
+    const res = await fetch(`${STRAPI_API}/public/reviews-pro?tour=${slug}&lang=${langCode}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.summary?.rating || !data?.summary?.total) return null;
+    return { rating: Number(data.summary.rating), total: Number(data.summary.total) };
+  } catch { return null; }
+}
+
+// Fetch ratings en paralelo para los tours con reseñas reales
+const [ratingFreeBruselas, ratingFreeEn] = await Promise.all([
+  getRealRating('free-tour-bruselas', 'es'),
+  getRealRating('free-tour-brussels', 'en'),
+]);
+
+const realRatings: Record<string, {rating: number, total: number} | null> = {
+  'free-tour-bruselas': ratingFreeBruselas,
+  'free-tour-brussels': ratingFreeEn,
+};
+
 // Tours reales de Belgotours - SOLO TOURS QUE EXISTEN
 const toursData = {
   'es': [
@@ -323,9 +348,9 @@ const sectionTexts = {
       "Descubre las experiencias mejor valoradas por miles de viajeros. <span class='font-semibold text-blue-600'>Reserva ahora, paga después.</span>",
     filters: {
       all: "Todos los Tours",
-      free: "💛 Pago libre",
-      private: "👑 Tours Privados",
-      special: "🍫 Tours Especiales",
+      free: "Pago libre",
+      private: "Tours Privados",
+      special: "Tours Especiales",
     },
     tourDetails: {
       reviews: "reseñas",
@@ -337,7 +362,7 @@ const sectionTexts = {
     cta: {
       button: "Ver Todos los Tours Disponibles",
       features:
-        "⚡ Confirmación instantánea • Cancelación gratuita • 👥 Grupos reducidos",
+        "Confirmación instantánea • Cancelación gratuita • 👥 Grupos reducidos",
     },
   },
 
@@ -347,9 +372,9 @@ const sectionTexts = {
       "Discover the best-rated experiences by thousands of travelers. <span class='font-semibold text-blue-600'>Book now, pay later.</span>",
     filters: {
       all: "All Tours",
-      free: "💛 Tip-based",
-      private: "👑 Private Tours",
-      special: "🍫 Special Tours",
+      free: "Tip-based",
+      private: "Private Tours",
+      special: "Special Tours",
     },
     tourDetails: {
       reviews: "reviews",
@@ -361,7 +386,7 @@ const sectionTexts = {
     cta: {
       button: "View All Available Tours",
       features:
-        "⚡ Instant confirmation • Free cancellation • 👥 Small groups",
+        "Instant confirmation • Free cancellation • 👥 Small groups",
     },
   },
 
@@ -371,9 +396,9 @@ const sectionTexts = {
       "Scopri le esperienze meglio valutate da migliaia di viaggiatori. <span class='font-semibold text-blue-600'>Prenota ora, paga dopo.</span>",
     filters: {
       all: "Tutti i Tour",
-      free: "💛 Offerta libera",
-      private: "👑 Tour Privati",
-      special: "🍫 Tour Speciali",
+      free: "Offerta libera",
+      private: "Tour Privati",
+      special: "Tour Speciali",
     },
     tourDetails: {
       reviews: "recensioni",
@@ -385,7 +410,7 @@ const sectionTexts = {
     cta: {
       button: "Vedi Tutti i Tour Disponibili",
       features:
-        "⚡ Conferma immediata • Cancellazione gratuita • 👥 Gruppi piccoli",
+        "Conferma immediata • Cancellazione gratuita • 👥 Gruppi piccoli",
     },
   },
 
@@ -395,9 +420,9 @@ const sectionTexts = {
       "Découvrez les expériences les mieux notées par des milliers de voyageurs. <span class='font-semibold text-blue-600'>Réservez maintenant, payez plus tard.</span>",
     filters: {
       all: "Tous les Tours",
-      free: "💛 Participation libre",
-      private: "👑 Tours Privés",
-      special: "🍫 Tours Spéciaux",
+      free: "Participation libre",
+      private: "Tours Privés",
+      special: "Tours Spéciaux",
     },
     tourDetails: {
       reviews: "avis",
@@ -409,7 +434,7 @@ const sectionTexts = {
     cta: {
       button: "Voir Tous les Tours Disponibles",
       features:
-        "⚡ Confirmation instantanée • Annulation gratuite • 👥 Petits groupes",
+        "Confirmation instantanée • Annulation gratuite • 👥 Petits groupes",
     },
   },
 
@@ -419,9 +444,9 @@ const sectionTexts = {
       "Descubra as experiências mais bem avaliadas por milhares de viajantes. <span class='font-semibold text-blue-600'>Reserve agora, pague depois.</span>",
     filters: {
       all: "Todos os Tours",
-      free: "💛 Contribuição livre",
-      private: "👑 Tours Privados",
-      special: "🍫 Tours Especiais",
+      free: "Contribuição livre",
+      private: "Tours Privados",
+      special: "Tours Especiais",
     },
     tourDetails: {
       reviews: "avaliações",
@@ -433,7 +458,7 @@ const sectionTexts = {
     cta: {
       button: "Ver Todos os Tours Disponíveis",
       features:
-        "⚡ Confirmação instantânea • Cancelamento gratuito • 👥 Grupos pequenos",
+        "Confirmação instantânea • Cancelamento gratuito • 👥 Grupos pequenos",
     },
   },
 };
@@ -504,11 +529,18 @@ const getTourUrl = (tourSlug: string, lang: string, tourIdiomas: string[]) => {
   </div>
 
               <!-- Grid de Tours -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+<div class="
+  flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory
+  md:grid md:grid-cols-2 md:overflow-visible md:pb-0
+  lg:grid-cols-3
+  -mx-4 px-4 md:mx-0 md:px-0
+  scrollbar-hide
+">
   {toursDestacados.map((tour) => (
  <article
   data-category={tour.categoria}
-  class="relative bg-white rounded-3xl border border-neutral-200 shadow-sm hover:shadow-xl transition-all duration-300 group tour-card flex flex-col overflow-hidden"
+  class="relative bg-white rounded-3xl border border-neutral-200 shadow-sm hover:shadow-xl transition-all duration-300 group tour-card flex flex-col overflow-hidden
+         flex-shrink-0 w-[80vw] md:w-auto snap-start"
 >
 
 
@@ -536,16 +568,18 @@ const getTourUrl = (tourSlug: string, lang: string, tourIdiomas: string[]) => {
 
 
 
-        <!-- Rating (comentado correctamente) -->
-        {/*
-        <div class="flex items-center gap-2 mb-3 text-sm">
-          <span class="text-yellow-400">★</span>
-          <span class="font-semibold text-neutral-800">{tour.rating}</span>
-          <span class="text-neutral-500">
-            ({tour.reviews} {texts.tourDetails.reviews})
-          </span>
-        </div>
-        */}
+        <!-- Rating dinámico — solo muestra si hay datos reales -->
+        {(() => {
+          const real = realRatings[tour.slug];
+          if (!real) return null;
+          return (
+            <div class="flex items-center gap-1.5 mb-3 text-sm">
+              <span class="text-yellow-400">★</span>
+              <span class="font-semibold text-neutral-800">{real.rating.toFixed(1)}</span>
+              <span class="text-neutral-500">({real.total} {texts.tourDetails.reviews})</span>
+            </div>
+          );
+        })()}
 
         <!-- Título y Descripción -->
         <h3 class="text-xl font-bold text-neutral-900 mb-2 line-clamp-2">
@@ -662,6 +696,8 @@ const getTourUrl = (tourSlug: string, lang: string, tourIdiomas: string[]) => {
 </section>
 
 <style>
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
   .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;

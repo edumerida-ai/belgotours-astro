@@ -613,7 +613,7 @@ inline-flex items-center justify-center gap-2
 w-full md:w-auto`}
 aria-expanded="false"
 >
-<span>🗓️ {heroCtaText}</span>
+<span>{heroCtaText}</span>
 </button>
 
 {heroCtaMode === "private-request" && mapsUrl && (
@@ -852,7 +852,7 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
   transition-all duration-300`}
       aria-expanded="false"
     >
-      🗓️ {ui.verDisponibilidad}
+      {ui.verDisponibilidad}
     </button>
   </div>
 </div>
@@ -1065,11 +1065,14 @@ if (typeof window !== "undefined") {
     );
     descriptionObserver.observe(description);
 
-    // 3️⃣ Ocultar al llegar al footer
+    // 3️⃣ Ocultar al llegar al footer / mostrar al salir
     const footerObserver = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           hideSticky();
+        } else {
+          // Al salir del footer hacia arriba, mostrar el sticky
+          showSticky();
         }
       },
       { threshold: 0.1 }
@@ -1079,5 +1082,6 @@ if (typeof window !== "undefined") {
   });
 }
 </script>
+
 
 </Layout>

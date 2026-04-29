@@ -86,12 +86,20 @@ const textsByLang = {
 const t = textsByLang[lang] || textsByLang.es;
 ---
 
-<section class="relative overflow-visible bg-neutral-950 text-white pt-10 pb-32 lg:pt-16 lg:pb-40">
-  <!-- DECORACIÓN -->
-  <div class="pointer-events-none absolute inset-0 opacity-30">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-yellow-400/20 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-0 right-0 w-96 h-96 bg-red-500/20 rounded-full blur-3xl"></div>
+<section class="relative overflow-visible text-white pt-10 pb-32 lg:pt-16 lg:pb-40">
+  <!-- Imagen de fondo móvil -->
+  <div class="absolute inset-0 lg:hidden">
+    <img src="/images/hero/bruselas-hero.webp" alt="Bruselas" 
+         class="w-full h-full object-cover object-center"
+         loading="eager" fetchpriority="high" />
+    <div class="absolute inset-0 bg-neutral-950/75"></div>
   </div>
+  <!-- Fondo negro desktop -->
+  <div class="absolute inset-0 hidden lg:block bg-neutral-950">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-yellow-400/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-red-500/20 rounded-full blur-3xl pointer-events-none"></div>
+  </div>
+
 
   <div class="container relative mx-auto px-4 max-w-7xl">
 

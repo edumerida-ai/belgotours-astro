@@ -147,6 +147,27 @@ if (!window.bookingState.participants) {
 
 window.bookingState.tracking = tracking;
 
+// ── Scroll automático guiado ─────────────────────────────────
+
+
+// 2. Cuando se selecciona HORARIO → scroll a participantes (ya existe en Calendar)
+// 3. Cuando participantes cambian → scroll a botón Continuar
+document.addEventListener("participantsUpdated", () => {
+  setTimeout(() => {
+    const nextBtn = document.getElementById("nextStep");
+    if (!nextBtn || !window.bookingState?.selectedTime) return;
+    const panel = nextBtn.closest(".panel-content, .overflow-y-auto");
+    if (panel) {
+      const offsetTop = nextBtn.getBoundingClientRect().top
+        - panel.getBoundingClientRect().top
+        + panel.scrollTop - 16;
+      panel.scrollTo({ top: offsetTop, behavior: "smooth" });
+    } else {
+      nextBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, 300);
+});
+
 // 🔥 Limpiar errores visuales al escribir (solo una vez)
 bookingRoot.querySelectorAll("input, select, textarea").forEach((input) => {
   input.addEventListener("input", () => {
@@ -177,12 +198,28 @@ bookingRoot.querySelectorAll("input, select, textarea").forEach((input) => {
   updateSummary();
 }
 
-  // ✅ Solo hacer scroll cuando NO es el paso inicial
+  // Scroll al inicio del paso — dentro del panel si existe
   if (stepNumber !== 1) {
-    bookingRoot.scrollIntoView({
-  behavior: "smooth",
-  block: "start",
-});
+    setTimeout(() => {
+      const panel = document.querySelector(".panel-content");
+      if (panel) {
+        // Scroll al top del panel primero
+        panel.scrollTo({ top: 0, behavior: "smooth" });
+        // Luego al primer campo vacío del paso activo
+        setTimeout(() => {
+          const activeStep = document.querySelector(".booking-step.active");
+          const firstInput = activeStep?.querySelector("input:not([type='hidden']):not([type='checkbox'])") as HTMLElement | null;
+          if (firstInput && panel) {
+            const offset = firstInput.getBoundingClientRect().top
+              - panel.getBoundingClientRect().top
+              + panel.scrollTop - 80;
+            panel.scrollTo({ top: Math.max(0, offset), behavior: "smooth" });
+          }
+        }, 300);
+      } else {
+        bookingRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   }
 }
 
@@ -446,6 +483,30 @@ window.addEventListener("timeSelected", () => {
 const step2Inputs = bookingRoot.querySelectorAll(
   "#step2 input, #step2 select, #step2 textarea"
 );
+
+// Scroll al siguiente campo al presionar Tab o Enter en móvil
+step2Inputs.forEach((input) => {
+  input.addEventListener("blur", () => {
+    // Solo en móvil
+    if (window.innerWidth > 768) return;
+    const panel = document.querySelector(".panel-content");
+    if (!panel) return;
+    // Encontrar el siguiente input vacío
+    const allInputs = Array.from(
+      document.querySelectorAll("#step2 input:not([type='hidden']):not([type='checkbox']), #step2 select, #step2 textarea")
+    ) as HTMLElement[];
+    const currentIdx = allInputs.indexOf(input as HTMLElement);
+    const nextInput = allInputs.slice(currentIdx + 1).find(el => !(el as HTMLInputElement).value?.trim());
+    if (nextInput) {
+      setTimeout(() => {
+        const offset = nextInput.getBoundingClientRect().top
+          - panel.getBoundingClientRect().top
+          + panel.scrollTop - 80;
+        panel.scrollTo({ top: Math.max(0, offset), behavior: "smooth" });
+      }, 150);
+    }
+  });
+});
 
 step2Inputs.forEach((input) => {
   input.addEventListener("input", () => {

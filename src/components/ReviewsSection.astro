@@ -2,169 +2,143 @@
 interface Props {
   lang: string;
 }
-
 const { lang } = Astro.props;
 
-// Base URL de Strapi (desde .env)
-const STRAPI_API =
-  import.meta.env.PUBLIC_STRAPI_URL || "https://api.belgotours.com/api";
+const STRAPI_API = import.meta.env.PUBLIC_STRAPI_URL || "https://api.belgotours.com/api";
 
-// ---------------------------------------------
-// Textos por idioma
-// ---------------------------------------------
 const textsByLang = {
-  es: {
-    title: "Lo que dicen nuestros viajeros",
-    subtitle: "Opiniones reales y verificadas de personas que han vivido nuestros tours.",
-    moreReviews: "Mostrar más reseñas",
-    noReviews: "Aún no hay reseñas disponibles en este idioma."
-  },
-  en: {
-    title: "What our travelers say",
-    subtitle: "Real, verified reviews from people who experienced our tours.",
-    moreReviews: "Show more reviews",
-    noReviews: "No reviews available in this language yet."
-  },
-  it: {
-    title: "Cosa dicono i nostri viaggiatori",
-    subtitle: "Recensioni reali e verificate di chi ha vissuto i nostri tour.",
-    moreReviews: "Mostra altre recensioni",
-    noReviews: "Nessuna recensione disponibile in questa lingua."
-  },
-  fr: {
-    title: "Ce que disent nos voyageurs",
-    subtitle: "Avis réels et vérifiés de voyageurs ayant participé à nos tours.",
-    moreReviews: "Voir plus d’avis",
-    noReviews: "Aucun avis disponible dans cette langue."
-  },
-  pt: {
-    title: "O que dizem nossos viajantes",
-    subtitle: "Avaliações reais e verificadas de quem viveu nossos tours.",
-    moreReviews: "Ver mais avaliações",
-    noReviews: "Ainda não há avaliações neste idioma."
-  }
+  es: { title: "Lo que dicen nuestros viajeros", subtitle: "Opiniones reales y verificadas", badge: "reseñas verificadas", moreReviews: "Ver más reseñas", noReviews: "Aún no hay reseñas en este idioma." },
+  en: { title: "What our travelers say", subtitle: "Real, verified reviews", badge: "verified reviews", moreReviews: "See more reviews", noReviews: "No reviews available yet." },
+  it: { title: "Cosa dicono i nostri viaggiatori", subtitle: "Recensioni reali e verificate", badge: "recensioni verificate", moreReviews: "Vedi altre recensioni", noReviews: "Nessuna recensione disponibile." },
+  fr: { title: "Ce que disent nos voyageurs", subtitle: "Avis réels et vérifiés", badge: "avis vérifiés", moreReviews: "Voir plus d'avis", noReviews: "Aucun avis disponible." },
+  pt: { title: "O que dizem nossos viajantes", subtitle: "Avaliações reais e verificadas", badge: "avaliações verificadas", moreReviews: "Ver mais avaliações", noReviews: "Ainda não há avaliações." }
 };
-
 const t = textsByLang[lang] || textsByLang.es;
 
-// ---------------------------------------------
-// Fetch reviews públicas para HOME
-// ---------------------------------------------
-const params = new URLSearchParams();
-params.set("idioma", lang);
-
-const url = `${STRAPI_API}/public/reviews?${params.toString()}`;
-
-let reviews = [];
+// Fetch reviews
+let reviews: any[] = [];
+let totalReviews = 0;
+let avgRating = 0;
 
 try {
-  const res = await fetch(url);
+  const res = await fetch(`${STRAPI_API}/public/reviews?idioma=${lang}`);
   if (res.ok) {
     const json = await res.json();
     reviews = json?.data ?? [];
-  } else {
-    console.error("❌ Error HTTP reviews home:", res.status);
+    totalReviews = reviews.length;
+    if (totalReviews > 0) {
+      avgRating = reviews.reduce((s: number, r: any) => s + (Number(r.rating_general) || 0), 0) / totalReviews;
+    }
   }
-} catch (e) {
-  console.error("❌ Error loading home reviews", e);
-}
+} catch (e) {}
 
-// ---------------------------------------------
-// Agrupar por tour_slug y limitar a 2 por tour
-// ---------------------------------------------
-const reviewsByTour = {};
-
-for (const r of reviews) {
-  const slug = r.tour_slug;
-  if (!slug) continue;
-
-  if (!reviewsByTour[slug]) {
-    reviewsByTour[slug] = [];
-  }
-
-  if (reviewsByTour[slug].length < 2) {
-    reviewsByTour[slug].push(r);
-  }
-}
-
-const tourEntries = Object.entries(reviewsByTour).slice(0, 3);
-
+// Mostrar máximo 6 reviews inicialmente
+const initialReviews = reviews.slice(0, 6);
 ---
 
-<section id="reviews" class="bg-[#0A0A0A] py-20">
+<section id="reviews" class="bg-neutral-50 py-16 md:py-20">
   <div class="max-w-7xl mx-auto px-4">
 
-    <!-- Header -->
-    <div class="text-center max-w-3xl mx-auto mb-14">
-      <h2 class="text-3xl md:text-4xl font-semibold text-white mb-4">
+    <!-- Header con stats reales -->
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <h2 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">
         {t.title}
       </h2>
-      <p class="text-[#6B7280] text-lg">
-        {t.subtitle}
-      </p>
+      {totalReviews > 0 && (
+        <div class="flex items-center justify-center gap-3 mt-4">
+          <div class="flex items-center gap-1.5 bg-white border border-neutral-200 rounded-full px-4 py-2 shadow-sm">
+            <span class="text-yellow-400 text-lg">★</span>
+            <span class="font-bold text-neutral-900 text-lg">{avgRating.toFixed(1)}</span>
+            <span class="text-neutral-500 text-sm">/ 5</span>
+          </div>
+          <div class="bg-white border border-neutral-200 rounded-full px-4 py-2 shadow-sm text-sm text-neutral-600">
+            {totalReviews}+ {t.badge}
+          </div>
+        </div>
+      )}
+      <p class="text-neutral-500 mt-3 text-base">{t.subtitle}</p>
     </div>
 
-    <!-- Reviews por tour -->
-    {tourEntries.length > 0 ? (
-      <div class="space-y-14">
-        {tourEntries.map(([slug, items]) => (
-          <div>
-            
+    <!-- Grid de reviews -->
+    {initialReviews.length > 0 ? (
+      <div>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="reviews-grid">
+          {initialReviews.map((r: any) => (
+            <article class="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow">
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <div class="font-semibold text-neutral-900 text-sm">{r.cliente_nombre}</div>
+                  {r.cliente_pais && (
+                    <div class="text-xs text-neutral-400 mt-0.5">{r.cliente_pais}</div>
+                  )}
+                </div>
+                <div class="text-yellow-400 text-sm flex-shrink-0">
+                  {"★".repeat(Math.min(5, Number(r.rating_general) || 0))}
+                </div>
+              </div>
+              <p class="text-neutral-600 text-sm leading-relaxed line-clamp-4">
+                {r.comentario_publico || "El viajero dejó una valoración positiva."}
+              </p>
+              <div class="mt-3 pt-3 border-t border-neutral-100 text-xs text-neutral-400">
+                {new Date(r.fecha_tour).toLocaleDateString(
+                  lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "fr" ? "fr-FR" : "es-ES",
+                  { day: "numeric", month: "long", year: "numeric" }
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
 
-
-            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((r) => (
-                <article class="bg-[#111111] rounded-2xl p-6 shadow-md">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="text-white font-medium">
-                      {r.cliente_nombre}
-                    </span>
-                    <span class="text-[#FACC15] text-sm">
-                      {"★".repeat(r.rating_general)}
-                    </span>
-                  </div>
-
-                  <p class="text-[#6B7280] text-sm leading-relaxed line-clamp-4">
-                    {r.comentario_publico || "El viajero dejó una valoración sin comentario."}
-                  </p>
-
-                  <div class="mt-4 text-xs text-[#6B7280] flex justify-between">
-                    <span>{r.cliente_pais || ""}</span>
-                    <span>{new Date(r.fecha_tour).toLocaleDateString()}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
+        {reviews.length > 6 && (
+          <div class="text-center mt-8">
+            <button
+              id="loadMoreReviews"
+              type="button"
+              class="inline-flex items-center gap-2 px-6 py-3 rounded-full border-2 border-neutral-900 text-neutral-900 font-semibold text-sm hover:bg-neutral-900 hover:text-white transition-all duration-200"
+            >
+              {t.moreReviews} ({reviews.length - 6})
+            </button>
           </div>
-        ))}
+        )}
       </div>
     ) : (
-      <p class="text-center text-[#6B7280]">
-        {t.noReviews}
-      </p>
+      <p class="text-center text-neutral-400 py-8">{t.noReviews}</p>
     )}
-
-    <!-- CTA -->
-    <div class="mt-20 flex flex-col sm:flex-row items-center justify-center gap-4">
-  <button
-    id="loadMoreReviews"
-    type="button"
-    class="bg-[#FACC15] text-black font-semibold px-8 py-4 rounded-xl hover:opacity-90 transition"
-    aria-label={t.moreReviews}
-  >
-    {t.moreReviews}
-  </button>
-</div>
-
-
   </div>
 </section>
 
+<script define:vars={{ allReviews: reviews, lang }}>
+const btn = document.getElementById("loadMoreReviews");
+const grid = document.getElementById("reviews-grid");
+if (btn && grid) {
+  btn.addEventListener("click", () => {
+    const extra = allReviews.slice(6);
+    extra.forEach(r => {
+      const stars = "★".repeat(Math.min(5, Number(r.rating_general) || 0));
+      const fecha = new Date(r.fecha_tour).toLocaleDateString(
+        lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "fr" ? "fr-FR" : "es-ES",
+        { day: "numeric", month: "long", year: "numeric" }
+      );
+      const el = document.createElement("article");
+      el.className = "bg-white rounded-2xl p-5 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow";
+      el.innerHTML = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.75rem;">
+          <div>
+            <div style="font-weight:600;color:#111827;font-size:0.875rem;">${r.cliente_nombre || ""}</div>
+            ${r.cliente_pais ? `<div style="font-size:0.75rem;color:#9ca3af;margin-top:2px;">${r.cliente_pais}</div>` : ""}
+          </div>
+          <div style="color:#facc15;font-size:0.875rem;flex-shrink:0;">${stars}</div>
+        </div>
+        <p style="color:#4b5563;font-size:0.875rem;line-height:1.6;">${r.comentario_publico || "El viajero dejó una valoración positiva."}</p>
+        <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #f3f4f6;font-size:0.75rem;color:#9ca3af;">${fecha}</div>
+      `;
+      grid.appendChild(el);
+    });
+    btn.style.display = "none";
+  });
+}
+</script>
+
 <style>
-  .line-clamp-4 {
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  .line-clamp-4 { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
 </style>
