@@ -1,0 +1,159 @@
+---
+interface Props {
+  lang: string;
+  tourType: 'free' | 'privado' | 'especial';
+  ciudad: string;
+}
+const { lang, tourType, ciudad } = Astro.props;
+const cityName = ciudad === 'bruselas'
+  ? (lang === 'en' ? 'Brussels' : lang === 'it' ? 'Bruxelles' : lang === 'fr' ? 'Bruxelles' : 'Bruselas')
+  : (lang === 'en' ? 'Bruges' : lang === 'it' ? 'Bruges' : lang === 'fr' ? 'Bruges' : 'Brujas');
+
+type FAQ = { q: string; a: string };
+
+const FAQS: Record<string, Record<string, FAQ[]>> = {
+  es: {
+    free: [
+      { q: `¿Qué es un free tour en ${cityName}?`, a: `Un free tour en ${cityName} es una visita guiada a pie sin precio fijo. Al final del recorrido decides cuánto aportar según tu experiencia. Es la forma más económica y auténtica de conocer la ciudad con un guía local.` },
+      { q: "¿Hay que pagar algo por adelantado?", a: "No. La reserva es completamente gratuita. Solo al final del tour, si te ha gustado la experiencia, contribuyes con la cantidad que consideres justa. No hay ningún cargo obligatorio." },
+      { q: "¿Cuánto se suele dar de propina en un free tour?", a: "La mayoría de los viajeros contribuye entre 10 y 20 euros por persona. Si el guía ha hecho un trabajo excelente, entre 15 y 20 euros es una propina muy justa." },
+      { q: "¿En qué idioma es el tour?", a: "El tour se realiza en español. Nuestros guías son nativos o tienen un nivel avanzado de español, por lo que la experiencia es completamente natural y fluida." },
+      { q: "¿Cuántas personas van en el grupo?", a: "Trabajamos con grupos reducidos de máximo 15 personas. Esto garantiza una experiencia cercana, personalizada y muy diferente a los recorridos masivos." },
+      { q: "¿Qué pasa si llueve?", a: "El tour se realiza con cualquier clima. Te recomendamos llevar ropa cómoda y, si el tiempo lo requiere, un paraguas o chubasquero. Bélgica tiene un clima variable, ¡ven preparado!" },
+      { q: "¿Se puede cancelar la reserva?", a: "Sí, la cancelación es completamente gratuita. Puedes cancelar tu reserva en cualquier momento sin ningún coste." },
+    ],
+    privado: [
+      { q: `¿Qué incluye el tour privado en ${cityName}?`, a: `El tour privado en ${cityName} es una visita personalizada con un guía exclusivo para tu grupo. El itinerario, la duración y el precio se definen directamente contigo tras la reserva.` },
+      { q: "¿Cuánto cuesta el tour privado?", a: "El precio es orientativo y se acuerda directamente por WhatsApp o email tras la reserva. El coste varía según la duración, el número de personas y el itinerario elegido." },
+      { q: "¿Hay que pagar por adelantado?", a: "No. La reserva no tiene ningún coste. Tras reservar, nos ponemos en contacto contigo para definir todos los detalles y el precio final del tour." },
+      { q: "¿Se puede personalizar el itinerario?", a: "Sí, completamente. El tour privado se adapta a tus intereses: puedes incluir museos, barrios específicos, paradas gastronómicas o cualquier lugar que te interese visitar." },
+      { q: "¿En qué idiomas está disponible el tour privado?", a: "El tour privado está disponible en español, inglés, italiano y francés según disponibilidad de guías." },
+    ],
+    especial: [
+      { q: "¿Qué incluye el tour de chocolate y cerveza?", a: "El tour incluye degustación de 3 chocolates belgas artesanales y cata de 3 cervezas belgas seleccionadas, todo ello durante un recorrido guiado por el centro histórico de Bruselas." },
+      { q: "¿Cuándo se paga el tour?", a: "El pago se realiza directamente al guía el día del tour. No hay que pagar nada por adelantado en la reserva." },
+      { q: "¿Es apto para niños?", a: "La degustación de cerveza está reservada para mayores de 18 años. Los menores pueden participar en el recorrido pero no en la cata de cerveza." },
+      { q: "¿Hay que tener conocimientos previos de chocolate o cerveza?", a: "No hace falta ningún conocimiento previo. El guía te explicará todo sobre la historia, elaboración y características de cada producto de forma amena y accesible." },
+    ],
+  },
+  en: {
+    free: [
+      { q: `What is a free tour in ${cityName}?`, a: `A free tour in ${cityName} is a guided walking tour with no fixed price. At the end of the tour you decide how much to contribute based on your experience. It is the most affordable and authentic way to discover the city with a local guide.` },
+      { q: "Do I need to pay anything in advance?", a: "No. The booking is completely free. Only at the end of the tour, if you enjoyed the experience, you contribute whatever amount you feel is fair. There is no mandatory charge." },
+      { q: "How much should I tip on a free tour?", a: "Most travellers contribute between €10 and €20 per person. If the guide did an excellent job, €15–20 is a very fair tip." },
+      { q: "What language is the tour in?", a: "The tour is conducted in English by local expert guides." },
+      { q: "How many people are in the group?", a: "We work with small groups of maximum 15 people. This ensures a close, personalised experience very different from mass tourism tours." },
+      { q: "What if it rains?", a: "The tour takes place in all weather conditions. We recommend wearing comfortable clothes and bringing an umbrella or raincoat if needed." },
+      { q: "Can I cancel my booking?", a: "Yes, cancellation is completely free. You can cancel your booking at any time with no cost." },
+    ],
+    privado: [
+      { q: `What does the private tour in ${cityName} include?`, a: `The private tour in ${cityName} is a personalised visit with an exclusive guide for your group. The itinerary, duration and price are agreed directly with you after booking.` },
+      { q: "How much does the private tour cost?", a: "The price is indicative and agreed directly via WhatsApp or email after booking. The cost varies depending on duration, number of people and chosen itinerary." },
+      { q: "Is there anything to pay in advance?", a: "No. The booking has no cost. After booking, we contact you to define all the details and the final price of the tour." },
+      { q: "Can the itinerary be customised?", a: "Yes, completely. The private tour adapts to your interests: you can include museums, specific neighbourhoods, food stops or any place you want to visit." },
+    ],
+    especial: [
+      { q: "What does the chocolate and beer tour include?", a: "The tour includes a tasting of 3 artisan Belgian chocolates and 3 selected Belgian beers, all during a guided walk through the historic centre of Brussels." },
+      { q: "When do I pay for the tour?", a: "Payment is made directly to the guide on the day of the tour. Nothing needs to be paid in advance when booking." },
+    ],
+  },
+  it: {
+    free: [
+      { q: `Cos'è un free tour a ${cityName}?`, a: `Un free tour a ${cityName} è una visita guidata a piedi senza prezzo fisso. Alla fine del tour decidi tu quanto lasciare in base alla tua esperienza. È il modo più economico e autentico per scoprire la città con una guida locale.` },
+      { q: "Bisogna pagare qualcosa in anticipo?", a: "No. La prenotazione è completamente gratuita. Solo alla fine del tour, se hai apprezzato l'esperienza, contribuisci con l'importo che ritieni giusto." },
+      { q: "Quanto si lascia di mancia in un free tour?", a: "La maggior parte dei viaggiatori lascia tra 10 e 20 euro a persona. Se la guida ha fatto un ottimo lavoro, 15–20 euro è una mancia molto adeguata." },
+      { q: "Quante persone ci sono nel gruppo?", a: "Lavoriamo con gruppi ridotti di massimo 15 persone per garantire un'esperienza personalizzata e autentica." },
+    ],
+    privado: [
+      { q: `Cosa include il tour privato a ${cityName}?`, a: `Il tour privato a ${cityName} è una visita personalizzata con una guida esclusiva per il tuo gruppo. Itinerario, durata e prezzo vengono definiti direttamente con te dopo la prenotazione.` },
+    ],
+    especial: [
+      { q: "Cosa include il tour del cioccolato e della birra?", a: "Il tour include la degustazione di 3 cioccolati belgi artigianali e l'assaggio di 3 birre belghe selezionate, durante una passeggiata guidata nel centro storico di Bruxelles." },
+    ],
+  },
+  fr: {
+    free: [
+      { q: `Qu'est-ce qu'un free tour à ${cityName}?`, a: `Un free tour à ${cityName} est une visite guidée à pied sans prix fixe. À la fin de la visite, vous décidez combien contribuer selon votre expérience. C'est la façon la plus abordable et authentique de découvrir la ville avec un guide local.` },
+      { q: "Faut-il payer quelque chose à l'avance?", a: "Non. La réservation est entièrement gratuite. Seulement à la fin de la visite, si vous avez apprécié l'expérience, vous contribuez du montant que vous jugez juste." },
+      { q: "Combien de personnes y a-t-il dans le groupe?", a: "Nous travaillons avec des groupes réduits de maximum 15 personnes pour garantir une expérience personnalisée et authentique." },
+    ],
+    privado: [
+      { q: `Que comprend le tour privé à ${cityName}?`, a: `Le tour privé à ${cityName} est une visite personnalisée avec un guide exclusif pour votre groupe. L'itinéraire, la durée et le prix sont définis directement avec vous après la réservation.` },
+    ],
+    especial: [
+      { q: "Que comprend le tour chocolat et bière?", a: "Le tour comprend une dégustation de 3 chocolats belges artisanaux et de 3 bières belges sélectionnées, pendant une promenade guidée dans le centre historique de Bruxelles." },
+    ],
+  },
+};
+
+const safeLang = ['es','en','it','fr'].includes(lang) ? lang : 'es';
+const faqList = FAQS[safeLang]?.[tourType] || FAQS['es']?.[tourType] || [];
+
+// Schema FAQ para Google
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqList.map(faq => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: { "@type": "Answer", text: faq.a }
+  }))
+};
+---
+
+{faqList.length > 0 && (
+  <section class="py-14 bg-white border-t border-neutral-100">
+    <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+    <div class="max-w-3xl mx-auto px-4">
+      <h2 class="text-2xl md:text-3xl font-bold text-neutral-900 mb-8">
+        {lang === 'en' ? 'Frequently Asked Questions' :
+         lang === 'it' ? 'Domande Frequenti' :
+         lang === 'fr' ? 'Questions Fréquentes' :
+         'Preguntas Frecuentes'}
+      </h2>
+      <div class="space-y-3" id="faq-list">
+        {faqList.map((faq, i) => (
+          <div class="faq-item border border-neutral-200 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              class="faq-trigger w-full text-left px-5 py-4 flex items-center justify-between gap-3 hover:bg-neutral-50 transition-colors"
+              aria-expanded="false"
+              data-index={i}
+            >
+              <span class="font-semibold text-neutral-900 text-sm md:text-base">{faq.q}</span>
+              <svg class="faq-icon w-5 h-5 text-neutral-400 flex-shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div class="faq-answer hidden px-5 pb-4 text-sm text-neutral-600 leading-relaxed">
+              {faq.a}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<script>
+document.querySelectorAll('.faq-trigger').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.faq-item');
+    const answer = item?.querySelector('.faq-answer');
+    const icon = btn.querySelector('.faq-icon');
+    const isOpen = !answer?.classList.contains('hidden');
+
+    // Cerrar todos
+    document.querySelectorAll('.faq-answer').forEach(a => a.classList.add('hidden'));
+    document.querySelectorAll('.faq-icon').forEach(i => i.classList.remove('rotate-180'));
+    document.querySelectorAll('.faq-trigger').forEach(b => b.setAttribute('aria-expanded','false'));
+
+    // Abrir el actual si estaba cerrado
+    if (!isOpen) {
+      answer?.classList.remove('hidden');
+      icon?.classList.add('rotate-180');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+</script>

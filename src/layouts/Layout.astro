@@ -8,9 +8,12 @@ interface Props {
   title: string;
   description?: string;
   canonical?: string;
+  noindex?: boolean;
 }
 
-const { title, description, canonical } = Astro.props;
+const { title, description, canonical: canonicalProp, noindex = false } = Astro.props;
+// Canonical automático — usa el prop si existe, sino construye desde la URL actual
+const canonical = canonicalProp || `https://belgotours.com${currentUrl.replace(/\/$/, '')}${currentUrl.endsWith('/') ? '/' : ''}`;
 const currentUrl = Astro.url.pathname;
 const currentLang = currentUrl.split("/")[1] || "es";
 
@@ -20,8 +23,32 @@ const currentLang = currentUrl.split("/")[1] || "es";
  */
 const isTourDetailPage = /^\/[a-z]{2}\/tours\/[^/]+\/?$/.test(currentUrl);
 
-// Generar etiquetas hreflang
 const languages = ["es", "en", "it", "fr", "pt"];
+
+// Hreflang seguro — solo URLs reales
+const hrefPath = currentUrl.replace(/^\/[a-z]{2}/, '').replace(/\/$/, '');
+const isHomePage = hrefPath === '' || hrefPath === '/';
+const isTourPath = hrefPath.startsWith('/tours/');
+const isLegal = ['/privacy','/terms','/cookies','/legal-notice'].some(p => hrefPath.startsWith(p));
+const TOUR_MAP: Record<string, Record<string, string>> = {
+  '/tours/free-tour-bruselas':              {es:'/tours/free-tour-bruselas',en:'/tours/free-tour-brussels',it:'/tours/free-tour-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/free-tour-bruselas'},
+  '/tours/free-tour-brujas':                {es:'/tours/free-tour-brujas',en:'/tours/free-tour-brussels',it:'/tours/free-tour-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/free-tour-brujas'},
+  '/tours/tour-chocolate-cerveza-bruselas': {es:'/tours/tour-chocolate-cerveza-bruselas',en:'/tours/free-tour-brussels',it:'/tours/free-tour-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/tour-chocolate-cerveza-bruselas'},
+  '/tours/tour-privado-bruselas':           {es:'/tours/tour-privado-bruselas',en:'/tours/private-tour-brussels',it:'/tours/tour-privato-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/tour-privado-bruselas'},
+  '/tours/tour-privado-brujas':             {es:'/tours/tour-privado-brujas',en:'/tours/private-tour-brussels',it:'/tours/tour-privato-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/tour-privado-brujas'},
+  '/tours/free-tour-brussels':              {es:'/tours/free-tour-bruselas',en:'/tours/free-tour-brussels',it:'/tours/free-tour-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/free-tour-brussels'},
+  '/tours/private-tour-brussels':           {es:'/tours/tour-privado-bruselas',en:'/tours/private-tour-brussels',it:'/tours/tour-privato-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/private-tour-brussels'},
+  '/tours/free-tour-bruxelles':             {es:'/tours/free-tour-bruselas',en:'/tours/free-tour-brussels',it:'/tours/free-tour-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/free-tour-bruxelles'},
+  '/tours/tour-privato-bruxelles':          {es:'/tours/tour-privado-bruselas',en:'/tours/private-tour-brussels',it:'/tours/tour-privato-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/tour-privato-bruxelles'},
+  '/tours/tour-prive-bruxelles':            {es:'/tours/tour-privado-bruselas',en:'/tours/private-tour-brussels',it:'/tours/tour-privato-bruxelles',fr:'/tours/tour-prive-bruxelles',pt:'/tours/tour-privado-bruselas'},
+};
+const slugMap = isTourPath ? (TOUR_MAP[hrefPath] ?? null) : null;
+const hreflangLinks = languages.map(lang => {
+  if (isHomePage) return {lang, href: `https://belgotours.com/${lang}/`};
+  if (isTourPath && slugMap?.[lang]) return {lang, href: `https://belgotours.com/${lang}${slugMap[lang]}`};
+  if (isLegal) return {lang, href: `https://belgotours.com/${lang}${hrefPath}`};
+  return null;
+}).filter((x): x is {lang: string; href: string} => x !== null);
 ---
 
 
@@ -42,15 +69,11 @@ const languages = ["es", "en", "it", "fr", "pt"];
     {description && <meta name="description" content={description} />}
 
     {canonical && <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-    {languages.map((lang) => (
-      <link
-        rel="alternate"
-        hreflang={lang}
-        href={`https://belgotours.com/${lang}${currentUrl.replace(/^\/[a-z]{2}/, '')}`}
-      />
+    {hreflangLinks.map(({lang, href}) => (
+      <link rel="alternate" hreflang={lang} href={href} />
     ))}
-
     <link rel="alternate" hreflang="x-default" href="https://belgotours.com/en/" />
 
     <meta property="og:title" content={title} />

@@ -1,4 +1,20 @@
 User-agent: *
 Allow: /
 
+# Dashboard privado — bloqueo total
+Disallow: /app/
+Disallow: /api/
+
+# Proceso de reserva — no indexar
+Disallow: /*/booking-success
+Disallow: /*/booking-edit
+Disallow: /*/booking-view
+Disallow: /*/resenas/formulario
+Disallow: /*/resenas/gracias
+Disallow: /*/resenas/
+
+# Archivos internos
+Disallow: /_astro/
+Disallow: /cdn-cgi/
+
 Sitemap: https://belgotours.com/sitemap.xml

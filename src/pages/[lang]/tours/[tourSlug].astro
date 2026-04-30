@@ -20,6 +20,7 @@ import AIAssistant from "../../../components/tours/AIAssistant.astro";
 import GamificationSystem from "../../../components/tours/GamificationSystem.astro";
 
 import BookingForm from "../../../components/booking/BookingForm.astro";
+import TourFAQ from "../../../components/tours/TourFAQ.astro";
 
 
 /* =========================================================
@@ -406,13 +407,22 @@ REVIEWS (schema gating)
 /* =========================================================
 SEO (title/description/canonical)
 ========================================================= */
-const metaTitle =
-(tour.seoTitle && tour.seoTitle.trim()) ||
-`${tour.titulo} | BelgoTours`;
+const rawTitle = (tour.seoTitle && tour.seoTitle.trim()) || tour.titulo;
+const metaTitle = rawTitle.includes('BelgoTours')
+  ? rawTitle
+  : `${rawTitle} | BelgoTours`;
+
+// Limpiar HTML de seo_description para meta tag
+const stripHtml = (html: string) => html
+  .replace(/<[^>]*>/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .slice(0, 160);
 
 const metaDescription =
-(tour.seoDescription && tour.seoDescription.trim()) ||
-heroSubtitle;
+  (tour.seoDescription && tour.seoDescription.trim())
+    ? stripHtml(tour.seoDescription)
+    : heroSubtitle;
 
 const canonicalUrl =
 (tour.seoCanonical && tour.seoCanonical.trim()) ||
@@ -816,6 +826,13 @@ class="bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semi
     </div>
   </div>
 </section>
+
+<!-- 6b) FAQ -->
+<TourFAQ
+  lang={lang}
+  tourType={tour.tipo_tour === 'privado' ? 'privado' : tour.tipo_tour === 'especial' ? 'especial' : 'free'}
+  ciudad={tour.ciudad || 'bruselas'}
+/>
 
 <!-- 7) GUÍAS DEL TOUR -->
 <GuidesSectionTour lang={lang} guias={tour.guias} />

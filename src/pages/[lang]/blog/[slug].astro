@@ -1,0 +1,272 @@
+---
+export const prerender = false;
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+
+const { lang, slug } = Astro.params as { lang: string; slug: string };
+const safeLang = ['es','en','it','fr','pt'].includes(lang) ? lang : 'es';
+
+// Artículos por slug e idioma
+type Article = {
+  title: string;
+  description: string;
+  date: string;
+  image: string;
+  content: string;
+  tourCta: { text: string; url: string };
+};
+
+const ARTICLES: Record<string, Record<string, Article>> = {
+  es: {
+    "que-ver-en-bruselas": {
+      title: "Qué ver en Bruselas: los lugares imprescindibles",
+      description: "Descubre los monumentos, barrios y rincones que no puedes perderte en tu visita a Bruselas. Guía completa con los mejores lugares de la capital belga.",
+      date: "2026-04-01",
+      image: "/images/hero/bruselas-hero.webp",
+      tourCta: { text: "Descúbrelos con un guía local", url: "/es/tours/free-tour-bruselas" },
+      content: `
+        <h2>La Grand Place</h2>
+        <p>La Grand Place es el corazón de Bruselas y uno de los espacios urbanos más bellos de Europa. Rodeada de gremios del siglo XVII y el Ayuntamiento gótico, es imprescindible tanto de día como de noche cuando se ilumina.</p>
+
+        <h2>Manneken Pis</h2>
+        <p>A pocos metros de la Grand Place encontrarás la famosa estatua del Manneken Pis, símbolo irreverente y querido de la ciudad. Es más pequeño de lo que imaginas, pero su historia y las leyendas que lo rodean lo hacen único.</p>
+
+        <h2>Las Galerías Saint-Hubert</h2>
+        <p>Inauguradas en 1847, las Galerías Saint-Hubert fueron las primeras galerías comerciales cubiertas de Europa. Hoy albergan chocolaterías, librerías y cafés de lujo bajo una magnífica estructura de hierro y cristal.</p>
+
+        <h2>Mont des Arts</h2>
+        <p>Desde el Mont des Arts tendrás una de las mejores vistas panorámicas de Bruselas. El jardín que conecta la ciudad baja con la alta es perfecto para un paseo tranquilo con vistas a la ciudad.</p>
+
+        <h2>El barrio del Sablon</h2>
+        <p>El Sablon es el barrio más elegante de Bruselas, conocido por sus anticuarios, chocolaterías de lujo y la hermosa iglesia de Notre-Dame du Sablon. Los fines de semana hay un mercado de antigüedades en la plaza.</p>
+
+        <h2>El barrio Europeo</h2>
+        <p>Bruselas es la capital de facto de la Unión Europea. El barrio europeo, con el Parlamento y el Berlaymont, es una visita interesante para entender el papel político de la ciudad en el mundo.</p>
+
+        <h2>El Atomium</h2>
+        <p>Construido para la Exposición Universal de 1958, el Atomium es uno de los símbolos más reconocibles de Bruselas. Representa un cristal de hierro ampliado 165 mil millones de veces y ofrece vistas panorámicas de la ciudad desde su esfera superior.</p>
+
+        <h2>Consejos para visitar Bruselas</h2>
+        <ul>
+          <li>La mejor forma de conocer el centro histórico es a pie — todo está muy cerca</li>
+          <li>Prueba las gaufres, los chocolates y las frites belgas auténticas</li>
+          <li>El museo de los Instrumentos Musicales y el MRBAB son gratuitos el primer miércoles de cada mes</li>
+          <li>Bruselas tiene uno de los mejores sistemas de transporte público de Europa</li>
+        </ul>
+      `
+    },
+    "free-tour-bruselas-guia-completa": {
+      title: "Free Tour Bruselas: guía completa para reservar",
+      description: "Todo lo que necesitas saber sobre los free tours en Bruselas: cómo funcionan, qué ver, cuánto dar de propina y cómo reservar el mejor free tour en español.",
+      date: "2026-04-10",
+      image: "/images/hero/bruselas-hero.webp",
+      tourCta: { text: "Reservar Free Tour Bruselas", url: "/es/tours/free-tour-bruselas" },
+      content: `
+        <h2>¿Qué es un free tour?</h2>
+        <p>Un free tour es una visita guiada a pie en la que no pagas un precio fijo por adelantado. Al final del recorrido, decides cuánto aportar según tu experiencia. Es una forma honesta y flexible de conocer una ciudad con un guía local.</p>
+
+        <h2>¿Cómo funciona el free tour de Bruselas?</h2>
+        <p>El recorrido dura aproximadamente 2 horas y 15 minutos y sale desde la Grand Place. Durante el tour visitarás los principales monumentos del centro histórico acompañado de un guía local en español que te contará la historia, las curiosidades y las leyendas de cada lugar.</p>
+
+        <h2>¿Qué se visita en el free tour?</h2>
+        <ul>
+          <li>Grand Place — la plaza más bonita de Europa</li>
+          <li>Manneken Pis y sus leyendas</li>
+          <li>Galerías Saint-Hubert</li>
+          <li>Barrio de Saint-Géry</li>
+          <li>Mont des Arts con vistas panorámicas</li>
+          <li>Barrio del Sablon</li>
+        </ul>
+
+        <h2>¿Cuánto se da de propina en un free tour?</h2>
+        <p>No hay un importe obligatorio, pero la mayoría de los viajeros contribuye entre 10 y 20 euros por persona. Si el tour te ha gustado y el guía ha hecho un buen trabajo, entre 15 y 20 euros es una propina justa.</p>
+
+        <h2>¿Por qué elegir BelgoTours para el free tour de Bruselas?</h2>
+        <p>BelgoTours es un operador local independiente con guías nativos o de nivel avanzado en español. A diferencia de las grandes plataformas, nuestros grupos son reducidos (máximo 15 personas) y el trato es cercano y personalizado.</p>
+      `
+    },
+    "que-ver-en-brujas-en-un-dia": {
+      title: "Qué ver en Brujas en un día: itinerario completo",
+      description: "Itinerario completo para ver lo mejor de Brujas en un día. Canales, plazas medievales y rincones escondidos de la ciudad más bonita de Bélgica.",
+      date: "2026-04-15",
+      image: "/images/hero/bruselas-hero.webp",
+      tourCta: { text: "Free Tour Brujas en Español", url: "/es/tours/free-tour-brujas" },
+      content: `
+        <h2>Brujas en un día: es posible</h2>
+        <p>Brujas es una ciudad compacta y perfecta para visitar en un día, especialmente si vienes desde Bruselas en tren (solo 1 hora). Aquí te proponemos el itinerario más completo para aprovechar cada momento.</p>
+
+        <h2>Mañana: el centro histórico</h2>
+        <p>Empieza en el Markt, la plaza central de Brujas, con el imponente Campanario medieval. Sube al campanario para tener una vista panorámica de toda la ciudad. A pocos pasos está el Burg, la plaza donde se concentra la historia política de la ciudad.</p>
+
+        <h2>A mediodía: los canales</h2>
+        <p>Los canales son el alma de Brujas. Pasea por el Rozenhoedkaai para la foto más icónica de la ciudad, y continúa hasta el Lago del Amor (Minnewater), un lugar romántico y tranquilo alejado del turismo masivo.</p>
+
+        <h2>Tarde: barrios y cerveza belga</h2>
+        <p>El barrio de los Curtidores (Tannerij) es el más pintoresco de Brujas. Termina el día en una de las cervecerías locales probando la cerveza Brugse Zot, fabricada en la única cervecería que queda dentro de las murallas de la ciudad.</p>
+
+        <h2>Cómo llegar a Brujas desde Bruselas</h2>
+        <p>El tren directo desde Bruselas-Central o Bruselas-Midi tarda entre 55 y 65 minutos y sale con frecuencia. El precio es de unos 15 euros ida y vuelta. Desde la estación de Brujas el centro histórico está a 15 minutos a pie.</p>
+      `
+    },
+  },
+  en: {
+    "things-to-do-in-brussels": {
+      title: "Things to do in Brussels: the ultimate guide",
+      description: "Discover the best things to do in Brussels: monuments, hidden neighbourhoods, Belgian food and insider tips from local guides.",
+      date: "2026-04-01",
+      image: "/images/hero/bruselas-hero.webp",
+      tourCta: { text: "Explore Brussels with a local guide", url: "/en/tours/free-tour-brussels" },
+      content: `
+        <h2>The Grand Place</h2>
+        <p>The Grand Place is the beating heart of Brussels and one of the most stunning urban squares in Europe. Surrounded by 17th-century guild houses and a Gothic Town Hall, it is unmissable both by day and when illuminated at night.</p>
+
+        <h2>Manneken Pis</h2>
+        <p>Just a few steps from the Grand Place, you will find the famous Manneken Pis statue — a small but beloved symbol of Brussels. It is smaller than most people expect, but its history and legends make it unique.</p>
+
+        <h2>The Galeries Saint-Hubert</h2>
+        <p>Opened in 1847, the Galeries Saint-Hubert were the first covered shopping arcades in Europe. Today they house chocolatiers, bookshops and elegant cafés beneath a beautiful iron-and-glass structure.</p>
+
+        <h2>Mont des Arts</h2>
+        <p>From the Mont des Arts you will have one of the best panoramic views of Brussels. The garden connecting the lower and upper city is perfect for a quiet stroll with views over the rooftops.</p>
+
+        <h2>Tips for visiting Brussels</h2>
+        <ul>
+          <li>The historic centre is best explored on foot — everything is within walking distance</li>
+          <li>Try Belgian waffles, chocolates and authentic frites</li>
+          <li>Several museums offer free entry on the first Wednesday of each month</li>
+          <li>Brussels has one of the best public transport systems in Europe</li>
+        </ul>
+      `
+    },
+    "free-walking-tour-brussels-guide": {
+      title: "Free Walking Tour Brussels: complete guide",
+      description: "Everything you need to know about free walking tours in Brussels: how they work, what to see, how much to tip and how to book the best free tour in English.",
+      date: "2026-04-10",
+      image: "/images/hero/bruselas-hero.webp",
+      tourCta: { text: "Book Free Tour Brussels", url: "/en/tours/free-tour-brussels" },
+      content: `
+        <h2>What is a free tour?</h2>
+        <p>A free tour is a guided walking tour with no fixed price. At the end of the tour, you decide how much to contribute based on your experience. It is an honest and flexible way to discover a city with a local guide.</p>
+
+        <h2>How does the Brussels free tour work?</h2>
+        <p>The tour lasts approximately 2 hours 15 minutes and starts from the Grand Place. You will visit the main landmarks of the historic centre with a local English-speaking guide who will share stories, history and hidden facts about each place.</p>
+
+        <h2>What does the tour cover?</h2>
+        <ul>
+          <li>Grand Place — one of Europe's most beautiful squares</li>
+          <li>Manneken Pis and its legends</li>
+          <li>Galeries Saint-Hubert</li>
+          <li>Saint-Géry neighbourhood</li>
+          <li>Mont des Arts with panoramic views</li>
+          <li>Sablon district</li>
+        </ul>
+
+        <h2>How much should you tip on a free tour?</h2>
+        <p>There is no set amount, but most travellers contribute between €10 and €20 per person. If you enjoyed the tour and the guide did a great job, €15–20 is a fair tip.</p>
+      `
+    },
+  },
+};
+
+const article = ARTICLES[safeLang]?.[slug];
+
+if (!article) {
+  return Astro.redirect(`/${safeLang}/blog/`);
+}
+
+const canonical = `https://belgotours.com/${safeLang}/blog/${slug}`;
+
+// Schema Article para SEO
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: article.title,
+  description: article.description,
+  image: `https://belgotours.com${article.image}`,
+  datePublished: article.date,
+  dateModified: article.date,
+  author: {
+    "@type": "Organization",
+    name: "BelgoTours",
+    url: "https://belgotours.com"
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "BelgoTours",
+    logo: { "@type": "ImageObject", url: "https://belgotours.com/Logo-belgotours.webp" }
+  },
+  mainEntityOfPage: { "@type": "WebPage", "@id": canonical }
+};
+---
+
+<Layout title={`${article.title} | BelgoTours`} description={article.description} canonical={canonical}>
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <Header slot="header" lang={safeLang} />
+
+  <article class="max-w-3xl mx-auto px-4 py-16">
+    <!-- Header del artículo -->
+    <div class="mb-8">
+      <a href={`/${safeLang}/blog`}
+         class="text-sm text-neutral-400 hover:text-neutral-600 transition mb-4 inline-block">
+        ← {safeLang === 'es' ? 'Volver al blog' : safeLang === 'en' ? 'Back to blog' : safeLang === 'it' ? 'Torna al blog' : safeLang === 'fr' ? 'Retour au blog' : 'Voltar ao blog'}
+      </a>
+      <p class="text-sm text-neutral-400 mb-3">
+        {new Date(article.date).toLocaleDateString(safeLang === 'en' ? 'en-GB' : safeLang === 'it' ? 'it-IT' : safeLang === 'fr' ? 'fr-FR' : 'es-ES', {day:'numeric',month:'long',year:'numeric'})}
+      </p>
+      <h1 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">{article.title}</h1>
+      <p class="text-lg text-neutral-500">{article.description}</p>
+    </div>
+
+    <!-- Imagen principal -->
+    <div class="rounded-2xl overflow-hidden mb-10 h-64 md:h-80">
+      <img src={article.image} alt={article.title}
+           class="w-full h-full object-cover"
+           loading="eager" fetchpriority="high" />
+    </div>
+
+    <!-- CTA inline antes del contenido -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-5 mb-10 flex items-center justify-between gap-4 flex-wrap">
+      <p class="font-semibold text-neutral-900 text-sm">
+        {safeLang === 'es' ? '¿Quieres verlo con un guía local?' :
+         safeLang === 'en' ? 'Want to explore it with a local guide?' :
+         safeLang === 'it' ? 'Vuoi scoprirlo con una guida locale?' :
+         'Envie de le découvrir avec un guide local?'}
+      </p>
+      <a href={article.tourCta.url}
+         class="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-neutral-900 font-bold px-5 py-2.5 rounded-xl text-sm transition whitespace-nowrap">
+        {article.tourCta.text}
+      </a>
+    </div>
+
+    <!-- Contenido del artículo -->
+    <div class="prose prose-neutral max-w-none" set:html={article.content} />
+
+    <!-- CTA final -->
+    <div class="mt-14 bg-neutral-900 text-white rounded-2xl p-8 text-center">
+      <h2 class="text-xl font-bold mb-2">{article.tourCta.text}</h2>
+      <p class="text-neutral-400 text-sm mb-5">
+        {safeLang === 'es' ? 'Reserva gratis · Grupos pequeños · Cancelación gratuita' :
+         safeLang === 'en' ? 'Free booking · Small groups · Free cancellation' :
+         safeLang === 'it' ? 'Prenotazione gratuita · Gruppi piccoli · Cancellazione gratuita' :
+         'Réservation gratuite · Petits groupes · Annulation gratuite'}
+      </p>
+      <a href={article.tourCta.url}
+         class="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-neutral-900 font-bold px-8 py-3 rounded-xl transition">
+        {safeLang === 'es' ? 'Ver disponibilidad' :
+         safeLang === 'en' ? 'Check availability' :
+         safeLang === 'it' ? 'Verifica disponibilità' :
+         'Voir les disponibilités'}
+      </a>
+    </div>
+  </article>
+
+  <Footer lang={safeLang as any} />
+</Layout>
+
+<style>
+  .prose h2 { font-size: 1.4rem; font-weight: 700; margin: 2rem 0 0.75rem; color: #111827; }
+  .prose p { margin: 0 0 1rem; line-height: 1.7; color: #374151; }
+  .prose ul { margin: 0 0 1rem 1.5rem; color: #374151; }
+  .prose li { margin-bottom: 0.4rem; line-height: 1.6; }
+</style>

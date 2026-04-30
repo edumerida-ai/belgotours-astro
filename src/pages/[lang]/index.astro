@@ -15,16 +15,60 @@ import { SEARCHBOX_TOURS } from "@/data/tours/searchbox.tours";
 const { lang } = Astro.params as { lang: "es" | "en" | "it" | "fr" | "pt" };
 
 /* SEO fallback */
-const seoTitle = "Free Tours en Bruselas y Brujas | BelgoTours";
-const seoDescription =
-  "Reserva Free Tours y visitas guiadas en Bruselas y Brujas con guías locales en español, inglés, italiano y francés.";
 const canonical = `https://belgotours.com/${lang}/`;
 
-/* HERO fallback */
-const heroTitle = "Descubre Bélgica con guías locales";
-const heroSubtitle = "Free Tours y Tours Privados en Bruselas y Brujas";
-const heroDescription = "Experiencias auténticas, grupos pequeños y cancelación gratuita.";
-const heroHighlighted = "Español, Inglés, Francés e Italiano";
+// SEO por idioma — titles únicos, keywords principales, sin canibalización
+const SEO_BY_LANG: Record<string, {title: string; description: string; heroTitle: string; heroSubtitle: string; heroDescription: string; heroHighlighted: string}> = {
+  es: {
+    title: "Free Tour Bruselas en Español | Tours en Bélgica · BelgoTours",
+    description: "Free Tours en Bruselas y Brujas con guías locales en español. Reserva gratis, paga lo que quieras al final. Grupos pequeños y cancelación gratuita.",
+    heroTitle: "Free Tours en Bruselas y Bélgica",
+    heroSubtitle: "Descubre Bruselas y Brujas con guías locales expertos",
+    heroDescription: "Reserva gratis · Grupos pequeños · Cancelación gratuita",
+    heroHighlighted: "En español, inglés, italiano y francés",
+  },
+  en: {
+    title: "Free Walking Tour Brussels in English | Local Guides · BelgoTours",
+    description: "Free walking tours in Brussels and Bruges with expert local guides in English. Book for free, pay what you want at the end. Small groups.",
+    heroTitle: "Free Tours in Brussels & Belgium",
+    heroSubtitle: "Discover Brussels and Bruges with expert local guides",
+    heroDescription: "Free booking · Small groups · Free cancellation",
+    heroHighlighted: "In English, Spanish, Italian and French",
+  },
+  it: {
+    title: "Free Tour Bruxelles in Italiano | Guide Locali · BelgoTours",
+    description: "Free tour a Bruxelles e Bruges con guide locali in italiano. Prenota gratis, paga quello che vuoi alla fine. Gruppi piccoli.",
+    heroTitle: "Free Tour a Bruxelles e in Belgio",
+    heroSubtitle: "Scopri Bruxelles e Bruges con guide locali esperte",
+    heroDescription: "Prenotazione gratuita · Gruppi piccoli · Cancellazione gratuita",
+    heroHighlighted: "In italiano, spagnolo, inglese e francese",
+  },
+  fr: {
+    title: "Tour Privé Bruxelles en Français | Guides Locaux · BelgoTours",
+    description: "Tours privés et visites guidées à Bruxelles avec des guides locaux francophones. Réservation gratuite, groupes réduits.",
+    heroTitle: "Tours Guidés à Bruxelles et en Belgique",
+    heroSubtitle: "Découvrez Bruxelles et Bruges avec des guides locaux experts",
+    heroDescription: "Réservation gratuite · Petits groupes · Annulation gratuite",
+    heroHighlighted: "En français, espagnol, anglais et italien",
+  },
+  pt: {
+    title: "Free Tour Bruxelas | Tours em Bruxelas e na Bélgica · BelgoTours",
+    description: "Free tours em Bruxelas e Bruges com guias locais. Reserve grátis, pague o que quiser no final. Grupos pequenos e cancelamento gratuito.",
+    heroTitle: "Free Tours em Bruxelas e na Bélgica",
+    heroSubtitle: "Descubra Bruxelas e Bruges com guias locais especialistas",
+    heroDescription: "Reserva gratuita · Grupos pequenos · Cancelamento gratuito",
+    heroHighlighted: "Em espanhol, inglês, italiano e francês",
+  },
+};
+
+const safeLang = ['es','en','it','fr','pt'].includes(lang) ? lang : 'es';
+const seo = SEO_BY_LANG[safeLang];
+const seoTitle = seo.title;
+const seoDescription = seo.description;
+const heroTitle = seo.heroTitle;
+const heroSubtitle = seo.heroSubtitle;
+const heroDescription = seo.heroDescription;
+const heroHighlighted = seo.heroHighlighted;
 const heroImageUrl =
    "/images/hero/bruselas-hero.webp";
  
@@ -40,6 +84,55 @@ const tours = SEARCHBOX_TOURS;
 ---
 
 <Layout title={seoTitle} description={seoDescription} canonical={canonical}>
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": `https://belgotours.com/#organization`,
+  name: "BelgoTours",
+  url: "https://belgotours.com",
+  logo: "https://belgotours.com/Logo-belgotours.webp",
+  image: "https://belgotours.com/images/hero/bruselas-hero.webp",
+  description: "Free tours y tours privados en Bruselas y Brujas con guías locales en español, inglés, italiano y francés.",
+  telephone: "+32456139612",
+  email: "reservas@belgotours.com",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Grand Place",
+    addressLocality: "Brussels",
+    postalCode: "1000",
+    addressCountry: "BE"
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 50.8503,
+    longitude: 4.3517
+  },
+  openingHoursSpecification: {
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    opens: "09:00",
+    closes: "20:00"
+  },
+  priceRange: "€",
+  currenciesAccepted: "EUR",
+  paymentAccepted: "Cash, Credit Card",
+  hasMap: "https://www.google.com/maps?q=Grand+Place+Brussels",
+  sameAs: [
+    "https://www.instagram.com/belgotours/",
+    "https://www.facebook.com/belgotours",
+    "https://www.youtube.com/@belgotours312"
+  ],
+  makesOffer: [
+    {
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "TouristTrip",
+        name: lang === "en" ? "Free Tour Brussels in English" : lang === "it" ? "Free Tour Bruxelles in Italiano" : lang === "fr" ? "Tour Privé Bruxelles" : "Free Tour Bruselas en Español",
+        url: `https://belgotours.com/${lang}/tours/${lang === "en" ? "free-tour-brussels" : lang === "it" ? "free-tour-bruxelles" : lang === "fr" ? "tour-prive-bruxelles" : "free-tour-bruselas"}`
+      }
+    }
+  ]
+})} />
   <Header lang={lang} />
          <HeroWrapper
     lang={lang}

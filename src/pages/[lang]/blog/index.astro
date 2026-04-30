@@ -1,0 +1,90 @@
+---
+export const prerender = false;
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+
+const { lang } = Astro.params as { lang: string };
+const safeLang = ['es','en','it','fr','pt'].includes(lang) ? lang : 'es';
+
+const SEO: Record<string, {title: string; description: string}> = {
+  es: { title: "Blog de Viajes por Bélgica | Guías y Consejos · BelgoTours", description: "Guías de viaje, itinerarios y consejos para visitar Bruselas y Brujas. Descubre qué ver, qué hacer y cómo aprovechar tu visita a Bélgica." },
+  en: { title: "Belgium Travel Blog | Brussels & Bruges Guides · BelgoTours", description: "Travel guides, itineraries and tips for visiting Brussels and Bruges. Discover what to see, what to do and how to make the most of your trip to Belgium." },
+  it: { title: "Blog di Viaggio in Belgio | Guide Bruxelles e Bruges · BelgoTours", description: "Guide di viaggio, itinerari e consigli per visitare Bruxelles e Bruges. Scopri cosa vedere, cosa fare e come sfruttare al meglio la tua visita in Belgio." },
+  fr: { title: "Blog Voyage en Belgique | Guides Bruxelles & Bruges · BelgoTours", description: "Guides de voyage, itinéraires et conseils pour visiter Bruxelles et Bruges. Découvrez quoi voir, quoi faire et comment profiter au maximum de votre visite." },
+  pt: { title: "Blog de Viagem na Bélgica | Guias Bruxelas e Bruges · BelgoTours", description: "Guias de viagem, roteiros e dicas para visitar Bruxelas e Bruges. Descubra o que ver, o que fazer e como aproveitar ao máximo sua visita à Bélgica." },
+};
+
+const seo = SEO[safeLang];
+const canonical = `https://belgotours.com/${safeLang}/blog/`;
+
+// Artículos disponibles por idioma
+const articles: Record<string, {slug: string; title: string; excerpt: string; date: string; image: string}[]> = {
+  es: [
+    { slug: "que-ver-en-bruselas", title: "Qué ver en Bruselas: los lugares imprescindibles", excerpt: "Descubre los monumentos, barrios y rincones que no puedes perderte en tu visita a la capital belga.", date: "2026-04-01", image: "/images/hero/bruselas-hero.webp" },
+    { slug: "free-tour-bruselas-guia-completa", title: "Free Tour Bruselas: guía completa para reservar", excerpt: "Todo lo que necesitas saber antes de hacer un free tour en Bruselas: cómo funciona, qué incluye y cómo reservar.", date: "2026-04-10", image: "/images/hero/bruselas-hero.webp" },
+    { slug: "que-ver-en-brujas-en-un-dia", title: "Qué ver en Brujas en un día: itinerario completo", excerpt: "Si solo tienes un día en Brujas, este itinerario te ayudará a aprovechar cada momento en la ciudad medieval más bonita de Europa.", date: "2026-04-15", image: "/images/hero/bruselas-hero.webp" },
+  ],
+  en: [
+    { slug: "things-to-do-in-brussels", title: "Things to do in Brussels: the ultimate guide", excerpt: "Discover the monuments, neighbourhoods and hidden corners you cannot miss on your visit to the Belgian capital.", date: "2026-04-01", image: "/images/hero/bruselas-hero.webp" },
+    { slug: "free-walking-tour-brussels-guide", title: "Free Walking Tour Brussels: complete guide", excerpt: "Everything you need to know before joining a free tour in Brussels: how it works, what's included and how to book.", date: "2026-04-10", image: "/images/hero/bruselas-hero.webp" },
+  ],
+  it: [
+    { slug: "cosa-vedere-a-bruxelles", title: "Cosa vedere a Bruxelles: i luoghi imperdibili", excerpt: "Scopri i monumenti, i quartieri e gli angoli nascosti da non perdere durante la tua visita alla capitale belga.", date: "2026-04-01", image: "/images/hero/bruselas-hero.webp" },
+  ],
+  fr: [
+    { slug: "que-voir-a-bruxelles", title: "Que voir à Bruxelles: les incontournables", excerpt: "Découvrez les monuments, quartiers et recoins cachés à ne pas manquer lors de votre visite de la capitale belge.", date: "2026-04-01", image: "/images/hero/bruselas-hero.webp" },
+  ],
+  pt: [
+    { slug: "o-que-ver-em-bruxelas", title: "O que ver em Bruxelas: os lugares imperdíveis", excerpt: "Descubra os monumentos, bairros e cantos escondidos que não pode perder na sua visita à capital belga.", date: "2026-04-01", image: "/images/hero/bruselas-hero.webp" },
+  ],
+};
+
+const posts = articles[safeLang] || articles.es;
+---
+
+<Layout title={seo.title} description={seo.description} canonical={canonical}>
+  <Header slot="header" lang={safeLang} />
+
+  <section class="max-w-5xl mx-auto px-4 py-16">
+    <h1 class="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
+      {safeLang === 'es' ? 'Blog de Viajes por Bélgica' :
+       safeLang === 'en' ? 'Belgium Travel Blog' :
+       safeLang === 'it' ? 'Blog di Viaggio in Belgio' :
+       safeLang === 'fr' ? 'Blog Voyage en Belgique' :
+       'Blog de Viagem na Bélgica'}
+    </h1>
+    <p class="text-neutral-500 mb-12 text-lg">
+      {safeLang === 'es' ? 'Guías, itinerarios y consejos para visitar Bruselas y Brujas' :
+       safeLang === 'en' ? 'Guides, itineraries and tips for visiting Brussels and Bruges' :
+       safeLang === 'it' ? 'Guide, itinerari e consigli per visitare Bruxelles e Bruges' :
+       safeLang === 'fr' ? 'Guides, itinéraires et conseils pour visiter Bruxelles et Bruges' :
+       'Guias, roteiros e dicas para visitar Bruxelas e Bruges'}
+    </p>
+
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {posts.map(post => (
+        <a href={`/${safeLang}/blog/${post.slug}`}
+           class="group bg-white rounded-2xl border border-neutral-200 overflow-hidden hover:shadow-lg transition-shadow">
+          <div class="h-48 overflow-hidden">
+            <img src={post.image} alt={post.title}
+                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                 loading="lazy" />
+          </div>
+          <div class="p-5">
+            <p class="text-xs text-neutral-400 mb-2">{new Date(post.date).toLocaleDateString(safeLang === 'en' ? 'en-GB' : safeLang === 'it' ? 'it-IT' : safeLang === 'fr' ? 'fr-FR' : 'es-ES', {day:'numeric',month:'long',year:'numeric'})}</p>
+            <h2 class="font-bold text-neutral-900 text-base mb-2 line-clamp-2 group-hover:text-yellow-600 transition-colors">{post.title}</h2>
+            <p class="text-sm text-neutral-500 line-clamp-3">{post.excerpt}</p>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <Footer lang={safeLang as any} />
+</Layout>
+
+<style>
+  .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .line-clamp-3 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+</style>

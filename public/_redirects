@@ -1,52 +1,191 @@
 # ======================================
+# WWW → SIN WWW (CRÍTICO)
+# ======================================
+https://www.belgotours.com/*   https://belgotours.com/:splat   301!
+
+# ======================================
+# RESERVAS.BELGOTOURS.COM (subdominio antiguo)
+# ======================================
+https://reservas.belgotours.com/*   https://belgotours.com/es/   301!
+
+# ======================================
 # HOME / IDIOMAS (URLs antiguas)
 # ======================================
-
-
-# Nota: la home raíz / NO se redirige
-# https://belgotours.com/ ya es válida
-
+/inicio/*                    /es/        301
+/home/*                      /es/        301
+/fr/inicio/                  /fr/        301
 
 # ======================================
-# FREE TOURS (URLs antiguas)
+# FREE TOURS (URLs antiguas y slugs cruzados)
 # ======================================
-
 /free-tour-bruselas-espanol/              /es/tours/free-tour-bruselas        301
 /en/free-tour-brussels-english/           /en/tours/free-tour-brussels        301
 /it/free-tour-di-bruxelles-in-italiano/   /it/tours/free-tour-bruxelles       301
+/fr/free-tour-brussels-english/           /fr/tours/tour-prive-bruxelles      301
+/fr/free-tour-bruselas-espanol/           /fr/tours/tour-prive-bruxelles      301
+/es/free-tour-bruselas/                   /es/tours/free-tour-bruselas        301
 
+# Tours en idioma incorrecto — slug francés en ruta española/inglesa
+/es/tours/free-tour-bruxelles/            /es/tours/free-tour-bruselas        301
+/es/tours/free-tour-bruxelles             /es/tours/free-tour-bruselas        301
+/es/tours/free-tour-brussels/             /es/tours/free-tour-bruselas        301
+/es/tours/free-tour-brussels              /es/tours/free-tour-bruselas        301
+/en/tours/free-tour-bruxelles/            /en/tours/free-tour-brussels        301
+/en/tours/free-tour-bruxelles             /en/tours/free-tour-brussels        301
+/en/tours/free-tour-bruselas/             /en/tours/free-tour-brussels        301
+/en/tours/free-tour-bruselas              /en/tours/free-tour-brussels        301
+/fr/tours/free-tour-bruselas/             /fr/tours/tour-prive-bruxelles      301
+/fr/tours/free-tour-bruselas              /fr/tours/tour-prive-bruxelles      301
+/fr/tours/free-tour-brussels/             /fr/tours/tour-prive-bruxelles      301
+/fr/tours/free-tour-brussels              /fr/tours/tour-prive-bruxelles      301
+/fr/tours/free-tour-bruxelles/            /fr/tours/tour-prive-bruxelles      301
+/fr/tours/free-tour-bruxelles             /fr/tours/tour-prive-bruxelles      301
+/pt/tours/free-tour-bruxelles/            /pt/                                301
+/pt/tours/free-tour-bruxelles             /pt/                                301
+/it/tours/free-tour-bruselas/             /it/tours/free-tour-bruxelles       301
+/it/tours/free-tour-bruselas              /it/tours/free-tour-bruxelles       301
+/it/tours/free-tour-brussels/             /it/tours/free-tour-bruxelles       301
+/it/tours/free-tour-brussels              /it/tours/free-tour-bruxelles       301
+
+# Brujas en idioma incorrecto
+/fr/tours/free-tour-brujas/               /fr/tours/tour-prive-bruxelles      301
+/fr/tours/free-tour-brujas                /fr/tours/tour-prive-bruxelles      301
+/en/tours/free-tour-brujas/               /en/tours/free-tour-brussels        301
+/en/tours/free-tour-brujas                /en/tours/free-tour-brussels        301
+
+# ======================================
+# TOUR CHOCOLATE — slugs cruzados
+# ======================================
+/fr/tours/tour-chocolate-cerveza-bruselas/   /fr/tours/tour-prive-bruxelles   301
+/fr/tours/tour-chocolate-cerveza-bruselas    /fr/tours/tour-prive-bruxelles   301
+/en/tours/tour-chocolate-cerveza-bruselas/   /en/tours/free-tour-brussels     301
+/en/tours/tour-chocolate-cerveza-bruselas    /en/tours/free-tour-brussels     301
+/it/tours/tour-chocolate-cerveza-bruselas    /it/tours/free-tour-bruxelles    301
+
+# ======================================
+# TOUR PRIVADO — slugs cruzados
+# ======================================
+/es/tours/tour-prive-bruxelles/           /es/tours/tour-privado-bruselas     301
+/es/tours/tour-prive-bruxelles            /es/tours/tour-privado-bruselas     301
+/en/tours/tour-prive-bruxelles/           /en/tours/private-tour-brussels     301
+/en/tours/tour-prive-bruxelles            /en/tours/private-tour-brussels     301
+/es/tours/private-tour-brussels/          /es/tours/tour-privado-bruselas     301
+/es/tours/private-tour-brussels           /es/tours/tour-privado-bruselas     301
+/fr/tours/tour-privado-bruselas/          /fr/tours/tour-prive-bruxelles      301
+/fr/tours/tour-privado-bruselas           /fr/tours/tour-prive-bruxelles      301
+/fr/tours/private-tour-brussels/          /fr/tours/tour-prive-bruxelles      301
+/fr/tours/private-tour-brussels           /fr/tours/tour-prive-bruxelles      301
+/it/tours/private-tour-brussels/          /it/tours/tour-privato-bruxelles    301
+/it/tours/private-tour-brussels           /it/tours/tour-privato-bruxelles    301
+/en/tours/tour-privado-bruselas/          /en/tours/private-tour-brussels     301
+/en/tours/tour-privado-bruselas           /en/tours/private-tour-brussels     301
+/en/tours/tour-privado-brujas/            /en/tours/private-tour-brussels     301
+/en/tours/tour-privado-brujas             /en/tours/private-tour-brussels     301
+/es/tours/tour-privado-bruselas/          /es/tours/tour-privado-bruselas     301
+/fr/tours/tour-privado-brujas/            /fr/tours/tour-prive-bruxelles      301
+/fr/tours/tour-privado-brujas             /fr/tours/tour-prive-bruxelles      301
+
+# Rutas /tour/ sin /tours/
+/tour/free-tour-brujas/                   /es/tours/free-tour-brujas          301
+/tour/                                    /es/                                301
+/en/tour/free-tour-brussels/              /en/tours/free-tour-brussels        301
+/fr/tour/free-tour-de-bruselas/           /fr/tours/tour-prive-bruxelles      301
+/fr/tour/visite-privee-de-bruxelles/      /fr/tours/tour-prive-bruxelles      301
+
+# ======================================
+# PÁGINAS ANTIGUAS — Blog/FAQ/Contacto WordPress
+# ======================================
+/it/chi-siamo-belgotours                  /it/                                301
+/it/contacto                              /it/                                301
+/en/contacto                              /en/                                301
+/home/contacto                            /es/                                301
+/en/about-belgotours                      /en/                                301
+/en/cancellation                          /en/                                301
+/es/cancelacion                           /es/                                301
+/en/blog                                  /en/                                301
+/en/faq                                   /en/                                301
+/en/politica-de-privacidad/               /en/privacy                         301
+/it/politica-de-privacidad/               /it/privacy                         301
+/it/author/temporal/                      /it/                                301
+/it/autore/temporaneo/                    /it/                                301
+/author/temporal/                         /es/                                301
+/fr/auteur/temporaire/                    /fr/                                301
+
+# ======================================
+# PÁGINAS ANTIGUAS — Slugs largos de WordPress
+# ======================================
+/descubre-brujas-free-tours-y-tours-privados-para-explorar-la-ciudad-de-los-canales/blog         /es/tours/free-tour-brujas   301
+/descubre-brujas-free-tours-y-tours-privados-para-explorar-la-ciudad-de-los-canales/tours/tour-chocolate-cerveza-bruselas   /es/tours/tour-chocolate-cerveza-bruselas   301
+/itscubre-brujas-free-tours-y-tours-privados-para-explorar-la-ciudad-de-los-canales/blog         /it/tours/free-tour-bruxelles   301
+/itscubre-brujas-free-tours-y-tours-privados-para-explorar-la-ciudad-de-los-canales/contacto     /it/   301
+/enscubre-brujas-free-tours-y-tours-privados-para-explorar-la-ciudad-de-los-canales/contacto     /en/   301
+/preguntas-frecuentes-sobre-free-tours-y-tours-privados-en-brujas/blog                           /es/   301
+/preguntas-frecuentes-sobre-free-tours-y-tours-privados-en-brujas/legal-notice                   /es/legal-notice   301
+/preguntas-frecuentes-sobre-free-tours-en-brujas/                                                /es/   301
+/plantilla-tour-privado/contacto          /es/tours/tour-privado-bruselas     301
+/plantilla-tour-privado/tours/tour-privado-brujas   /es/tours/tour-privado-brujas   301
+/plantilla-tour-privado/                  /es/tours/tour-privado-bruselas     301
+/plantilla-tour-privado/terms             /es/terms                           301
+/plantilla-tour-privado/privacy           /es/privacy                         301
+
+# ======================================
+# PÁGINAS ANTIGUAS — Tours sin estructura /lang/
+# ======================================
+/free-tour-brujas/                        /es/tours/free-tour-brujas          301
+/free-tour-brujas                         /es/tours/free-tour-brujas          301
+/tour-privado-bruselas/                   /es/tours/tour-privado-bruselas     301
+/descubre-brujas/                         /es/tours/free-tour-brujas          301
+/que-ver-y-hacer-en-bruselas/             /es/                                301
+/terminos-privacidad-belgotours/          /es/terms                           301
+/fr/politique-de-confidentialite/         /fr/privacy                         301
+
+# Tours de ciudades que no existen
+/free-tour-gante/                         /es/                                301
+/tour-privado-gante/                      /es/tours/tour-privado-bruselas     301
+/fr/free-tour-de-gand/                    /fr/                                301
+/en/free-tour-bruges/                     /en/tours/free-tour-brussels        301
+/en/alternative-tour-of-the-marolles-district/   /en/tours/free-tour-brussels   301
+/fr/visite-privee-de-bruxelles/           /fr/tours/tour-prive-bruxelles      301
+/fr/visite-privee-des-marolles/           /fr/tours/tour-prive-bruxelles      301
+/fr/visite-privee-du-quartier-europeen/   /fr/tours/tour-prive-bruxelles      301
+/fr/free-tour-de-bruxelles/               /fr/tours/tour-prive-bruxelles      301
+/en/private-tour-of-ghent/               /en/tours/private-tour-brussels     301
+/fr/tour-privado-amberes/                 /fr/                                301
+/en/what-to-see-and-do-in-brussels-discover-the-must-visit-spots-for-your-trip/   /en/tours/free-tour-brussels   301
+/en/descubre-bruselas-con-nuestros-free-tours-la-mejor-forma-de-conocer-la-ciudad/   /en/tours/free-tour-brussels   301
+/en/frequently-asked-questions-about-free-tours-and-private-tours-in-bruges/   /en/tours/free-tour-brussels   301
+/fr/decouvrez-bruxelles-avec-nos-free-tours-la-meilleure-facon-de-decouvrir-la-ville/   /fr/tours/tour-prive-bruxelles   301
+/it/free-tour-di-bruxelles-in-italiano/   /it/tours/free-tour-bruxelles       301
+
+# ======================================
+# WordPress residual
+# ======================================
+/wp-content/*                             /es/        301
 
 # ======================================
 # TÉRMINOS Y CONDICIONES (URLs antiguas)
 # ======================================
-
 /terminos-privacidad-belgotours/           /es/terms     301
 /en/privacy-terms-belgotours/              /en/terms     301
 /it/condizioni-di-privacy-belgotours/      /it/terms     301
 /fr/conditions-de-confidentialite-belgotours/ /fr/terms  301
 
-
 # ======================================
 # POLÍTICA DE PRIVACIDAD (URLs antiguas)
 # ======================================
-
 /politica-de-privacidad/        /es/privacy     301
 /en/privacy-policy/             /en/privacy     301
 /it/informativa-sulla-privacy/  /it/privacy     301
-/fr/politique-de-confidentialite/ /fr/privacy  301
-
+/fr/politique-de-confidentialite/ /fr/privacy   301
 
 # ======================================
 # PARTNERS (URLs antiguas)
 # ======================================
-/partners/                   /es/b2b-collaboration-belgium/    301 
+/partners/                   /es/b2b-collaboration-belgium/    301
 /it/partners/                /it/b2b-collaboration-belgium/    301
 /fr/partners/                /fr/b2b-collaboration-belgium/    301
 
-
-
-
-
-
-
-
+# ======================================
+# PT sin trailing slash
+# ======================================
+/pt                          /pt/        301
