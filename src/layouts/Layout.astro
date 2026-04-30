@@ -12,10 +12,10 @@ interface Props {
 }
 
 const { title, description, canonical: canonicalProp, noindex = false } = Astro.props;
-// Canonical automático — usa el prop si existe, sino construye desde la URL actual
-const canonical = canonicalProp || `https://belgotours.com${currentUrl.replace(/\/$/, '')}${currentUrl.endsWith('/') ? '/' : ''}`;
 const currentUrl = Astro.url.pathname;
 const currentLang = currentUrl.split("/")[1] || "es";
+// Canonical automático — usa el prop si existe, sino construye desde la URL actual
+const canonical = canonicalProp || `https://belgotours.com${currentUrl}`;
 
 /**
  * SOLO páginas de detalle de tour:
