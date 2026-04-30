@@ -194,8 +194,8 @@ const c = t[lang] || t.en;
   });
 
   saveBtn?.addEventListener("click", () => {
-    const analytics = (document.getElementById("analytics-check") as HTMLInputElement)?.checked ?? true;
-    const marketing = (document.getElementById("marketing-check") as HTMLInputElement)?.checked ?? false;
+    const analytics = (document.getElementById("analytics-check"))?.checked ?? true;
+    const marketing = (document.getElementById("marketing-check"))?.checked ?? false;
     save({ essential: true, analytics, marketing });
   });
 })();
