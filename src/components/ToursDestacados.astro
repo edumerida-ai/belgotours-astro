@@ -12,7 +12,9 @@ const safeLangForFetch = ['es','en','it','fr'].includes(lang) ? lang : 'es';
 
 async function getRealRating(slug: string, langCode: string): Promise<{rating: number, total: number} | null> {
   try {
-    const res = await fetch(`${STRAPI_API}/public/reviews-pro?tour=${slug}&lang=${langCode}`);
+    const res = await fetch(`${STRAPI_API}/public/reviews-pro?tour=${slug}&lang=${langCode}`, {
+      signal: AbortSignal.timeout(3000)
+    });
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.summary?.rating || !data?.summary?.total) return null;

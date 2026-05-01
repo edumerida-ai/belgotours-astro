@@ -4,3 +4,23 @@
 
 [functions]
   directory = "netlify/functions"
+
+[[headers]]
+  for = "/es/"
+  [headers.values]
+    Cache-Control = "public, s-maxage=30, stale-while-revalidate=120"
+
+[[headers]]
+  for = "/en/"
+  [headers.values]
+    Cache-Control = "public, s-maxage=30, stale-while-revalidate=120"
+
+[[headers]]
+  for = "/it/"
+  [headers.values]
+    Cache-Control = "public, s-maxage=30, stale-while-revalidate=120"
+
+[[headers]]
+  for = "/fr/"
+  [headers.values]
+    Cache-Control = "public, s-maxage=30, stale-while-revalidate=120"
