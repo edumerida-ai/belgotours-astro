@@ -421,7 +421,7 @@ const subRatings = [
       </div>
 
       <!-- CARD 2: SUBRATINGS -->
-      <div class="card" id="card-subratings" style="opacity:0.5; pointer-events:none; transition: opacity 0.3s;">
+      <div class="card" id="card-subratings">
         <div class="card-label">Paso 2 de 3</div>
         <div class="subratings-grid">
           {subRatings.map((sr, idx) => (
@@ -446,7 +446,7 @@ const subRatings = [
       </div>
 
       <!-- CARD 3: COMENTARIO -->
-      <div class="card comment-card" id="card-comment" style="opacity:0.5; pointer-events:none; transition: opacity 0.3s;">
+      <div class="card comment-card" id="card-comment">
         <div class="card-label">Paso 3 de 3</div>
         <h2>{t.publicCommentTitle}</h2>
         <p class="comment-desc">{t.subtitle}</p>
@@ -514,14 +514,10 @@ const subRatings = [
               fb.textContent = ratingLabels[v] || '';
               fb.classList.add('has-value');
             }
-            // Desbloquear card subratings
-            if (cardSubratings) {
-              cardSubratings.style.opacity = '1';
-              cardSubratings.style.pointerEvents = 'auto';
-              setTimeout(() => {
-                cardSubratings.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              }, 200);
-            }
+            // Scroll suave a subratings
+            setTimeout(() => {
+              cardSubratings?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 200);
           } else {
             // Marcar subrating card como rated
             const subcard = document.getElementById('subcard-' + name);
@@ -546,13 +542,7 @@ const subRatings = [
     const textarea = document.getElementById('comentario');
     const charCountEl = document.getElementById('charCount');
 
-    textarea?.addEventListener('focus', () => {
-      // Desbloquear card comentario cuando hace focus
-      if (cardComment) {
-        cardComment.style.opacity = '1';
-        cardComment.style.pointerEvents = 'auto';
-      }
-    });
+
 
     // Desbloquear comentario cuando subratings estén listos
     const subInputs = ['profesionalidad','diversion','comunicacion','calidad','ruta'];
@@ -567,17 +557,7 @@ const subRatings = [
       checkValid();
     });
 
-    // Desbloquear card comment cuando se completa al menos 1 subrating
-    document.querySelectorAll('.stars-small .star-btn-sm').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setTimeout(() => {
-          if (cardComment) {
-            cardComment.style.opacity = '1';
-            cardComment.style.pointerEvents = 'auto';
-          }
-        }, 300);
-      });
-    });
+
 
     // ── Validación ─────────────────────────────────────────
     function checkValid() {
